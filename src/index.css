@@ -1,0 +1,94 @@
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+
+/**
+ * Sistema de diseño ConectaComuna.
+ * Paleta base: blanco crema (#F9F8F2), negro (#1A1A1A) y verde claro (#CFE8C6).
+ * El verde medio se reserva para acciones primarias, de modo que el ojo
+ * siempre encuentre el botón importante sobre el fondo crema.
+ */
+@theme {
+  /* Crema: fondo de la app y superficies suaves */
+  --color-cream-50: #fdfdfa;
+  --color-cream-100: #f9f8f2;
+  --color-cream-200: #f1efe4;
+  --color-cream-300: #e6e3d4;
+
+  /* Verde claro: acentos, chips y bloques destacados */
+  --color-brand-50: #f2f9ef;
+  --color-brand-100: #cfe8c6;
+  --color-brand-200: #b9dcac;
+  --color-brand-300: #9ecd8c;
+  --color-brand-400: #86c26f;
+  --color-brand-500: #6fb257;
+  --color-brand-600: #5a9a45;
+  --color-brand-700: #467a36;
+  --color-brand-800: #365c2a;
+
+  /* Neutros cálidos derivados del negro de la paleta */
+  --color-ink-900: #1a1a1a;
+  --color-ink-700: #3d3d3a;
+  --color-ink-500: #6b6b65;
+  --color-ink-400: #8f8f88;
+  --color-ink-200: #d9d7cc;
+  --color-ink-100: #e9e7dd;
+
+  --color-accent-500: #6fb257;
+}
+
+:root {
+  color-scheme: light;
+  /* Fuentes del sistema: cero descargas de tipografías en conexiones lentas. */
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  @apply bg-cream-100 text-ink-900 antialiased;
+}
+
+/* Accesibilidad: foco siempre visible para navegación por teclado. */
+:focus-visible {
+  outline: 3px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Respetar a quien pide menos animación (y ahorrar CPU en gama baja). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@layer components {
+  /* El diseño usa tarjetas de borde fino sobre blanco, sin sombras. */
+  .card {
+    @apply rounded-[14px] border border-ink-200 bg-white;
+  }
+
+  .card-soft {
+    @apply rounded-[14px] border border-brand-100 bg-brand-50;
+  }
+}
+
+.leaflet-container {
+  font: inherit;
+  z-index: 0;
+}
