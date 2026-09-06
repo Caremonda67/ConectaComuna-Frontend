@@ -17,6 +17,7 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
 const FacialVerificationPage = lazy(() => import('@/pages/FacialVerificationPage'))
+const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<CardSkeletonList count={3} />}>{children}</Suspense>
@@ -99,6 +100,16 @@ const router = createBrowserRouter([
           <ProtectedRoute requireBusiness>
             <Lazy>
               <BusinessProfileEditor />
+            </Lazy>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'panel/facilitador',
+        element: (
+          <ProtectedRoute>
+            <Lazy>
+              <FacilitatorDashboard />
             </Lazy>
           </ProtectedRoute>
         ),
