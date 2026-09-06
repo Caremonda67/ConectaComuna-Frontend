@@ -13,6 +13,7 @@
     "@hookform/resolvers": "^5.9.1",
     "@supabase/supabase-js": "^2.115.0",
     "@tanstack/react-query": "^5.102.8",
+    "face-api.js": "^0.22.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",

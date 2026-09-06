@@ -16,6 +16,7 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
+const FacialVerificationPage = lazy(() => import('@/pages/FacialVerificationPage'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<CardSkeletonList count={3} />}>{children}</Suspense>
@@ -71,6 +72,14 @@ const router = createBrowserRouter([
         element: (
           <Lazy>
             <RegisterPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'verificacion',
+        element: (
+          <Lazy>
+            <FacialVerificationPage />
           </Lazy>
         ),
       },
