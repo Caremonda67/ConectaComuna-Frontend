@@ -109,17 +109,37 @@ export default function BusinessDetailPage() {
               Editar mi negocio
             </Link>
           ) : (
-            <Button
-              onClick={() => {
-                if (!userId) {
-                  navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
-                  return
-                }
-                setShowForm((v) => !v)
-              }}
-            >
-              Solicitar servicio
-            </Button>
+            <>
+              <Button
+                onClick={() => {
+                  if (!userId) {
+                    navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                    return
+                  }
+                  setShowForm((v) => !v)
+                }}
+              >
+                Solicitar servicio
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  if (!userId) {
+                    navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                    return
+                  }
+                  try {
+                    const { facilitadorService } = await import('@/services/facilitadorService')
+                    await facilitadorService.solicitarVinculacion(userId, business.id)
+                    alert('Solicitud enviada al dueño del negocio.')
+                  } catch (e: any) {
+                    alert(e.message)
+                  }
+                }}
+              >
+                Apadrinar (Administrar)
+              </Button>
+            </>
           )}
         </div>
       </header>
