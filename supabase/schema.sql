@@ -1,11 +1,10 @@
--- =====================================================================
--- ConectaComuna · Esquema de referencia para el equipo de backend
--- Este archivo documenta el contrato que el frontend espera (tablas,
--- columnas y políticas RLS). Ajústalo si el backend ya definió otro.
--- =====================================================================
+-- ConectaComuna — Schema de referencia para el equipo backend.
+-- FUENTE DE VERDAD: frontend/supabase/schema.sql
+-- Este archivo es una copia sincronizada. Si hay conflicto, prevalece el del frontend.
+-- Aplicar en Supabase: copiar el contenido de frontend/supabase/schema.sql en la consola SQL.
 
--- ---------- PERFILES ----------
-create type account_type as enum ('client', 'business');
+-- ---------- PERFILES DE USUARIO ----------
+create type account_type as enum ('client', 'business', 'facilitador');
 
 create table public.profiles (
   id uuid primary key references auth.users on delete cascade,
@@ -17,8 +16,7 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
--- El account_type se siembra desde el metadata del signUp, pero la fuente
--- de verdad es esta tabla (el usuario no puede alterar sus propias policies).
+-- Trigger: al crear usuario en Auth, siembra su fila en profiles automáticamente.
 create function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
@@ -70,7 +68,6 @@ create table public.businesses (
   created_at timestamptz not null default now()
 );
 
--- Índices para los filtros que hace el frontend (categoría + caja geográfica).
 create index businesses_category_idx on public.businesses (category) where is_active;
 create index businesses_geo_idx on public.businesses (lat, lng) where is_active;
 
@@ -96,14 +93,11 @@ create table public.orders (
   scheduled_for timestamptz,
   price_estimate numeric(12,2),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  -- Un negocio puede ser cliente de otro, pero no de sí mismo.
-  constraint no_self_order check (true)
+  updated_at timestamptz not null default now()
 );
 
 alter table public.orders enable row level security;
 
--- Solo ven el pedido su cliente y el dueño del negocio.
 create policy orders_select_involved on public.orders
   for select using (
     auth.uid() = client_id
@@ -137,8 +131,6 @@ alter table public.reviews enable row level security;
 
 create policy reviews_select_public on public.reviews for select using (true);
 
--- Solo se puede calificar un pedido propio y finalizado: la reputación
--- no se puede inflar creando reseñas sueltas.
 create policy reviews_insert_client on public.reviews
   for insert with check (
     auth.uid() = client_id
@@ -148,7 +140,7 @@ create policy reviews_insert_client on public.reviews
     )
   );
 
--- Agregados de reputación calculados en el servidor, nunca en el cliente.
+-- Trigger: recalcula rating_avg y rating_count al insertar una reseña.
 create function public.refresh_business_rating() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
@@ -166,6 +158,7 @@ create trigger reviews_after_insert
 after insert on public.reviews
 for each row execute function public.refresh_business_rating();
 
+-- Trigger: incrementa completed_orders al marcar un pedido como completado.
 create function public.bump_completed_orders() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
@@ -183,7 +176,6 @@ for each row execute function public.bump_completed_orders();
 -- ---------- STORAGE ----------
 insert into storage.buckets (id, name, public) values ('business-photos', 'business-photos', true);
 
--- La ruta debe ser `<uid>/<archivo>`: cada quien escribe solo en su carpeta.
 create policy business_photos_insert on storage.objects
   for insert to authenticated with check (
     bucket_id = 'business-photos'
@@ -192,3 +184,61 @@ create policy business_photos_insert on storage.objects
 
 create policy business_photos_read on storage.objects
   for select using (bucket_id = 'business-photos');
+
+-- Añadir el rol 'facilitador'
+ALTER TYPE account_type ADD VALUE IF NOT EXISTS 'facilitador';
+
+-- ---------- FACILITADORES (CO-ADMINISTRADORES) ----------
+create table public.facilitadores_negocio (
+  id uuid primary key default gen_random_uuid(),
+  negocio_id uuid not null references public.businesses(id) on delete cascade,
+  facilitador_id uuid not null references public.profiles(id) on delete cascade,
+  estado_vinculacion text not null default 'pendiente' check (estado_vinculacion in ('pendiente', 'aprobado', 'rechazado')),
+  creado_en timestamptz not null default now(),
+  constraint un_solo_facilitador_por_negocio unique(negocio_id, facilitador_id)
+);
+
+alter table public.facilitadores_negocio enable row level security;
+
+-- Los facilitadores pueden ver sus propias vinculaciones
+create policy facilitadores_select_propios on public.facilitadores_negocio
+  for select using (auth.uid() = facilitador_id);
+
+-- Los dueños de negocios pueden ver las vinculaciones hacia sus negocios
+create policy facilitadores_select_dueños on public.facilitadores_negocio
+  for select using (auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id));
+
+-- Los facilitadores pueden solicitar vinculación (insertar en pendiente)
+create policy facilitadores_insert_solicitud on public.facilitadores_negocio
+  for insert with check (auth.uid() = facilitador_id and estado_vinculacion = 'pendiente');
+
+-- Solo el dueño del negocio puede actualizar el estado (aprobar o rechazar)
+create policy facilitadores_update_dueño on public.facilitadores_negocio
+  for update using (auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id));
+
+-- Los dueños de negocios pueden eliminar una vinculación
+create policy facilitadores_delete_dueño on public.facilitadores_negocio
+  for delete using (auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id));
+
+-- Actualizar política de UPDATE de businesses para permitir a los facilitadores aprobados
+create policy businesses_facilitator_update on public.businesses
+  for update using (
+    exists (
+      select 1 from public.facilitadores_negocio fn
+      where fn.negocio_id = id
+      and fn.facilitador_id = auth.uid()
+      and fn.estado_vinculacion = 'aprobado'
+    )
+  ) with check (
+    exists (
+      select 1 from public.facilitadores_negocio fn
+      where fn.negocio_id = id
+      and fn.facilitador_id = auth.uid()
+      and fn.estado_vinculacion = 'aprobado'
+    )
+  );
+
+-- NOTA: La política original 'businesses_owner_write' permitía 'for all'. 
+-- Deberíamos asegurar que DELETE sigue siendo solo para el owner.
+-- Supabase acumula las políticas con OR. Como la del facilitador es solo FOR UPDATE,
+-- el DELETE seguirá bloqueado para el facilitador por omisión.

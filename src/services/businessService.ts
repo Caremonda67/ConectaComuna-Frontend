@@ -132,6 +132,9 @@ export const businessService = {
         rating_avg: existing?.rating_avg ?? 0,
         rating_count: existing?.rating_count ?? 0,
         completed_orders: existing?.completed_orders ?? 0,
+        verification_status: existing?.verification_status ?? 'unverified',
+        verification_score: existing?.verification_score ?? null,
+        verification_selfie_url: existing?.verification_selfie_url ?? null,
         is_active: input.is_active ?? existing?.is_active ?? true,
         created_at: existing?.created_at ?? new Date().toISOString(),
       }

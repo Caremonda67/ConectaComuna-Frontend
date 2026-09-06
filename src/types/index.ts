@@ -6,7 +6,7 @@
  */
 import type { LucideIcon } from 'lucide-react'
 
-export type AccountType = 'client' | 'business'
+export type AccountType = 'client' | 'business' | 'facilitador'
 
 /** Rol activo en sesión. Un usuario "business" puede actuar como cliente (rol dual). */
 export type ActiveRole = 'client' | 'business'
@@ -133,4 +133,14 @@ export interface BusinessFilters {
 
 export interface BusinessWithDistance extends Business {
   distanceKm: number | null
+}
+
+export type FacilitadorStatus = 'pendiente' | 'aprobado' | 'rechazado'
+
+export interface FacilitadorNegocio {
+  id: string
+  negocio_id: string
+  facilitador_id: string
+  estado_vinculacion: FacilitadorStatus
+  creado_en: string
 }
