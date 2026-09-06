@@ -72,6 +72,9 @@ export interface Business {
   rating_avg: number
   rating_count: number
   completed_orders: number
+  verification_status: 'unverified' | 'pending_review' | 'verified' | 'rejected'
+  verification_score?: number | null
+  verification_selfie_url?: string | null
   is_active: boolean
   created_at: string
 }

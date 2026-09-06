@@ -63,6 +63,9 @@ create table public.businesses (
   rating_avg numeric(3,2) not null default 0,
   rating_count int not null default 0,
   completed_orders int not null default 0,
+  verification_status text not null default 'unverified' check (verification_status in ('unverified', 'pending_review', 'verified', 'rejected')),
+  verification_score numeric(3,2),
+  verification_selfie_url text,
   is_active boolean not null default true,
   created_at timestamptz not null default now()
 );
