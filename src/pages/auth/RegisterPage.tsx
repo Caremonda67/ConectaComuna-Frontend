@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
+import { takeAuthFrom } from '@/lib/authRedirect'
 import { cn } from '@/lib/utils'
 import type { AccountType } from '@/types'
 import { UI_ICONS, type LucideIcon } from '@/components/ui/icons'
@@ -26,14 +29,25 @@ type Values = z.infer<typeof schema>
 export default function RegisterPage() {
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromState = (location.state as { from?: string } | null)?.from
   const [accountType, setAccountType] = useState<AccountType>('client')
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(schema) })
+
+  const { locate: handleGetLocation, loading: loadingLocation } = useNeighborhoodLocator(
+    (barrio) => {
+      setValue('neighborhood', barrio)
+      setServerError(null)
+    },
+    (msg) => setServerError(msg)
+  )
 
   async function onSubmit(values: Values) {
     setServerError(null)
@@ -46,11 +60,11 @@ export default function RegisterPage() {
         neighborhood: values.neighborhood || undefined,
         accountType,
       })
-      // Al negocio lo llevamos directo a completar su perfil: sin ficha,
-      // no aparece en el mapa ni recibe pedidos.
+      const from = fromState ?? takeAuthFrom('')
       let to = '/panel'
       if (accountType === 'business') to = '/panel/negocio'
       if (accountType === 'facilitador') to = '/panel/facilitador'
+      if (from && accountType === 'client') to = from
       navigate(to, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
@@ -121,11 +135,28 @@ export default function RegisterPage() {
           error={errors.phone?.message}
           {...register('phone')}
         />
-        <TextField
-          label="Barrio (opcional)"
-          error={errors.neighborhood?.message}
-          {...register('neighborhood')}
-        />
+        <div className="space-y-2">
+          <TextField
+            label="Barrio (opcional)"
+            error={errors.neighborhood?.message}
+            {...register('neighborhood')}
+          />
+          <button
+            type="button"
+            onClick={handleGetLocation}
+            disabled={loadingLocation}
+            className="flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+          >
+            {loadingLocation ? (
+              <span className="mr-2 animate-pulse">⏳ Obteniendo ubicación...</span>
+            ) : (
+              <>
+                <UI_ICONS.map size={16} className="mr-1" />
+                Usar mi ubicación actual
+              </>
+            )}
+          </button>
+        </div>
 
         {serverError && (
           <p role="alert" className="text-sm text-rose-700">
@@ -141,9 +172,15 @@ export default function RegisterPage() {
         </p>
       </form>
 
+      <SocialAuthButtons from={fromState} />
+
       <p className="text-center text-sm text-ink-500">
         ¿Ya tienes cuenta?{' '}
-        <Link to="/entrar" className="font-semibold text-brand-700 underline">
+        <Link
+          to="/entrar"
+          state={fromState ? { from: fromState } : undefined}
+          className="font-semibold text-brand-700 underline"
+        >
           Entrar
         </Link>
       </p>

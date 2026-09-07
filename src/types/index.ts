@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tipos del dominio de ConectaComuna.
  * Espejo del esquema Postgres de Supabase (ver supabase/schema.sql).
  * Cuando el repo de backend genere tipos con `supabase gen types typescript`,
@@ -44,6 +44,7 @@ export interface Profile {
   avatar_url: string | null
   account_type: AccountType
   neighborhood: string | null
+  onboarding_completado: boolean
   created_at: string
 }
 
@@ -142,5 +143,20 @@ export interface FacilitadorNegocio {
   negocio_id: string
   facilitador_id: string
   estado_vinculacion: FacilitadorStatus
+  creado_en: string
+  /** Relaciones embebidas por Supabase (select con joins). */
+  facilitador?: Pick<Profile, 'id' | 'full_name' | 'phone'> | null
+  negocio?: Pick<Business, 'id' | 'name' | 'category'> | null
+}
+
+/** Direccion guardada por un usuario (tipo domicilios de Rappi). */
+export interface DireccionUsuario {
+  id: string
+  usuario_id: string
+  etiqueta: string
+  direccion_texto: string
+  barrio: string | null
+  lat: number
+  lng: number
   creado_en: string
 }

@@ -1,4 +1,5 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
@@ -23,8 +24,15 @@ const bottomNav = [
 ]
 
 export function AppLayout() {
-  const { profile, isDual, activeRole, setActiveRole, signOut } = useAuth()
+  const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!loading && profile && !profile.onboarding_completado && location.pathname !== '/onboarding') {
+      navigate('/onboarding')
+    }
+  }, [loading, profile, location.pathname, navigate])
 
   return (
     <div className="flex min-h-dvh flex-col bg-cream-100">

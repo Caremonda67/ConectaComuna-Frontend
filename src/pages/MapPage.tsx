@@ -1,25 +1,32 @@
-import { MapPin } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useAsync } from '@/hooks/useAsync'
-import { useGeolocation } from '@/hooks/useGeolocation'
 import { businessService } from '@/services/businessService'
 import { LazyMap } from '@/components/map/LazyMap'
 import { BusinessCard } from '@/components/business/BusinessCard'
+import { UbicacionPicker } from '@/components/location/UbicacionPicker'
+import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
 import { CardSkeletonList, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
-import { Button } from '@/components/ui/Button'
+import { COMUNA_CENTER } from '@/lib/env'
 import { CATEGORIES } from '@/data/categories'
 import type { CategorySlug } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function MapPage() {
-  const { position, status, request } = useGeolocation()
+  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
   const [category, setCategory] = useState<CategorySlug | 'all'>('all')
   const [radiusKm, setRadiusKm] = useState(5)
 
+  const elegirUbicacion = (u: UbicacionElegida) => {
+    guardarUbicacion(u)
+    setUbicacion(u)
+  }
+
+  const center = ubicacion?.center ?? COMUNA_CENTER
+
   const filters = useMemo(
-    () => ({ category, center: position, radiusKm, sort: 'distance' as const }),
-    [category, position, radiusKm],
+    () => ({ category, center, radiusKm, sort: 'distance' as const }),
+    [category, center, radiusKm],
   )
 
   const { data, loading, error, reload } = useAsync(
@@ -29,13 +36,9 @@ export default function MapPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">Mapa de la comuna</h1>
-        <Button size="sm" variant="secondary" onClick={request} loading={status === 'locating'}>
-          <MapPin aria-hidden="true" size={15} strokeWidth={1.75} />
-          Mi ubicación
-        </Button>
-      </div>
+      <h1 className="text-xl font-bold">Mapa de la comuna</h1>
+
+      <UbicacionPicker value={ubicacion} onChange={elegirUbicacion} />
 
       <div className="flex flex-wrap gap-3">
         <label className="text-sm text-ink-700">
@@ -68,12 +71,6 @@ export default function MapPage() {
         </label>
       </div>
 
-      {status === 'denied' && (
-        <p className="card p-3 text-sm text-ink-700">
-          No pudimos acceder a tu ubicación; estamos mostrando el centro de la comuna.
-        </p>
-      )}
-
       {/*
         El mapa NO se desmonta durante la carga: si lo reemplazáramos por un
         skeleton en cada cambio de filtro, Leaflet se destruiría y recrearía
@@ -84,12 +81,17 @@ export default function MapPage() {
         <Skeleton className="w-full rounded-[14px]" style={{ height: '55vh' }} />
       ) : (
         <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-          <LazyMap businesses={data ?? []} center={position} height="55vh" />
+          <LazyMap
+            businesses={data ?? []}
+            center={center}
+            height="55vh"
+            showUser={ubicacion?.origen === 'gps'}
+          />
         </div>
       )}
 
       <section aria-label="Negocios visibles en el mapa">
-        <h2 className="mb-2 text-lg font-bold">Cerca de ti</h2>
+        <h2 className="mb-2 text-lg font-bold">Negocios cercanos</h2>
         {loading && <CardSkeletonList count={2} />}
         {error && <ErrorState message={error} onRetry={reload} />}
         {!loading && !error && (data?.length ?? 0) === 0 && (

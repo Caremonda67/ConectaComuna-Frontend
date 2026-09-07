@@ -1,74 +1,138 @@
+import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
-import { delay, uid } from './demoBackend'
-import type { Business, FacilitadorNegocio } from '@/types'
+import { delay, mutateDb, readDb, uid } from './demoBackend'
 import { businessService } from './businessService'
+import type { Business, FacilitadorNegocio } from '@/types'
 
-// Mock de vinculaciones en memoria para el modo demo
-let mockVinculaciones: FacilitadorNegocio[] = []
+const SELECT_RELACIONES =
+  "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name, phone)"
 
 export const facilitadorService = {
   /**
-   * Obtiene todos los negocios a los que un facilitador ha solicitado o tiene acceso.
+   * Negocios vinculados al facilitador (aprobados o en espera), con su estado.
    */
-  async getNegociosVinculados(facilitadorId: string): Promise<Array<{ vinculacion: FacilitadorNegocio, negocio: Business }>> {
+  async getNegociosVinculados(facilitadorId: string): Promise<Array<{ vinculacion: FacilitadorNegocio; negocio: Business }>> {
     if (isDemoMode) {
-      const vinculaciones = mockVinculaciones.filter(v => v.facilitador_id === facilitadorId)
-      const result = []
+      const vinculaciones = readDb().vinculaciones.filter((v) => v.facilitador_id === facilitadorId)
+      const result: Array<{ vinculacion: FacilitadorNegocio; negocio: Business }> = []
       for (const v of vinculaciones) {
         const negocio = await businessService.getById(v.negocio_id)
         if (negocio) result.push({ vinculacion: v, negocio })
       }
       return delay(result, 300)
     }
-    // Implementación real con Supabase...
-    return []
+    // RLS: policy 'facilitadores_select_propios' permite ver solo tus vinculaciones.
+    const { data, error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .select(SELECT_RELACIONES)
+      .eq('facilitador_id', facilitadorId)
+    if (error) throw error
+    const filas = (data ?? []) as Array<Record<string, unknown>>
+    return filas
+      .filter((f) => Boolean(f.negocio))
+      .map((f) => ({ vinculacion: f as unknown as FacilitadorNegocio, negocio: f.negocio as Business }))
   },
 
   /**
-   * Obtiene las solicitudes de facilitadores para un negocio específico.
-   * Útil para que el dueño apruebe o rechace.
+   * Solicitudes de apadrinamiento pendientes para un negocio.
+   * La usa el dueno para aprobar o rechazar.
    */
   async getSolicitudesPendientes(negocioId: string): Promise<FacilitadorNegocio[]> {
     if (isDemoMode) {
-      return delay(mockVinculaciones.filter(v => v.negocio_id === negocioId && v.estado_vinculacion === 'pendiente'), 300)
+      const db = readDb()
+      return delay(
+        db.vinculaciones
+          .filter((v) => v.negocio_id === negocioId && v.estado_vinculacion === 'pendiente')
+          .map((v) => ({
+            ...v,
+            facilitador: db.profiles.find((p) => p.id === v.facilitador_id) ?? null,
+          })),
+        300,
+      )
     }
-    // Implementación real con Supabase...
-    return []
+    // RLS: policy 'facilitadores_select_duenos' permite ver solicitudes hacia tu negocio.
+    const { data, error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, phone)')
+      .eq('negocio_id', negocioId)
+      .eq('estado_vinculacion', 'pendiente')
+    if (error) throw error
+    return (data ?? []) as unknown as FacilitadorNegocio[]
   },
 
   /**
-   * Crea una solicitud de vinculación (facilitador -> negocio).
+   * El facilitador pide administrar un negocio (queda en 'pendiente').
    */
   async solicitarVinculacion(facilitadorId: string, negocioId: string): Promise<FacilitadorNegocio> {
     if (isDemoMode) {
-      const existente = mockVinculaciones.find(v => v.facilitador_id === facilitadorId && v.negocio_id === negocioId)
-      if (existente) throw new Error('Ya existe una vinculación con este negocio.')
-      
+      const existente = readDb().vinculaciones.find((v) => v.facilitador_id === facilitadorId && v.negocio_id === negocioId)
+      if (existente) throw new Error('Ya existe una vinculacion con este negocio.')
+
       const nueva: FacilitadorNegocio = {
         id: uid('fac'),
         negocio_id: negocioId,
         facilitador_id: facilitadorId,
         estado_vinculacion: 'pendiente',
-        creado_en: new Date().toISOString()
+        creado_en: new Date().toISOString(),
       }
-      mockVinculaciones.push(nueva)
+      mutateDb((d) => d.vinculaciones.push(nueva))
       return delay(nueva, 300)
     }
-    // Implementación real con Supabase...
-    throw new Error('Not implemented yet')
+    // RLS: policy 'facilitadores_insert_solicitud' permite insertar solo en 'pendiente'.
+    const { data, error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .insert({
+        facilitador_id: facilitadorId,
+        negocio_id: negocioId,
+        estado_vinculacion: 'pendiente',
+      })
+      .select()
+      .single()
+    if (error) throw error
+    return data as FacilitadorNegocio
   },
 
   /**
-   * El dueño del negocio aprueba o rechaza una solicitud.
+   * El dueno aprueba o rechaza una solicitud de apadrinamiento.
    */
   async responderSolicitud(vinculacionId: string, estado: 'aprobado' | 'rechazado'): Promise<void> {
     if (isDemoMode) {
-      const i = mockVinculaciones.findIndex(v => v.id === vinculacionId)
-      if (i >= 0) {
-        mockVinculaciones[i].estado_vinculacion = estado
-      }
+      mutateDb((d) => {
+        const v = d.vinculaciones.find((x) => x.id === vinculacionId)
+        if (v) v.estado_vinculacion = estado
+      })
       return delay(undefined, 300)
     }
-    // Implementación real con Supabase...
-  }
+    // RLS: policy 'facilitadores_update_dueno' permite solo al dueno actualizar.
+    const { error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .update({ estado_vinculacion: estado })
+      .eq('id', vinculacionId)
+    if (error) throw error
+  },
+
+  /**
+   * Historial de solicitudes del negocio (respondidas o no), para el dueno.
+   */
+  async getVinculacionesDelNegocio(negocioId: string): Promise<FacilitadorNegocio[]> {
+    if (isDemoMode) {
+      const db = readDb()
+      return delay(
+        db.vinculaciones
+          .filter((v) => v.negocio_id === negocioId)
+          .map((v) => ({
+            ...v,
+            facilitador: db.profiles.find((p) => p.id === v.facilitador_id) ?? null,
+          })),
+        300,
+      )
+    }
+    const { data, error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, phone)')
+      .eq('negocio_id', negocioId)
+      .order('creado_en', { ascending: false })
+    if (error) throw error
+    return (data ?? []) as unknown as FacilitadorNegocio[]
+  },
 }

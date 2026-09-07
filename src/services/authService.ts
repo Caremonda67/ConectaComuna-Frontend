@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Servicio de autenticación.
  *
  * Decisión: el `account_type` NO se guarda solo en `auth.users.user_metadata`
@@ -24,6 +24,8 @@ export interface AuthSession {
   userId: string
   email: string
 }
+
+export type SocialProvider = 'google' | 'facebook'
 
 export const authService = {
   async getSession(): Promise<AuthSession | null> {
@@ -74,6 +76,7 @@ export const authService = {
         avatar_url: null,
         account_type: input.accountType,
         neighborhood: input.neighborhood ?? null,
+        onboarding_completado: true,
         created_at: new Date().toISOString(),
       }
       mutateDb((d) => {
@@ -92,12 +95,32 @@ export const authService = {
           phone: input.phone ?? null,
           neighborhood: input.neighborhood ?? null,
           account_type: input.accountType,
+          onboarding_completado: true,
         },
       },
     })
     if (error) throw new Error(translateAuthError(error.message))
     if (!data.user) throw new Error('No se pudo crear la cuenta.')
     return { userId: data.user.id, email: data.user.email ?? input.email }
+  },
+
+  /**
+   * Abre el flujo OAuth de Supabase (Google / Facebook).
+   * Hay que tener el proveedor encendido en el dashboard y las URLs de
+   * redirección registradas. Ver vault/PLAN-LOGIN-SOCIAL.md.
+   */
+  async signInWithOAuth(provider: SocialProvider, returnTo?: string): Promise<void> {
+    if (isDemoMode) {
+      throw new Error(
+        'El inicio con Google o Facebook pide Supabase real. En demo entra con un correo de prueba.',
+      )
+    }
+    const redirectTo = `${window.location.origin}${returnTo && returnTo.startsWith('/') ? returnTo : '/entrar'}`
+    const { error } = await requireSupabase().auth.signInWithOAuth({
+      provider,
+      options: { redirectTo },
+    })
+    if (error) throw new Error(translateAuthError(error.message))
   },
 
   async signOut(): Promise<void> {

@@ -13,6 +13,7 @@ const MapPage = lazy(() => import('@/pages/MapPage'))
 const BusinessDetailPage = lazy(() => import('@/pages/BusinessDetailPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
@@ -73,6 +74,14 @@ const router = createBrowserRouter([
         element: (
           <Lazy>
             <RegisterPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'onboarding',
+        element: (
+          <Lazy>
+            <OnboardingPage />
           </Lazy>
         ),
       },

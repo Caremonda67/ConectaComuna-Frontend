@@ -4,8 +4,8 @@
  * se sienta real mientras el backend del otro repositorio está en construcción.
  * Toda mutación aquí replica exactamente la firma de los servicios Supabase.
  */
-import { demoBusinesses, demoOrders, demoProfiles, demoReviews } from '@/data/demoData'
-import type { Business, Order, Profile, Review } from '@/types'
+import { demoBusinesses, demoDirecciones, demoOrders, demoProfiles, demoReviews, demoVinculaciones } from '@/data/demoData'
+import type { Business, DireccionUsuario, FacilitadorNegocio, Order, Profile, Review } from '@/types'
 
 const KEY = 'conectacomuna.demo.v1'
 
@@ -14,6 +14,8 @@ interface DemoDb {
   businesses: Business[]
   orders: Order[]
   reviews: Review[]
+  vinculaciones: FacilitadorNegocio[]
+  direcciones: DireccionUsuario[]
   sessionUserId: string | null
 }
 
@@ -23,6 +25,8 @@ function seed(): DemoDb {
     businesses: structuredClone(demoBusinesses),
     orders: structuredClone(demoOrders),
     reviews: structuredClone(demoReviews),
+    vinculaciones: structuredClone(demoVinculaciones),
+    direcciones: structuredClone(demoDirecciones),
     sessionUserId: null,
   }
 }
@@ -35,7 +39,11 @@ export function readDb(): DemoDb {
       localStorage.setItem(KEY, JSON.stringify(fresh))
       return fresh
     }
-    return JSON.parse(raw) as DemoDb
+    const parsed = JSON.parse(raw) as Partial<DemoDb>
+    // Mezcla con un seed: si una sesión anterior guardó la base con un esquema
+    // más viejo (p.ej. sin `direcciones`), los campos nuevos se rellenan con
+    // sus valores iniciales en lugar de romper en `undefined`.
+    return { ...seed(), ...parsed, direcciones: parsed.direcciones ?? seed().direcciones }
   } catch {
     return seed()
   }

@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
 import { orderService } from '@/services/orderService'
 import { OrderCard } from '@/components/orders/OrderCard'
+import { MisDirecciones } from '@/components/location/MisDirecciones'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
@@ -71,6 +72,21 @@ export default function ClientDashboard() {
               Activar mi negocio
             </Button>
           </div>
+        )}
+      </section>
+
+      <section aria-labelledby="direcciones">
+        <h2 id="direcciones" className="mb-2 text-lg font-bold">
+          Mis direcciones
+        </h2>
+        {userId ? (
+          <MisDirecciones usuarioId={userId} />
+        ) : (
+          <EmptyState
+            icon={UI_ICONS.map}
+            title="Inicia sesión para guardar direcciones"
+            description="Guarda tu casa o el trabajo y busca oficios cerca de tu zona."
+          />
         )}
       </section>
 

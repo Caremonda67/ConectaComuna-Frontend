@@ -1,15 +1,15 @@
-import { MapPin } from 'lucide-react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
-import { useGeolocation } from '@/hooks/useGeolocation'
 import { businessService } from '@/services/businessService'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { BusinessFiltersBar } from '@/components/business/BusinessFiltersBar'
+import { UbicacionPicker } from '@/components/location/UbicacionPicker'
+import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
-import { DEFAULT_RADIUS_KM } from '@/lib/env'
+import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
 /**
@@ -18,7 +18,15 @@ import type { BusinessFilters, CategorySlug } from '@/types'
  */
 export default function ExplorePage() {
   const [params, setParams] = useSearchParams()
-  const { position, status, request } = useGeolocation()
+  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
+
+  const elegirUbicacion = useCallback(
+    (u: UbicacionElegida) => {
+      guardarUbicacion(u)
+      setUbicacion(u)
+    },
+    [],
+  )
 
   const filters: BusinessFilters = useMemo(
     () => ({
@@ -26,10 +34,10 @@ export default function ExplorePage() {
       category: (params.get('categoria') as CategorySlug | null) ?? 'all',
       minRating: Number(params.get('min') ?? 0) || undefined,
       radiusKm: Number(params.get('radio') ?? DEFAULT_RADIUS_KM),
-      center: position,
+      center: ubicacion?.center ?? COMUNA_CENTER,
       sort: (params.get('orden') as BusinessFilters['sort']) ?? 'distance',
     }),
-    [params, position],
+    [params, ubicacion],
   )
 
   const { data, loading, error, reload } = useAsync(
@@ -63,18 +71,13 @@ export default function ExplorePage() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Explorar oficios</h1>
 
+      <UbicacionPicker value={ubicacion} onChange={elegirUbicacion} />
+
       <BusinessFiltersBar
         filters={filters}
         onChange={onChange}
-        hasLocation={status === 'granted'}
+        hasLocation={!!ubicacion}
       />
-
-      {status !== 'granted' && (
-        <Button size="sm" variant="secondary" onClick={request} loading={status === 'locating'}>
-          <MapPin aria-hidden="true" size={15} strokeWidth={1.75} />
-          Ordenar por cercanía real
-        </Button>
-      )}
 
       <p aria-live="polite" className="text-sm text-ink-500">
         {loading ? 'Buscando…' : `${data?.length ?? 0} resultados`}

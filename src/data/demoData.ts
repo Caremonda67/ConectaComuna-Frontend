@@ -1,4 +1,4 @@
-﻿import type { Business, BusinessHours, Order, Profile, Review } from '@/types'
+import type { Business, BusinessHours, Order, Profile, Review } from '@/types'
 
 const defaultHours = (): BusinessHours[] =>
   [0, 1, 2, 3, 4, 5, 6].map((day) => ({
@@ -16,6 +16,7 @@ export const demoProfiles: Profile[] = [
     avatar_url: null,
     account_type: 'client',
     neighborhood: 'El Rodeo',
+    onboarding_completado: true,
     created_at: '2025-01-10T10:00:00Z',
   },
   {
@@ -25,6 +26,7 @@ export const demoProfiles: Profile[] = [
     avatar_url: null,
     account_type: 'business',
     neighborhood: 'Antonio Nariño',
+    onboarding_completado: true,
     created_at: '2024-11-02T10:00:00Z',
   },
   {
@@ -34,6 +36,7 @@ export const demoProfiles: Profile[] = [
     avatar_url: null,
     account_type: 'business',
     neighborhood: 'El Rodeo',
+    onboarding_completado: true,
     created_at: '2025-02-15T10:00:00Z',
   },
 ]
@@ -234,3 +237,4 @@ export const demoReviews: Review[] = [
     client: { id: 'user-cliente', full_name: 'Luisa Martínez', avatar_url: null },
   },
 ]
+export const demoVinculaciones = []; export const demoDirecciones = [];

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,7 +6,9 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
 import { isDemoMode } from '@/lib/env'
+import { takeAuthFrom } from '@/lib/authRedirect'
 
 /**
  * react-hook-form + zod: validación en el cliente sin re-renderizar todo el
@@ -20,10 +22,11 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function LoginPage() {
-  const { signIn } = useAuth()
+  const { signIn, userId, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [serverError, setServerError] = useState<string | null>(null)
+  const fromState = (location.state as { from?: string } | null)?.from
 
   const {
     register,
@@ -31,11 +34,17 @@ export default function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(schema) })
 
+  useEffect(() => {
+    if (loading || !userId) return
+    const from = fromState ?? takeAuthFrom('/panel')
+    navigate(from, { replace: true })
+  }, [loading, userId, fromState, navigate])
+
   async function onSubmit(values: Values) {
     setServerError(null)
     try {
       await signIn(values.email, values.password)
-      const from = (location.state as { from?: string } | null)?.from ?? '/panel'
+      const from = fromState ?? takeAuthFrom('/panel')
       navigate(from, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos iniciar sesión.')
@@ -87,9 +96,15 @@ export default function LoginPage() {
         </Button>
       </form>
 
+      <SocialAuthButtons from={fromState} />
+
       <p className="text-center text-sm text-ink-500">
         ¿No tienes cuenta?{' '}
-        <Link to="/registro" className="font-semibold text-brand-700 underline">
+        <Link
+          to="/registro"
+          state={fromState ? { from: fromState } : undefined}
+          className="font-semibold text-brand-700 underline"
+        >
           Regístrate
         </Link>
       </p>
