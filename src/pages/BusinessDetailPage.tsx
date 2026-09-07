@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
 import { useAuth } from '@/hooks/useAuth'
 import { businessService } from '@/services/businessService'
@@ -13,18 +13,22 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { categoryLabel } from '@/data/categories'
 import { DAY_NAMES, formatDate, getBadges } from '@/lib/utils'
+import { AuthGate } from '@/components/auth/AuthGate'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function BusinessDetailPage() {
   const { id = '' } = useParams()
-  const { userId, profile, activeRole } = useAuth()
   const navigate = useNavigate()
+  const { userId, profile, activeRole } = useAuth()
   const [showForm, setShowForm] = useState(false)
+  const [pedirCuenta, setPedirCuenta] = useState(false)
+  const rutaNegocio = `/negocio/${id}`
 
   const { data: business, loading, error, reload } = useAsync(
     () => businessService.getById(id),
     [id],
   )
+  const motivoContacto = `Para contactar a ${business?.name ?? 'este emprendedor'}, necesitas iniciar sesión.`
   const { data: reviews } = useAsync(() => businessService.listReviews(id), [id])
 
   if (loading) return <CardSkeletonList count={2} />
@@ -83,24 +87,34 @@ export default function BusinessDetailPage() {
         </dl>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {business.whatsapp && (
-            <a
-              href={`https://wa.me/57${business.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-h-11 rounded-full bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600"
-            >
-              WhatsApp
-            </a>
-          )}
-          {business.phone && (
-            <a
-              href={`tel:+57${business.phone}`}
-              className="min-h-11 rounded-xl border border-ink-200 bg-white px-4 py-2.5 font-semibold"
-            >
-              Llamar
-            </a>
-          )}
+          {business.whatsapp &&
+            (userId ? (
+              <a
+                href={`https://wa.me/57${business.whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="min-h-11 rounded-full bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600"
+              >
+                WhatsApp
+              </a>
+            ) : (
+              <Button type="button" onClick={() => setPedirCuenta(true)}>
+                WhatsApp
+              </Button>
+            ))}
+          {business.phone &&
+            (userId ? (
+              <a
+                href={`tel:+57${business.phone}`}
+                className="min-h-11 rounded-xl border border-ink-200 bg-white px-4 py-2.5 font-semibold"
+              >
+                Llamar
+              </a>
+            ) : (
+              <Button type="button" variant="secondary" onClick={() => setPedirCuenta(true)}>
+                Llamar
+              </Button>
+            ))}
           {isOwner ? (
             <Link
               to="/panel/negocio"
@@ -114,7 +128,7 @@ export default function BusinessDetailPage() {
                 <Button
                   onClick={() => {
                     if (!userId) {
-                      navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                      setPedirCuenta(true)
                       return
                     }
                     setShowForm((v) => !v)
@@ -133,7 +147,7 @@ export default function BusinessDetailPage() {
                   variant="secondary"
                   onClick={async () => {
                     if (!userId) {
-                      navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                      setPedirCuenta(true)
                       return
                     }
                     try {
@@ -152,6 +166,13 @@ export default function BusinessDetailPage() {
           )}
         </div>
       </header>
+
+      <AuthGate
+        open={pedirCuenta}
+        onClose={() => setPedirCuenta(false)}
+        from={rutaNegocio}
+        motivo={motivoContacto}
+      />
 
       {showForm && userId && (
         <RequestForm
