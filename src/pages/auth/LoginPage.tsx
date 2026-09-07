@@ -50,10 +50,15 @@ export default function LoginPage() {
       </p>
 
       {isDemoMode && (
-        <p className="card-soft p-3 text-sm text-brand-800">
-          Modo demo: usa <strong>user-cliente@demo.co</strong> o{' '}
-          <strong>user-negocio@demo.co</strong> con cualquier contraseña.
-        </p>
+        <div className="card-soft p-3 text-sm text-brand-800">
+          Modo demo: usa <strong>user-cliente@demo.co</strong>,{' '}
+          <strong>user-negocio@demo.co</strong> o <strong>user-unas@demo.co</strong> (Kelly) con cualquier contraseña.
+          <div className="mt-2 text-xs">
+            <button type="button" onClick={() => { window.localStorage.removeItem('conectacomuna.demo.v1'); window.location.reload(); }} className="underline font-semibold">
+              🔄 Limpiar base de datos local (Reset)
+            </button>
+          </div>
+        </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">

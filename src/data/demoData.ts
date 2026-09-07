@@ -1,4 +1,4 @@
-import type { Business, BusinessHours, Order, Profile, Review } from '@/types'
+﻿import type { Business, BusinessHours, Order, Profile, Review } from '@/types'
 
 const defaultHours = (): BusinessHours[] =>
   [0, 1, 2, 3, 4, 5, 6].map((day) => ({
@@ -28,7 +28,7 @@ export const demoProfiles: Profile[] = [
     created_at: '2024-11-02T10:00:00Z',
   },
   {
-    id: 'user-uñas',
+    id: 'user-unas',
     full_name: 'Kelly Jiménez',
     phone: '3145558899',
     avatar_url: null,
@@ -67,7 +67,7 @@ export const demoBusinesses: Business[] = [
   },
   {
     id: 'biz-2',
-    owner_id: 'user-uñas',
+    owner_id: 'user-unas',
     name: 'Uñas de Kelly',
     description:
       'Manicure, pedicure, semipermanente y decoración. Atiendo a domicilio en la comuna sin costo adicional.',

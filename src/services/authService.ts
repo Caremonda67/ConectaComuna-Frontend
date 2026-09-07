@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Servicio de autenticación.
  *
  * Decisión: el `account_type` NO se guarda solo en `auth.users.user_metadata`
@@ -48,7 +48,7 @@ export const authService = {
       const profile = db.profiles.find((p) => `${p.id}@demo.co` === email)
       
       if (!profile) {
-        throw new Error('Ese correo demo no existe. Usa user-uñas@demo.co, user-negocio@demo.co o user-cliente@demo.co')
+        throw new Error('Ese correo demo no existe. Usa user-unas@demo.co, user-negocio@demo.co o user-cliente@demo.co')
       }
       
       mutateDb((d) => {
