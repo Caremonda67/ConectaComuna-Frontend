@@ -45,10 +45,12 @@ export const authService = {
   async signIn(email: string, password: string): Promise<AuthSession> {
     if (isDemoMode) {
       const db = readDb()
-      // En demo cualquier contraseña sirve; se resuelve por tipo de cuenta.
-      const profile =
-        db.profiles.find((p) => `${p.id}@demo.co` === email) ??
-        db.profiles.find((p) => p.account_type === 'client')!
+      const profile = db.profiles.find((p) => `${p.id}@demo.co` === email)
+      
+      if (!profile) {
+        throw new Error('Ese correo demo no existe. Usa user-uñas@demo.co, user-negocio@demo.co o user-cliente@demo.co')
+      }
+      
       mutateDb((d) => {
         d.sessionUserId = profile.id
       })

@@ -27,6 +27,15 @@ export const demoProfiles: Profile[] = [
     neighborhood: 'Antonio Nariño',
     created_at: '2024-11-02T10:00:00Z',
   },
+  {
+    id: 'user-uñas',
+    full_name: 'Kelly Jiménez',
+    phone: '3145558899',
+    avatar_url: null,
+    account_type: 'business',
+    neighborhood: 'El Rodeo',
+    created_at: '2025-02-15T10:00:00Z',
+  },
 ]
 
 export const demoBusinesses: Business[] = [
