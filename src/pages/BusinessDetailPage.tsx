@@ -17,7 +17,7 @@ import { UI_ICONS } from '@/components/ui/icons'
 
 export default function BusinessDetailPage() {
   const { id = '' } = useParams()
-  const { userId, profile } = useAuth()
+  const { userId, profile, activeRole } = useAuth()
   const navigate = useNavigate()
   const [showForm, setShowForm] = useState(false)
 
@@ -110,18 +110,25 @@ export default function BusinessDetailPage() {
             </Link>
           ) : (
             <>
-              <Button
-                onClick={() => {
-                  if (!userId) {
-                    navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
-                    return
-                  }
-                  setShowForm((v) => !v)
-                }}
-              >
-                Solicitar servicio
-              </Button>
-              {profile?.account_type === 'facilitador' && (
+              {activeRole === 'client' && (
+                <Button
+                  onClick={() => {
+                    if (!userId) {
+                      navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                      return
+                    }
+                    setShowForm((v) => !v)
+                  }}
+                >
+                  Solicitar servicio
+                </Button>
+              )}
+              {activeRole === 'business' && (
+                <p className="text-sm text-ink-500">
+                  Para contratar este servicio, cambia al rol de <strong>Cliente</strong> en el menú superior.
+                </p>
+              )}
+              {activeRole === 'facilitador' && (
                 <Button
                   variant="secondary"
                   onClick={async () => {
