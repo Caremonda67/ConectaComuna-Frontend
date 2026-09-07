@@ -7,15 +7,15 @@ import { UI_ICONS } from '@/components/ui/icons'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
 
-/** NavegaciÃ³n principal del diseÃ±o (barra superior en escritorio). */
+/** Navegación principal del diseño (barra superior en escritorio). */
 const topNav = [
   { to: '/', label: 'Inicio', end: true },
   { to: '/explorar', label: 'Explorar servicios' },
   { to: '/panel/negocio', label: 'Publicar servicio' },
-  { to: '/como-funciona', label: 'CÃ³mo funciona' },
+  { to: '/como-funciona', label: 'Cómo funciona' },
 ]
 
-/** En mÃ³vil la navegaciÃ³n baja al alcance del pulgar. */
+/** En móvil la navegación baja al alcance del pulgar. */
 const bottomNav = [
   { to: '/', label: 'Inicio', icon: UI_ICONS.home, end: true },
   { to: '/explorar', label: 'Explorar', icon: UI_ICONS.search, end: false },
@@ -60,7 +60,7 @@ export function AppLayout() {
             <Logo />
           </NavLink>
 
-          <nav aria-label="NavegaciÃ³n principal" className="hidden lg:block">
+          <nav aria-label="Navegación principal" className="hidden lg:block">
             <ul className="flex items-center gap-6">
               {topNav.map((item) => (
                 <li key={item.to}>
@@ -133,7 +133,7 @@ export function AppLayout() {
                   to="/entrar"
                   className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-medium text-ink-900 sm:inline-flex"
                 >
-                  Iniciar sesiÃ³n
+                  Iniciar sesión
                 </NavLink>
                 <NavLink
                   to="/registro"
@@ -161,7 +161,7 @@ export function AppLayout() {
       <SiteFooter />
 
       <nav
-        aria-label="NavegaciÃ³n rÃ¡pida"
+        aria-label="Navegación rápida"
         className="fixed inset-x-0 bottom-0 z-20 border-t border-ink-200 bg-white lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
