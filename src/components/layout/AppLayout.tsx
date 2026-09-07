@@ -63,27 +63,27 @@ export function AppLayout() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Rol dual: el negocio también contrata servicios de otros. */}
-            {isDual && (
+            {/* Rol dual: negocio o facilitador pueden alternar a cliente */}
+            {isDual && profile && (
               <div
                 role="group"
                 aria-label="Cambiar de rol"
                 className="flex rounded-full border border-ink-200 bg-white p-0.5 text-xs"
               >
-                {(['client', 'business'] as const).map((role) => (
+                {(['client', profile.account_type] as const).map((role) => (
                   <button
                     key={role}
                     type="button"
                     aria-pressed={activeRole === role}
-                    onClick={() => setActiveRole(role)}
+                    onClick={() => setActiveRole(role as any)}
                     className={cn(
-                      'min-h-8 rounded-full px-2.5 font-medium transition-colors',
+                      'min-h-8 rounded-full px-2.5 font-medium transition-colors capitalize',
                       activeRole === role
                         ? 'bg-brand-100 text-brand-800'
                         : 'text-ink-500 hover:text-ink-900',
                     )}
                   >
-                    {role === 'client' ? 'Cliente' : 'Negocio'}
+                    {role === 'client' ? 'Cliente' : role === 'business' ? 'Negocio' : 'Facilitador'}
                   </button>
                 ))}
               </div>

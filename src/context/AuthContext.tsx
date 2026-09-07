@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo<AuthContextValue>(() => {
-    const isDual = profile?.account_type === 'business'
+    const isDual = profile?.account_type === 'business' || profile?.account_type === 'facilitador'
     return {
       loading,
       userId,
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       business,
       isDual,
-      // Un cliente puro nunca puede quedar en rol negocio.
+      // Un cliente puro nunca puede quedar en rol negocio o facilitador
       activeRole: isDual ? activeRole : 'client',
       setActiveRole,
       async signIn(mail, password) {
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       async signUp(input) {
         await authService.signUp(input)
-        setActiveRole(input.accountType === 'business' ? 'business' : 'client')
+        setActiveRole(input.accountType)
         await loadUser()
       },
       async signOut() {

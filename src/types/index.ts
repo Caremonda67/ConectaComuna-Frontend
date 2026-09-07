@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tipos del dominio de ConectaComuna.
  * Espejo del esquema Postgres de Supabase (ver supabase/schema.sql).
  * Cuando el repo de backend genere tipos con `supabase gen types typescript`,
@@ -9,7 +9,7 @@ import type { LucideIcon } from 'lucide-react'
 export type AccountType = 'client' | 'business' | 'facilitador'
 
 /** Rol activo en sesión. Un usuario "business" puede actuar como cliente (rol dual). */
-export type ActiveRole = 'client' | 'business'
+export type ActiveRole = 'client' | 'business' | 'facilitador'
 
 export type OrderStatus =
   | 'pending'
