@@ -48,7 +48,10 @@ export default function RegisterPage() {
       })
       // Al negocio lo llevamos directo a completar su perfil: sin ficha,
       // no aparece en el mapa ni recibe pedidos.
-      navigate(accountType === 'business' ? '/panel/negocio' : '/panel', { replace: true })
+      let to = '/panel'
+      if (accountType === 'business') to = '/panel/negocio'
+      if (accountType === 'facilitador') to = '/panel/facilitador'
+      navigate(to, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
     }
@@ -62,20 +65,27 @@ export default function RegisterPage() {
         <legend className="mb-2 text-sm font-medium text-ink-700">
           ¿Cómo vas a usar ConectaComuna?
         </legend>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <TypeCard
             active={accountType === 'client'}
             onClick={() => setAccountType('client')}
             icon={UI_ICONS.person}
             title="Cliente"
-            description="Busco servicios en mi comuna"
+            description="Busco servicios"
           />
           <TypeCard
             active={accountType === 'business'}
             onClick={() => setAccountType('business')}
             icon={UI_ICONS.tools}
             title="Negocio"
-            description="Ofrezco mi oficio (y también puedo contratar)"
+            description="Ofrezco mi oficio"
+          />
+          <TypeCard
+            active={accountType === 'facilitador'}
+            onClick={() => setAccountType('facilitador')}
+            icon={UI_ICONS.person}
+            title="Facilitador"
+            description="Apoyo a negocios"
           />
         </div>
       </fieldset>

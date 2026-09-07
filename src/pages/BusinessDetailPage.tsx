@@ -121,24 +121,22 @@ export default function BusinessDetailPage() {
               >
                 Solicitar servicio
               </Button>
-              <Button
-                variant="secondary"
-                onClick={async () => {
-                  if (!userId) {
-                    navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
-                    return
-                  }
-                  try {
-                    const { facilitadorService } = await import('@/services/facilitadorService')
-                    await facilitadorService.solicitarVinculacion(userId, business.id)
-                    alert('Solicitud enviada al dueño del negocio.')
-                  } catch (e: any) {
-                    alert(e.message)
-                  }
-                }}
-              >
-                Apadrinar (Administrar)
-              </Button>
+              {profile?.account_type === 'facilitador' && (
+                <Button
+                  variant="secondary"
+                  onClick={async () => {
+                    try {
+                      const { facilitadorService } = await import('@/services/facilitadorService')
+                      await facilitadorService.solicitarVinculacion(userId, business.id)
+                      alert('Solicitud enviada al dueño del negocio.')
+                    } catch (e: any) {
+                      alert(e.message)
+                    }
+                  }}
+                >
+                  Apadrinar (Administrar)
+                </Button>
+              )}
             </>
           )}
         </div>
