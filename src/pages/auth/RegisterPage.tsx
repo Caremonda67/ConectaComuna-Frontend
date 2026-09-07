@@ -62,7 +62,7 @@ export default function RegisterPage() {
       })
       const from = fromState ?? takeAuthFrom('')
       let to = '/panel'
-      if (accountType === 'business') to = '/panel/negocio'
+      if (accountType === 'business') to = '/verificacion'
       if (accountType === 'facilitador') to = '/panel/facilitador'
       if (from && accountType === 'client') to = from
       navigate(to, { replace: true })

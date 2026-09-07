@@ -1,9 +1,9 @@
-/**
- * Servicio de autenticación.
+﻿/**
+ * Servicio de autenticaciÃ³n.
  *
- * Decisión: el `account_type` NO se guarda solo en `auth.users.user_metadata`
- * (el usuario podría manipularlo), sino en la tabla `profiles`, que es la que
- * gobiernan las políticas RLS. El metadata solo se usa como semilla que un
+ * DecisiÃ³n: el `account_type` NO se guarda solo en `auth.users.user_metadata`
+ * (el usuario podrÃ­a manipularlo), sino en la tabla `profiles`, que es la que
+ * gobiernan las polÃ­ticas RLS. El metadata solo se usa como semilla que un
  * trigger `handle_new_user()` copia a `profiles` al registrarse.
  */
 import { requireSupabase, supabase } from '@/lib/supabase'
@@ -107,7 +107,7 @@ export const authService = {
   /**
    * Abre el flujo OAuth de Supabase (Google / Facebook).
    * Hay que tener el proveedor encendido en el dashboard y las URLs de
-   * redirección registradas. Ver vault/PLAN-LOGIN-SOCIAL.md.
+   * redirecciÃ³n registradas. Ver vault/PLAN-LOGIN-SOCIAL.md.
    */
   async signInWithOAuth(provider: SocialProvider, returnTo?: string): Promise<void> {
     if (isDemoMode) {
@@ -134,7 +134,7 @@ export const authService = {
     if (error) throw error
   },
 
-  /** Suscripción a cambios de sesión (login en otra pestaña, refresh token, etc.). */
+  /** SuscripciÃ³n a cambios de sesiÃ³n (login en otra pestaÃ±a, refresh token, etc.). */
   onAuthStateChange(cb: (session: AuthSession | null) => void): () => void {
     if (isDemoMode || !supabase) return () => {}
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -144,12 +144,13 @@ export const authService = {
   },
 }
 
-/** Mensajes de Supabase en inglés → español claro para el usuario final. */
+/** Mensajes de Supabase en inglÃ©s â†’ espaÃ±ol claro para el usuario final. */
 function translateAuthError(message: string): string {
   const m = message.toLowerCase()
-  if (m.includes('invalid login credentials')) return 'Correo o contraseña incorrectos.'
+  if (m.includes('invalid login credentials')) return 'Correo o contraseÃ±a incorrectos.'
   if (m.includes('already registered')) return 'Ese correo ya tiene una cuenta.'
-  if (m.includes('password')) return 'La contraseña debe tener al menos 6 caracteres.'
-  if (m.includes('email')) return 'Revisa el correo ingresado.'
-  return 'No pudimos completar la operación. Intenta de nuevo.'
+  if (m.includes('password')) return 'La contraseÃ±a debe tener al menos 6 caracteres.'
+  if (m.includes('email')) return 'Revisa el correo ingresado. (Detalle: ' + message + ')'
+  return 'No pudimos completar la operaciÃ³n. Intenta de nuevo.'
 }
+

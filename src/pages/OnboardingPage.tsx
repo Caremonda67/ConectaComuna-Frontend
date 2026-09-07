@@ -50,7 +50,7 @@ export default function OnboardingPage() {
       await refresh()
       // Redirigir según el rol elegido
       if (formData.accountType === 'business') {
-        navigate('/panel/negocio')
+        navigate('/verificacion')
       } else if (formData.accountType === 'facilitador') {
         navigate('/panel/facilitador')
       } else {
