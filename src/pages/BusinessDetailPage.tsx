@@ -132,6 +132,10 @@ export default function BusinessDetailPage() {
                 <Button
                   variant="secondary"
                   onClick={async () => {
+                    if (!userId) {
+                      navigate('/entrar', { state: { from: `/negocio/${business.id}` } })
+                      return
+                    }
                     try {
                       const { facilitadorService } = await import('@/services/facilitadorService')
                       await facilitadorService.solicitarVinculacion(userId, business.id)
