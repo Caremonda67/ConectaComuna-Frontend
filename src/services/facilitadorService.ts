@@ -135,4 +135,68 @@ export const facilitadorService = {
     if (error) throw error
     return (data ?? []) as unknown as FacilitadorNegocio[]
   },
+
+  /**
+   * Genera un codigo de 6 digitos para que el emprendedor lo comparta con su facilitador.
+   */
+  async generarCodigo(negocioId: string): Promise<string> {
+    const codigo = String(Math.floor(100000 + Math.random() * 900000))
+    if (isDemoMode) {
+      mutateDb((d) => {
+        const b = d.businesses.find((x: Business) => x.id === negocioId)
+        if (b) b.codigo_apadrinamiento = codigo
+      })
+      return delay(codigo, 200)
+    }
+    const { error } = await requireSupabase()
+      .from('businesses')
+      .update({ codigo_apadrinamiento: codigo })
+      .eq('id', negocioId)
+    if (error) throw error
+    return codigo
+  },
+
+  /**
+   * El facilitador ingresa el codigo y queda vinculado directamente como aprobado.
+   */
+  async vincularConCodigo(facilitadorId: string, codigo: string): Promise<FacilitadorNegocio> {
+    if (isDemoMode) {
+      const negocio = readDb().businesses.find((b: Business) => b.codigo_apadrinamiento === codigo)
+      if (!negocio) throw new Error('Código no válido. Verifica con el dueño del negocio.')
+      const existente = readDb().vinculaciones.find(
+        (v) => v.facilitador_id === facilitadorId && v.negocio_id === negocio.id,
+      )
+      if (existente) throw new Error('Ya tienes una vinculación con este negocio.')
+      const nueva: FacilitadorNegocio = {
+        id: uid('fac'),
+        negocio_id: negocio.id,
+        facilitador_id: facilitadorId,
+        estado_vinculacion: 'aprobado',
+        creado_en: new Date().toISOString(),
+      }
+      mutateDb((d) => d.vinculaciones.push(nueva))
+      return delay(nueva, 300)
+    }
+    // Buscar el negocio por codigo
+    const { data: negocios, error: busqError } = await requireSupabase()
+      .from('businesses')
+      .select('id')
+      .eq('codigo_apadrinamiento', codigo)
+      .limit(1)
+    if (busqError) throw busqError
+    if (!negocios || negocios.length === 0) throw new Error('Código no válido. Verifica con el dueño del negocio.')
+
+    const negocioId = negocios[0].id
+    const { data, error } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .insert({
+        facilitador_id: facilitadorId,
+        negocio_id: negocioId,
+        estado_vinculacion: 'aprobado',
+      })
+      .select()
+      .single()
+    if (error) throw error
+    return data as FacilitadorNegocio
+  },
 }

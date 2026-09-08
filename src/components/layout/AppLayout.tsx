@@ -1,4 +1,4 @@
-﻿import { useEffect } from 'react'
+import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { isDemoMode } from '@/lib/env'
@@ -35,7 +35,7 @@ export function AppLayout() {
         return
       }
       
-      if (profile.account_type === 'business' && location.pathname !== '/verificacion') {
+      if (location.pathname !== '/verificacion') {
         const isVerified = localStorage.getItem("facial_verified_" + profile.id) === 'true'
         if (!isVerified) {
           navigate('/verificacion')

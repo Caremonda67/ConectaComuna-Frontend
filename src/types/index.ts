@@ -77,6 +77,7 @@ export interface Business {
   verification_score?: number | null
   verification_selfie_url?: string | null
   is_active: boolean
+  codigo_apadrinamiento?: string | null
   created_at: string
 }
 

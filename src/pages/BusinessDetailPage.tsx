@@ -143,24 +143,9 @@ export default function BusinessDetailPage() {
                 </p>
               )}
               {activeRole === 'facilitador' && (
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    if (!userId) {
-                      setPedirCuenta(true)
-                      return
-                    }
-                    try {
-                      const { facilitadorService } = await import('@/services/facilitadorService')
-                      await facilitadorService.solicitarVinculacion(userId, business.id)
-                      alert('Solicitud enviada al dueño del negocio.')
-                    } catch (e: any) {
-                      alert(e.message)
-                    }
-                  }}
-                >
-                  Apadrinar (Administrar)
-                </Button>
+                <p className="text-sm text-ink-500">
+                  Para apadrinar este negocio, pídele el código al dueño e ingrésalo en tu panel de facilitador.
+                </p>
               )}
             </>
           )}

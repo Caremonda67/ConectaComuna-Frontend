@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { orderService } from '@/services/orderService'
 import { OrderCard } from '@/components/orders/OrderCard'
 import { MisDirecciones } from '@/components/location/MisDirecciones'
@@ -19,6 +21,27 @@ export default function ClientDashboard() {
     () => (userId ? orderService.listAsClient(userId) : Promise.resolve([])),
     [userId],
   )
+
+  const [editandoBarrio, setEditandoBarrio] = useState(false)
+  const [nuevoBarrio, setNuevoBarrio] = useState(profile?.neighborhood ?? '')
+  const [guardandoBarrio, setGuardandoBarrio] = useState(false)
+
+  const { locate: detectarBarrio, loading: detectando } = useNeighborhoodLocator(
+    (barrio) => setNuevoBarrio(barrio),
+    () => {},
+  )
+
+  async function guardarBarrio() {
+    if (!userId) return
+    setGuardandoBarrio(true)
+    try {
+      await profileService.update(userId, { neighborhood: nuevoBarrio || null })
+      await refresh()
+      setEditandoBarrio(false)
+    } finally {
+      setGuardandoBarrio(false)
+    }
+  }
 
   const active =
     data?.filter((o) => !['completed', 'cancelled'].includes(o.status)) ?? []
@@ -40,12 +63,49 @@ export default function ClientDashboard() {
               <dd>{profile.phone}</dd>
             </div>
           )}
-          {profile?.neighborhood && (
-            <div className="flex gap-2">
-              <dt className="font-medium">Barrio:</dt>
-              <dd>{profile.neighborhood}</dd>
-            </div>
-          )}
+          <div className="flex gap-2 items-start">
+            <dt className="font-medium">Barrio:</dt>
+            {editandoBarrio ? (
+              <dd className="flex-1 space-y-2">
+                <input
+                  type="text"
+                  value={nuevoBarrio}
+                  onChange={(e) => setNuevoBarrio(e.target.value)}
+                  placeholder="Escribe tu barrio"
+                  className="w-full rounded-lg border border-ink-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                />
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={detectarBarrio}
+                    disabled={detectando}
+                    className="flex items-center text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                  >
+                    {detectando ? '⏳ Detectando...' : (
+                      <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
+                    )}
+                  </button>
+                  <Button size="sm" loading={guardandoBarrio} onClick={guardarBarrio}>
+                    Guardar
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setEditandoBarrio(false); setNuevoBarrio(profile?.neighborhood ?? '') }}>
+                    Cancelar
+                  </Button>
+                </div>
+              </dd>
+            ) : (
+              <dd className="flex items-center gap-2">
+                <span>{profile?.neighborhood || 'Sin definir'}</span>
+                <button
+                  type="button"
+                  onClick={() => { setEditandoBarrio(true); setNuevoBarrio(profile?.neighborhood ?? '') }}
+                  className="text-xs text-brand-600 underline hover:text-brand-700"
+                >
+                  Editar
+                </button>
+              </dd>
+            )}
+          </div>
           {profile && (
             <div className="flex gap-2">
               <dt className="font-medium">Miembro desde:</dt>

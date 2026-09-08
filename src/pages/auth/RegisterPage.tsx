@@ -8,7 +8,6 @@ import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
-import { takeAuthFrom } from '@/lib/authRedirect'
 import { cn } from '@/lib/utils'
 import type { AccountType } from '@/types'
 import { UI_ICONS, type LucideIcon } from '@/components/ui/icons'
@@ -60,12 +59,7 @@ export default function RegisterPage() {
         neighborhood: values.neighborhood || undefined,
         accountType,
       })
-      const from = fromState ?? takeAuthFrom('')
-      let to = '/panel'
-      if (accountType === 'business') to = '/verificacion'
-      if (accountType === 'facilitador') to = '/panel/facilitador'
-      if (from && accountType === 'client') to = from
-      navigate(to, { replace: true })
+      navigate('/verificacion', { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
     }

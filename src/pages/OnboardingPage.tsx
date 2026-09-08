@@ -48,14 +48,7 @@ export default function OnboardingPage() {
         onboarding_completado: true,
       })
       await refresh()
-      // Redirigir según el rol elegido
-      if (formData.accountType === 'business') {
-        navigate('/verificacion')
-      } else if (formData.accountType === 'facilitador') {
-        navigate('/panel/facilitador')
-      } else {
-        navigate('/panel')
-      }
+      navigate('/verificacion')
     } catch (e: any) {
       setError(e.message || 'Hubo un error al guardar tu perfil.')
     } finally {

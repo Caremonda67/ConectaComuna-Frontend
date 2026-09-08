@@ -17,6 +17,8 @@ import { UI_ICONS } from '@/components/ui/icons'
 /** Panel del negocio: pedidos recibidos, reputación y perfil asistido. */
 export default function BusinessDashboard() {
   const { business } = useAuth()
+  const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
+  const [generandoCodigo, setGenerandoCodigo] = useState(false)
   const { data, loading, error, reload } = useAsync(
     () => (business ? orderService.listAsBusiness(business.id) : Promise.resolve([])),
     [business?.id],
@@ -72,6 +74,52 @@ export default function BusinessDashboard() {
           <Stat label="En curso" value={inProgress.length} />
           <Stat label="Finalizados" value={business.completed_orders} />
         </dl>
+      </section>
+
+      {/* Código de apadrinamiento para facilitadores */}
+      <section className="card p-4">
+        <h2 className="font-bold text-ink-900 mb-2">Código de apadrinamiento</h2>
+        <p className="text-sm text-ink-500 mb-3">
+          Si alguien de tu confianza te va a ayudar a manejar tu negocio, genera un código y compártelo. Solo con este código podrá vincularse.
+        </p>
+        {(codigoApadrinamiento || business.codigo_apadrinamiento) ? (
+          <div className="flex items-center gap-3">
+            <span className="text-2xl font-mono font-bold tracking-widest text-brand-700 bg-brand-50 px-4 py-2 rounded-lg">
+              {codigoApadrinamiento || business.codigo_apadrinamiento}
+            </span>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={generandoCodigo}
+              onClick={async () => {
+                setGenerandoCodigo(true)
+                try {
+                  const nuevo = await facilitadorService.generarCodigo(business.id)
+                  setCodigoApadrinamiento(nuevo)
+                } finally {
+                  setGenerandoCodigo(false)
+                }
+              }}
+            >
+              Regenerar
+            </Button>
+          </div>
+        ) : (
+          <Button
+            loading={generandoCodigo}
+            onClick={async () => {
+              setGenerandoCodigo(true)
+              try {
+                const nuevo = await facilitadorService.generarCodigo(business.id)
+                setCodigoApadrinamiento(nuevo)
+              } finally {
+                setGenerandoCodigo(false)
+              }
+            }}
+          >
+            Generar código
+          </Button>
+        )}
       </section>
 
       {/* Gestión asistida: le decimos exactamente qué le falta y por qué importa. */}
