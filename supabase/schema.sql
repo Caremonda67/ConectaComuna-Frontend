@@ -67,6 +67,7 @@ create table public.businesses (
   verification_score numeric(3,2),
   verification_selfie_url text,
   is_active boolean not null default true,
+  codigo_apadrinamiento varchar(6),
   created_at timestamptz not null default now()
 );
 
