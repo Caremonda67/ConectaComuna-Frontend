@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
+import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
 
@@ -94,7 +95,7 @@ export function AppLayout() {
                     key={role}
                     type="button"
                     aria-pressed={activeRole === role}
-                    onClick={() => setActiveRole(role as any)}
+                    onClick={() => setActiveRole(role as ActiveRole)}
                     className={cn(
                       'min-h-8 rounded-full px-2.5 font-medium transition-colors capitalize',
                       activeRole === role

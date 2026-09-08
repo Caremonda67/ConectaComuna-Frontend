@@ -12,14 +12,12 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
   const [step, setStep] = useState<'ID' | 'LIVENESS' | 'MATCHING' | 'DONE'>('ID');
   const [idImageSrc, setIdImageSrc] = useState<string | null>(null);
   
-  // Liveness state
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [livenessInstruction, setLivenessInstruction] = useState('Mira a la cámara');
+  const [livenessMessage, setLivenessMessage] = useState('Parpadea para verificar que eres una persona real.');
   const [selfieCanvas, setSelfieCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  // Load models on mount
   useEffect(() => {
-    async function loadModels() {
+    const loadModels = async () => {
       const MODEL_URL = '/models';
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -31,7 +29,6 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
     loadModels();
   }, []);
 
-  // Handle ID Upload
   const handleIdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -62,7 +59,6 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
     }
   };
 
-  // Start Liveness Camera
   useEffect(() => {
     if (step === 'LIVENESS') {
       startCamera();
@@ -72,34 +68,23 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
     };
   }, [step]);
 
-  // Liveness Loop (Blink Detection)
   useEffect(() => {
-    let intervalId: any;
-    
-    if (step === 'LIVENESS' && modelsLoaded) {
-      intervalId = setInterval(async () => {
-        if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) return;
+    let intervalId: ReturnType<typeof setInterval>;
 
-        const detections = await faceapi.detectSingleFace(
-          videoRef.current, 
-          new faceapi.TinyFaceDetectorOptions()
-        ).withFaceLandmarks();
+    const detectLiveness = async () => {
+      if (videoRef.current && modelsLoaded && step === 'LIVENESS') {
+        const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+        if (detection) {
+          const landmarks = detection.landmarks;
+          const leftEye = landmarks.getLeftEye();
+          const rightEye = landmarks.getRightEye();
 
-        if (detections) {
-          // Gesto de parpadeo (simplificado calculando distancia entre párpados)
-          // O para no complicar en exceso el algoritmo aquí: pedimos girar la cabeza
-          const jawOutline = detections.landmarks.getJawOutline();
-          const nose = detections.landmarks.getNose();
-          
-          const leftDist = nose[0].x - jawOutline[0].x;
-          const rightDist = jawOutline[16].x - nose[0].x;
-          
-          if (leftDist > rightDist * 2) {
-            setLivenessInstruction('Ahora mira al otro lado');
-          } else if (rightDist > leftDist * 2) {
-            setLivenessInstruction('Perfecto, procesando...');
+          const distLeft = faceapi.euclideanDistance([leftEye[1].x, leftEye[1].y], [leftEye[5].x, leftEye[5].y]);
+          const distRight = faceapi.euclideanDistance([rightEye[1].x, rightEye[1].y], [rightEye[5].x, rightEye[5].y]);
+
+          if (distLeft < 5 || distRight < 5) {
+            setLivenessMessage('¡Parpadeo detectado! Capturando selfie...');
             
-            // Capturar el frame como selfie
             const canvas = document.createElement('canvas');
             canvas.width = videoRef.current.videoWidth;
             canvas.height = videoRef.current.videoHeight;
@@ -107,30 +92,25 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
             if (ctx) {
               ctx.drawImage(videoRef.current, 0, 0);
               setSelfieCanvas(canvas);
+              setStep('MATCHING');
             }
-            
-            stopCamera();
-            setStep('MATCHING');
-            clearInterval(intervalId);
-          } else {
-            setLivenessInstruction('Gira la cabeza levemente a la derecha');
           }
-        } else {
-          setLivenessInstruction('Alinea tu rostro con la cámara');
         }
-      }, 500);
+      }
+    };
+
+    if (step === 'LIVENESS') {
+      intervalId = setInterval(detectLiveness, 100);
     }
 
     return () => clearInterval(intervalId);
-  }, [step, modelsLoaded]);
+  }, [modelsLoaded, step]);
 
-  // Matching
   useEffect(() => {
     const doMatch = async () => {
-      if (step !== 'MATCHING' || !idImageSrc || !selfieCanvas) return;
+      if (!idImageSrc || !selfieCanvas) return;
 
       try {
-        // 1. Obtener descriptor de la cédula
         const idImg = document.createElement('img');
         idImg.src = idImageSrc;
         await new Promise(r => idImg.onload = r);
@@ -210,7 +190,7 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
 
       {step === 'LIVENESS' && (
         <div className="space-y-4">
-          <p className="text-ink-600 font-medium text-center">{livenessInstruction}</p>
+          <p className="text-ink-600 font-medium text-center">{livenessMessage}</p>
           <div className="relative overflow-hidden rounded-lg bg-ink-900 aspect-video">
             <video 
               ref={videoRef} 

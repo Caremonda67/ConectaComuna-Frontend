@@ -49,8 +49,12 @@ export default function OnboardingPage() {
       })
       await refresh()
       navigate('/verificacion')
-    } catch (e: any) {
-      setError(e.message || 'Hubo un error al guardar tu perfil.')
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message)
+      } else {
+        setError('Hubo un error al guardar tu perfil.')
+      }
     } finally {
       setSubmitting(false)
     }
