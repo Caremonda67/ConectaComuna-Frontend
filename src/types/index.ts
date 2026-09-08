@@ -81,6 +81,17 @@ export interface Business {
   created_at: string
 }
 
+export interface Producto {
+  id: string
+  negocio_id: string
+  nombre: string
+  descripcion: string
+  precio: number
+  foto_url: string | null
+  disponible: boolean
+  creado_en: string
+}
+
 export interface Order {
   id: string
   business_id: string

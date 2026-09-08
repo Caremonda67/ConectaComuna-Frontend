@@ -271,3 +271,53 @@ create policy direcciones_update_propias on public.direcciones_usuario
 
 create policy direcciones_delete_propias on public.direcciones_usuario
   for delete using (auth.uid() = usuario_id);
+
+-- ---------- PRODUCTOS / SERVICIOS ----------
+create table public.productos (
+  id uuid primary key default gen_random_uuid(),
+  negocio_id uuid not null references public.businesses(id) on delete cascade,
+  nombre text not null,
+  descripcion text not null default '',
+  precio integer not null default 0,
+  foto_url text,
+  disponible boolean not null default true,
+  creado_en timestamptz not null default now()
+);
+
+create index productos_negocio_idx on public.productos(negocio_id) where disponible;
+
+alter table public.productos enable row level security;
+
+-- Lectura pblica de productos
+create policy productos_read_public on public.productos
+  for select using (true);
+
+-- Insercin: Dueo del negocio o Facilitador aprobado
+create policy productos_insert on public.productos
+  for insert with check (
+    auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id)
+    or exists (
+      select 1 from public.facilitadores_negocio f
+      where f.facilitador_id = auth.uid()
+        and f.negocio_id = productos.negocio_id
+        and f.estado_vinculacion = 'aprobado'
+    )
+  );
+
+-- Actualizacin: Dueo del negocio o Facilitador aprobado
+create policy productos_update on public.productos
+  for update using (
+    auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id)
+    or exists (
+      select 1 from public.facilitadores_negocio f
+      where f.facilitador_id = auth.uid()
+        and f.negocio_id = productos.negocio_id
+        and f.estado_vinculacion = 'aprobado'
+    )
+  );
+
+-- Eliminacin: Slo el dueo del negocio
+create policy productos_delete on public.productos
+  for delete using (
+    auth.uid() = (select owner_id from public.businesses b where b.id = negocio_id)
+  );
