@@ -27,6 +27,7 @@ export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onEr
             onError('No pudimos determinar el nombre de tu barrio con precisión. Por favor escríbelo manualmente.')
           }
         } catch (err) {
+          console.error('Error in reverse geocoding:', err)
           onError('Error al obtener la dirección desde las coordenadas.')
         } finally {
           setLoading(false)

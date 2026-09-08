@@ -41,16 +41,6 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
     }
   };
 
-  // Start Liveness Camera
-  useEffect(() => {
-    if (step === 'LIVENESS') {
-      startCamera();
-    }
-    return () => {
-      stopCamera();
-    };
-  }, [step]);
-
   const startCamera = async () => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       try {
@@ -59,7 +49,7 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
           videoRef.current.srcObject = stream;
         }
       } catch (err) {
-        console.error('Error accediendo a la cámara', err);
+        console.error('Error accessing camera: ', err);
         alert('Necesitamos acceso a tu cámara para la verificación.');
       }
     }
@@ -71,6 +61,16 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
       stream.getTracks().forEach(track => track.stop());
     }
   };
+
+  // Start Liveness Camera
+  useEffect(() => {
+    if (step === 'LIVENESS') {
+      startCamera();
+    }
+    return () => {
+      stopCamera();
+    };
+  }, [step]);
 
   // Liveness Loop (Blink Detection)
   useEffect(() => {
@@ -181,7 +181,7 @@ export function FacialVerification({ onSuccess, onManualReview, onCancel }: Faci
     };
 
     if (step === 'MATCHING') doMatch();
-  }, [step, idImageSrc, selfieCanvas]);
+  }, [step, idImageSrc, selfieCanvas, onSuccess, onManualReview]);
 
 
   if (!modelsLoaded) {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
@@ -55,9 +55,9 @@ export default function BusinessProfileEditor() {
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
+    control,
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -72,7 +72,7 @@ export default function BusinessProfileEditor() {
     },
   })
 
-  const description = watch('description') ?? ''
+  const description = useWatch({ control, name: 'description' }) ?? ''
 
   async function onSubmit(values: Values) {
     if (!userId) return
