@@ -56,6 +56,7 @@ export const authService = {
       mutateDb((d) => {
         d.sessionUserId = profile.id
       })
+      localStorage.setItem(`facial_verified_${profile.id}`, 'true')
       return delay({ userId: profile.id, email })
     }
     const { data, error } = await requireSupabase().auth.signInWithPassword({
@@ -83,6 +84,7 @@ export const authService = {
         d.profiles.push(profile)
         d.sessionUserId = id
       })
+      localStorage.setItem(`facial_verified_${id}`, 'true')
       return delay({ userId: id, email: input.email })
     }
 

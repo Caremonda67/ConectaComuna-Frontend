@@ -1,17 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { businessService } from '@/services/businessService'
+import { facilitadorService } from '@/services/facilitadorService'
 import { LazyMap } from '@/components/map/LazyMap'
 import { Button } from '@/components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
 import { DAY_NAMES } from '@/lib/utils'
-import type { BusinessHours, CategorySlug, Coordinates } from '@/types'
+import type { Business, BusinessHours, CategorySlug, Coordinates } from '@/types'
 
 const schema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -43,21 +44,19 @@ const emptyHours = (): BusinessHours[] =>
   }))
 
 export default function BusinessProfileEditor() {
-  const { userId, business, refresh } = useAuth()
+  const { userId, business, profile, refresh } = useAuth()
   const navigate = useNavigate()
-
-  const [position, setPosition] = useState<Coordinates>(
-    business ? { lat: business.lat, lng: business.lng } : COMUNA_CENTER,
-  )
-  const [photos, setPhotos] = useState<string[]>(business?.photos ?? [])
-  const [hours, setHours] = useState<BusinessHours[]>(business?.hours?.length ? business.hours : emptyHours())
-  const [uploading, setUploading] = useState(false)
-  const [serverError, setServerError] = useState<string | null>(null)
+  const location = useLocation()
+  const requestedBusinessId = new URLSearchParams(location.search).get('id')
+  const [managedBusiness, setManagedBusiness] = useState<Business | null>(business)
+  const [loadingBusiness, setLoadingBusiness] = useState(Boolean(requestedBusinessId && !business))
+  const [accessDenied, setAccessDenied] = useState(false)
 
   const {
     control,
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -72,13 +71,105 @@ export default function BusinessProfileEditor() {
     },
   })
 
+  const [position, setPosition] = useState<Coordinates>(
+    managedBusiness ? { lat: managedBusiness.lat, lng: managedBusiness.lng } : COMUNA_CENTER,
+  )
+  const [photos, setPhotos] = useState<string[]>(managedBusiness?.photos ?? [])
+  const [hours, setHours] = useState<BusinessHours[]>(managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours())
+  const [uploading, setUploading] = useState(false)
+  const [serverError, setServerError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!managedBusiness) {
+      if (business) {
+        setManagedBusiness(business)
+      }
+      return
+    }
+
+    setPosition({ lat: managedBusiness.lat, lng: managedBusiness.lng })
+    setPhotos(managedBusiness.photos ?? [])
+    setHours(managedBusiness.hours?.length ? managedBusiness.hours : emptyHours())
+    reset({
+      name: managedBusiness.name ?? '',
+      category: managedBusiness.category ?? '',
+      description: managedBusiness.description ?? '',
+      phone: managedBusiness.phone ?? '',
+      whatsapp: managedBusiness.whatsapp ?? '',
+      address: managedBusiness.address ?? '',
+      neighborhood: managedBusiness.neighborhood ?? '',
+    })
+  }, [managedBusiness, business, reset])
+
+  useEffect(() => {
+    const targetBusinessId = requestedBusinessId
+    const currentUserId = userId
+
+    if (!targetBusinessId || !currentUserId) {
+      setManagedBusiness(business)
+      setLoadingBusiness(false)
+      setAccessDenied(false)
+      return
+    }
+
+    const safeTargetBusinessId = targetBusinessId
+    const safeCurrentUserId = currentUserId
+    let alive = true
+
+    async function loadTargetBusiness() {
+      if (!safeTargetBusinessId || !safeCurrentUserId) return
+
+      try {
+        const target = await businessService.getById(safeTargetBusinessId)
+        if (!target) {
+          setAccessDenied(true)
+          setManagedBusiness(null)
+          return
+        }
+
+        const isOwner = target.owner_id === safeCurrentUserId
+        const isApprovedFacilitador =
+          profile?.account_type === 'facilitador' &&
+          (await facilitadorService.getNegociosVinculados(safeCurrentUserId)).some(
+            ({ vinculacion, negocio }) =>
+              negocio.id === target.id && vinculacion.estado_vinculacion === 'aprobado',
+          )
+
+        if (!isOwner && !isApprovedFacilitador) {
+          setAccessDenied(true)
+          setManagedBusiness(null)
+          return
+        }
+
+        if (alive) {
+          setManagedBusiness(target)
+          setAccessDenied(false)
+        }
+      } catch {
+        if (alive) {
+          setAccessDenied(true)
+          setManagedBusiness(null)
+        }
+      } finally {
+        if (alive) setLoadingBusiness(false)
+      }
+    }
+
+    void loadTargetBusiness()
+
+    return () => {
+      alive = false
+    }
+  }, [requestedBusinessId, userId, profile?.account_type])
+
   const description = useWatch({ control, name: 'description' }) ?? ''
 
   async function onSubmit(values: Values) {
     if (!userId) return
+    const ownerId = managedBusiness?.owner_id ?? userId
     setServerError(null)
     try {
-      await businessService.upsert(userId, {
+      await businessService.upsert(ownerId, {
         name: values.name,
         category: values.category as CategorySlug,
         description: values.description,
@@ -115,10 +206,28 @@ export default function BusinessProfileEditor() {
     }
   }
 
+  if (loadingBusiness) {
+    return <p className="text-sm text-ink-500">Cargando negocio…</p>
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="card p-6">
+        <h1 className="text-xl font-bold">No tienes acceso a este negocio</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          Solo el dueño del negocio o un facilitador aprobado puede editar este perfil.
+        </p>
+        <Button className="mt-4" onClick={() => navigate('/panel')}>
+          Volver al panel
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <h1 className="text-xl font-bold">
-        {business ? 'Editar mi negocio' : 'Crear mi negocio'}
+        {managedBusiness ? 'Editar mi negocio' : 'Crear mi negocio'}
       </h1>
 
       <section className="space-y-3 card p-4">

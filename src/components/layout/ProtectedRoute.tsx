@@ -23,7 +23,7 @@ export function ProtectedRoute({
     return <Navigate to="/onboarding" replace />
   }
 
-  if (requireBusiness && profile?.account_type !== 'business') {
+  if (requireBusiness && profile?.account_type !== 'business' && profile?.account_type !== 'facilitador') {
     return <Navigate to="/panel" replace />
   }
   return <>{children}</>

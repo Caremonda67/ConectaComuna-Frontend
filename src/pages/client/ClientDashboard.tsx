@@ -22,24 +22,30 @@ export default function ClientDashboard() {
     [userId],
   )
 
-  const [editandoBarrio, setEditandoBarrio] = useState(false)
+  const [editandoPerfil, setEditandoPerfil] = useState(false)
+  const [nuevoNombre, setNuevoNombre] = useState(profile?.full_name ?? '')
+  const [nuevoTelefono, setNuevoTelefono] = useState(profile?.phone ?? '')
   const [nuevoBarrio, setNuevoBarrio] = useState(profile?.neighborhood ?? '')
-  const [guardandoBarrio, setGuardandoBarrio] = useState(false)
+  const [guardandoPerfil, setGuardandoPerfil] = useState(false)
 
   const { locate: detectarBarrio, loading: detectando } = useNeighborhoodLocator(
     (barrio) => setNuevoBarrio(barrio),
     () => {},
   )
 
-  async function guardarBarrio() {
+  async function guardarPerfil() {
     if (!userId) return
-    setGuardandoBarrio(true)
+    setGuardandoPerfil(true)
     try {
-      await profileService.update(userId, { neighborhood: nuevoBarrio || null })
+      await profileService.update(userId, {
+        full_name: nuevoNombre.trim() || profile?.full_name || '',
+        phone: nuevoTelefono.trim() || null,
+        neighborhood: nuevoBarrio.trim() || null,
+      })
       await refresh()
-      setEditandoBarrio(false)
+      setEditandoPerfil(false)
     } finally {
-      setGuardandoBarrio(false)
+      setGuardandoPerfil(false)
     }
   }
 
@@ -51,68 +57,113 @@ export default function ClientDashboard() {
   return (
     <div className="space-y-6">
       <section className="card p-4">
-        <h1 className="text-xl font-bold">Mi cuenta</h1>
-        <dl className="mt-2 grid gap-1 text-sm text-ink-700">
-          <div className="flex gap-2">
-            <dt className="font-medium">Nombre:</dt>
-            <dd>{profile?.full_name}</dd>
-          </div>
-          {profile?.phone && (
-            <div className="flex gap-2">
-              <dt className="font-medium">Celular:</dt>
-              <dd>{profile.phone}</dd>
-            </div>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-xl font-bold">Mi cuenta</h1>
+          {!editandoPerfil && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setNuevoNombre(profile?.full_name ?? '')
+                setNuevoTelefono(profile?.phone ?? '')
+                setNuevoBarrio(profile?.neighborhood ?? '')
+                setEditandoPerfil(true)
+              }}
+            >
+              Editar perfil
+            </Button>
           )}
-          <div className="flex gap-2 items-start">
-            <dt className="font-medium">Barrio:</dt>
-            {editandoBarrio ? (
-              <dd className="flex-1 space-y-2">
-                <input
-                  type="text"
-                  value={nuevoBarrio}
-                  onChange={(e) => setNuevoBarrio(e.target.value)}
-                  placeholder="Escribe tu barrio"
-                  className="w-full rounded-lg border border-ink-200 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-                />
-                <div className="flex gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={detectarBarrio}
-                    disabled={detectando}
-                    className="flex items-center text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
-                  >
-                    {detectando ? '⏳ Detectando...' : (
-                      <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
-                    )}
-                  </button>
-                  <Button size="sm" loading={guardandoBarrio} onClick={guardarBarrio}>
-                    Guardar
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setEditandoBarrio(false); setNuevoBarrio(profile?.neighborhood ?? '') }}>
-                    Cancelar
-                  </Button>
-                </div>
-              </dd>
-            ) : (
-              <dd className="flex items-center gap-2">
-                <span>{profile?.neighborhood || 'Sin definir'}</span>
+        </div>
+
+        {editandoPerfil ? (
+          <div className="mt-3 space-y-3 text-sm text-ink-700">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-900">Nombre</label>
+              <input
+                type="text"
+                value={nuevoNombre}
+                onChange={(e) => setNuevoNombre(e.target.value)}
+                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-900">Celular</label>
+              <input
+                type="tel"
+                value={nuevoTelefono}
+                onChange={(e) => setNuevoTelefono(e.target.value)}
+                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-ink-900">Barrio / ubicación</label>
+              <input
+                type="text"
+                value={nuevoBarrio}
+                onChange={(e) => setNuevoBarrio(e.target.value)}
+                placeholder="Escribe tu barrio"
+                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => { setEditandoBarrio(true); setNuevoBarrio(profile?.neighborhood ?? '') }}
-                  className="text-xs text-brand-600 underline hover:text-brand-700"
+                  onClick={detectarBarrio}
+                  disabled={detectando}
+                  className="flex items-center text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
                 >
-                  Editar
+                  {detectando ? '⏳ Detectando...' : (
+                    <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
+                  )}
                 </button>
-              </dd>
-            )}
-          </div>
-          {profile && (
-            <div className="flex gap-2">
-              <dt className="font-medium">Miembro desde:</dt>
-              <dd>{formatDate(profile.created_at)}</dd>
+              </div>
             </div>
-          )}
-        </dl>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button type="button" size="sm" loading={guardandoPerfil} onClick={guardarPerfil}>
+                Guardar cambios
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setEditandoPerfil(false)
+                  setNuevoNombre(profile?.full_name ?? '')
+                  setNuevoTelefono(profile?.phone ?? '')
+                  setNuevoBarrio(profile?.neighborhood ?? '')
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <dl className="mt-2 grid gap-1 text-sm text-ink-700">
+            <div className="flex gap-2">
+              <dt className="font-medium">Nombre:</dt>
+              <dd>{profile?.full_name}</dd>
+            </div>
+            {profile?.phone && (
+              <div className="flex gap-2">
+                <dt className="font-medium">Celular:</dt>
+                <dd>{profile.phone}</dd>
+              </div>
+            )}
+            <div className="flex gap-2 items-start">
+              <dt className="font-medium">Barrio:</dt>
+              <dd>{profile?.neighborhood || 'Sin definir'}</dd>
+            </div>
+            {profile && (
+              <div className="flex gap-2">
+                <dt className="font-medium">Miembro desde:</dt>
+                <dd>{formatDate(profile.created_at)}</dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         {!isDual && (
           <div className="mt-4 rounded-xl bg-brand-50 p-3">

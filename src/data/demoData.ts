@@ -1,4 +1,4 @@
-import type { Business, BusinessHours, Order, Profile, Review } from '@/types'
+import type { Business, BusinessHours, FacilitadorNegocio, Order, Profile, Review } from '@/types'
 
 const defaultHours = (): BusinessHours[] =>
   [0, 1, 2, 3, 4, 5, 6].map((day) => ({
@@ -18,6 +18,16 @@ export const demoProfiles: Profile[] = [
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
     created_at: '2025-01-10T10:00:00Z',
+  },
+  {
+    id: 'user-facilitador',
+    full_name: 'Ana Ruiz',
+    phone: '3201112233',
+    avatar_url: null,
+    account_type: 'facilitador',
+    neighborhood: 'Antonio Nariño',
+    onboarding_completado: true,
+    created_at: '2025-02-01T09:30:00Z',
   },
   {
     id: 'user-negocio',
@@ -237,4 +247,14 @@ export const demoReviews: Review[] = [
     client: { id: 'user-cliente', full_name: 'Luisa Martínez', avatar_url: null },
   },
 ]
-export const demoVinculaciones = []; export const demoDirecciones = [];
+export const demoVinculaciones: FacilitadorNegocio[] = [
+  {
+    id: 'fac-1',
+    negocio_id: 'biz-1',
+    facilitador_id: 'user-facilitador',
+    estado_vinculacion: 'aprobado',
+    creado_en: '2026-09-01T12:00:00Z',
+  },
+]
+
+export const demoDirecciones = []

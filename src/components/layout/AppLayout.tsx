@@ -35,9 +35,11 @@ export function AppLayout() {
         navigate('/onboarding')
         return
       }
-      
+
+      if (isDemoMode) return
+
       if (location.pathname !== '/verificacion') {
-        const isVerified = localStorage.getItem("facial_verified_" + profile.id) === 'true'
+        const isVerified = localStorage.getItem('facial_verified_' + profile.id) === 'true'
         if (!isVerified) {
           navigate('/verificacion')
           return

@@ -43,7 +43,9 @@ export function readDb(): DemoDb {
     // Mezcla con un seed: si una sesión anterior guardó la base con un esquema
     // más viejo (p.ej. sin `direcciones`), los campos nuevos se rellenan con
     // sus valores iniciales en lugar de romper en `undefined`.
-    return { ...seed(), ...parsed, direcciones: parsed.direcciones ?? seed().direcciones }
+    const merged = { ...seed(), ...parsed, direcciones: parsed.direcciones ?? seed().direcciones }
+    localStorage.setItem(KEY, JSON.stringify(merged))
+    return merged
   } catch {
     return seed()
   }
