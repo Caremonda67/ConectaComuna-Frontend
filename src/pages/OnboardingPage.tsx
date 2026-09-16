@@ -49,8 +49,11 @@ export default function OnboardingPage() {
       })
       await refresh()
       navigate('/verificacion')
-    } catch (e: unknown) {
-      if (e instanceof Error) {
+    } catch (e: any) {
+      console.error('Error guardando perfil:', e)
+      if (e?.message) {
+        setError(e.message)
+      } else if (e instanceof Error) {
         setError(e.message)
       } else {
         setError('Hubo un error al guardar tu perfil.')
