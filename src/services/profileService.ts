@@ -27,12 +27,24 @@ export const profileService = {
       })
       return delay(db.profiles.find((p) => p.id === userId)!)
     }
-    const { data, error } = await requireSupabase()
+    // 1. Intentar UPDATE primero (permite parches parciales sin violar restricciones NOT NULL de otras columnas)
+    const { data: updated, error: updateError } = await requireSupabase()
       .from('profiles')
       .update(patch)
       .eq('id', userId)
       .select()
+      .maybeSingle()
+
+    if (updateError) throw updateError
+    if (updated) return updated as Profile
+
+    // 2. Si la fila no existía aún (ej: primer onboarding), crear mediante upsert
+    const { data, error } = await requireSupabase()
+      .from('profiles')
+      .upsert({ id: userId, ...patch })
+      .select()
       .single()
+
     if (error) throw error
     return data as Profile
   },

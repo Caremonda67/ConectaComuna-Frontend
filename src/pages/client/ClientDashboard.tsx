@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
@@ -16,11 +16,15 @@ import { UI_ICONS } from '@/components/ui/icons'
 
 /** Panel del cliente: historial y seguimiento de sus solicitudes. */
 export default function ClientDashboard() {
-  const { userId, profile, refresh, isDual } = useAuth()
+  const navigate = useNavigate()
+  const { userId, profile, refresh, isDual, setActiveRole } = useAuth()
   const { data, loading, error, reload } = useAsync(
     () => (userId ? orderService.listAsClient(userId) : Promise.resolve([])),
     [userId],
   )
+
+  const [activandoNegocio, setActivandoNegocio] = useState(false)
+  const [errorActivacion, setErrorActivacion] = useState<string | null>(null)
 
   const [editandoPerfil, setEditandoPerfil] = useState(false)
   const [nuevoNombre, setNuevoNombre] = useState(profile?.full_name ?? '')
@@ -171,13 +175,27 @@ export default function ClientDashboard() {
               ¿Tienes un oficio? Activa tu cuenta de negocio y empieza a recibir clientes de
               la comuna.
             </p>
+            {errorActivacion && (
+              <p className="mt-2 text-xs font-medium text-rose-600">{errorActivacion}</p>
+            )}
             <Button
               size="sm"
               className="mt-2"
+              loading={activandoNegocio}
               onClick={async () => {
                 if (!userId) return
-                await profileService.upgradeToBusiness(userId)
-                await refresh()
+                setActivandoNegocio(true)
+                setErrorActivacion(null)
+                try {
+                  await profileService.upgradeToBusiness(userId)
+                  setActiveRole('business')
+                  await refresh()
+                  navigate('/panel/negocio')
+                } catch (err) {
+                  setErrorActivacion(err instanceof Error ? err.message : 'No pudimos activar tu negocio.')
+                } finally {
+                  setActivandoNegocio(false)
+                }
               }}
             >
               Activar mi negocio
