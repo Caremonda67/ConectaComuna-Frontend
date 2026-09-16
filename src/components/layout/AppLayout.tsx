@@ -31,8 +31,10 @@ export function AppLayout() {
 
   useEffect(() => {
     if (!loading && profile) {
-      if (!profile.onboarding_completado && location.pathname !== '/onboarding') {
-        navigate('/onboarding')
+      if (!profile.onboarding_completado) {
+        if (location.pathname !== '/onboarding') {
+          navigate('/onboarding')
+        }
         return
       }
 
