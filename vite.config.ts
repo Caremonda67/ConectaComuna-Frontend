@@ -9,6 +9,7 @@ export default defineConfig({
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
   build: {
+    chunkSizeWarningLimit: 1000,
     // Separamos los vendors pesados: en gama baja / 3G el chunk del mapa
     // (leaflet) solo se descarga cuando el usuario abre la vista de mapa.
     rollupOptions: {
@@ -16,6 +17,7 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('leaflet')) return 'map'
           if (id.includes('@supabase')) return 'supabase'
+          if (id.includes('face-api.js')) return 'face-api'
           if (id.includes('node_modules/react')) return 'react'
           return undefined
         },
