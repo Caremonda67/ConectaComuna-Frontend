@@ -73,9 +73,11 @@ export interface Business {
   rating_avg: number
   rating_count: number
   completed_orders: number
-  verification_status: 'unverified' | 'pending_review' | 'verified' | 'rejected'
-  verification_score?: number | null
-  verification_selfie_url?: string | null
+  verification_status: 'unverified' | 'pending_review' | 'verified' | 'rejected' | 'under_review'
+  verification_by?: string | null
+  verification_note?: string | null
+  verification_date?: string | null
+  report_count?: number
   is_active: boolean
   codigo_apadrinamiento?: string | null
   created_at: string
@@ -125,7 +127,7 @@ export interface Badge {
   label: string
   description: string
   icon: LucideIcon
-  tone: 'bronze' | 'silver' | 'gold' | 'info'
+  tone: 'bronze' | 'silver' | 'gold' | 'info' | 'verified' | 'danger'
 }
 
 export interface Coordinates {
@@ -142,6 +144,7 @@ export interface BusinessFilters {
   radiusKm?: number
   center?: Coordinates | null
   sort?: 'distance' | 'rating' | 'recent'
+  openNow?: boolean
 }
 
 export interface BusinessWithDistance extends Business {
@@ -170,5 +173,21 @@ export interface DireccionUsuario {
   barrio: string | null
   lat: number
   lng: number
+  creado_en: string
+}
+
+export type MotivoReporte =
+  | 'direccion_falsa'
+  | 'anticipo_incumplido'
+  | 'precios_enganosos'
+  | 'suplantacion'
+  | 'otro'
+
+export interface ReporteComunitario {
+  id: string
+  negocio_id: string
+  reportado_por_id: string
+  motivo: MotivoReporte
+  descripcion?: string | null
   creado_en: string
 }

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
@@ -17,7 +17,6 @@ const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
-const FacialVerificationPage = lazy(() => import('@/pages/FacialVerificationPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -87,11 +86,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'verificacion',
-        element: (
-          <Lazy>
-            <FacialVerificationPage />
-          </Lazy>
-        ),
+        element: <Navigate to="/panel" replace />,
       },
       {
         path: 'panel',

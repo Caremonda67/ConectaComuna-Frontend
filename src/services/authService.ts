@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Servicio de autenticación.
  *
  * Decisión: el `account_type` NO se guarda solo en `auth.users.user_metadata`
@@ -50,13 +50,12 @@ export const authService = {
       const profile = db.profiles.find((p) => `${p.id}@demo.co` === email)
       
       if (!profile) {
-        throw new Error('Ese correo demo no existe. Usa user-unas@demo.co, user-negocio@demo.co o user-cliente@demo.co')
+        throw new Error('Ese correo demo no existe. Usa user-facilitador@demo.co, user-negocio@demo.co o user-cliente@demo.co')
       }
       
       mutateDb((d) => {
         d.sessionUserId = profile.id
       })
-      localStorage.setItem(`facial_verified_${profile.id}`, 'true')
       return delay({ userId: profile.id, email })
     }
     const { data, error } = await requireSupabase().auth.signInWithPassword({
@@ -84,7 +83,6 @@ export const authService = {
         d.profiles.push(profile)
         d.sessionUserId = id
       })
-      localStorage.setItem(`facial_verified_${id}`, 'true')
       return delay({ userId: id, email: input.email })
     }
 

@@ -1,11 +1,11 @@
 import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
-import { businessService } from './businessService'
+import { businessService, overlayLocalTrust } from './businessService'
 import type { Business, FacilitadorNegocio } from '@/types'
 
 const SELECT_RELACIONES =
-  "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name, phone)"
+  "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos, verification_status), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name, phone)"
 
 export const facilitadorService = {
   /**
@@ -30,7 +30,10 @@ export const facilitadorService = {
     const filas = (data ?? []) as Array<Record<string, unknown>>
     return filas
       .filter((f) => Boolean(f.negocio))
-      .map((f) => ({ vinculacion: f as unknown as FacilitadorNegocio, negocio: f.negocio as Business }))
+      .map((f) => ({
+        vinculacion: f as unknown as FacilitadorNegocio,
+        negocio: overlayLocalTrust(f.negocio as Business),
+      }))
   },
 
   /**

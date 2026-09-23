@@ -27,6 +27,18 @@ import {
   Store,
   UtensilsCrossed,
   Wrench,
+  Link2,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Flag,
+  Share2,
+  Copy,
+  Check,
+  Phone,
+  MessageCircle,
+  LogIn,
+  User,
 } from 'lucide-react'
 
 /**
@@ -61,6 +73,8 @@ export const BADGE_ICONS = {
   sprout: Sprout,
   star: Star,
   portfolio: Camera,
+  verified: ShieldCheck,
+  underReview: ShieldAlert,
 } as const satisfies Record<string, LucideIcon>
 
 /** Iconos de navegación e interfaz general. */
@@ -79,4 +93,16 @@ export const UI_ICONS = {
   store: Store,
   tools: Wrench,
   person: BadgeCheck,
+  link: Link2,
+  shieldCheck: ShieldCheck,
+  shieldAlert: ShieldAlert,
+  alert: AlertTriangle,
+  flag: Flag,
+  share: Share2,
+  copy: Copy,
+  check: Check,
+  phone: Phone,
+  whatsapp: MessageCircle,
+  logIn: LogIn,
+  user: User,
 } as const satisfies Record<string, LucideIcon>
