@@ -8,6 +8,17 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
+  server: {
+    host: true,
+    port: 5173,
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
+  },
   build: {
     chunkSizeWarningLimit: 1000,
     // Separamos los vendors pesados: en gama baja / 3G el chunk del mapa
@@ -17,7 +28,6 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('leaflet')) return 'map'
           if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('face-api.js')) return 'face-api'
           if (id.includes('node_modules/react')) return 'react'
           return undefined
         },

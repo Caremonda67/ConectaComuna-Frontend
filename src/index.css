@@ -48,8 +48,17 @@ body,
   min-height: 100%;
 }
 
+html {
+  overflow-x: clip;
+}
+
+html.large-text-mode {
+  font-size: 18px;
+}
+
 body {
   @apply bg-cream-100 text-ink-900 antialiased;
+  overflow-x: clip;
 }
 
 /* Accesibilidad: foco siempre visible para navegación por teclado. */
@@ -86,6 +95,22 @@ body {
   .card-soft {
     @apply rounded-[14px] border border-brand-100 bg-brand-50;
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    var(--color-cream-300) 0%,
+    var(--color-cream-200) 40%,
+    var(--color-cream-300) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
 }
 
 .leaflet-container {
