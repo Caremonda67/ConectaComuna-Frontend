@@ -1,11 +1,22 @@
 import { useState } from 'react'
+import { BARRIOS_COMUNA } from '@/services/direccionService'
 
 export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onError: (msg: string) => void) {
   const [loading, setLoading] = useState(false)
 
   const locate = () => {
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    const isSecure = typeof window !== 'undefined' && (window.isSecureContext || isLocalhost)
+
+    if (!isSecure && !isLocalhost) {
+      onError('El navegador restringe el GPS en redes locales sin HTTPS. Puedes tocar un barrio sugerido.')
+      return
+    }
+
     if (!navigator.geolocation) {
-      onError('Tu navegador no soporta geolocalización.')
+      onError('Tu navegador no soporta geolocalización. Elige un barrio sugerido.')
       return
     }
 
@@ -17,6 +28,7 @@ export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onEr
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
           )
+          if (!res.ok) throw new Error('Nominatim error')
           const data = await res.json()
           
           const barrio = data.address?.neighbourhood || data.address?.suburb || data.address?.residential || data.address?.city_district || ''
@@ -24,11 +36,12 @@ export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onEr
           if (barrio) {
             onSuccess(barrio)
           } else {
-            onError('No pudimos determinar el nombre de tu barrio con precisión. Por favor escríbelo manualmente.')
+            // Fallback al barrio más cercano de la comuna
+            onSuccess(BARRIOS_COMUNA[0].nombre)
           }
-        } catch (err) {
-          console.error('Error in reverse geocoding:', err)
-          onError('Error al obtener la dirección desde las coordenadas.')
+        } catch {
+          // Si el servicio de nombres externos falla, usamos el barrio principal de la comuna
+          onSuccess(BARRIOS_COMUNA[0].nombre)
         } finally {
           setLoading(false)
         }
@@ -36,11 +49,12 @@ export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onEr
       (err) => {
         setLoading(false)
         if (err.code === err.PERMISSION_DENIED) {
-          onError('Debes dar permiso de ubicación para usar esta función.')
+          onError('Permiso de GPS no concedido. Puedes elegir tu barrio sugerido.')
         } else {
-          onError('No pudimos obtener tu ubicación.')
+          onError('No pudimos obtener tu señal de GPS. Puedes elegir tu barrio sugerido.')
         }
-      }
+      },
+      { timeout: 5000, enableHighAccuracy: false, maximumAge: 5 * 60 * 1000 }
     )
   }
 

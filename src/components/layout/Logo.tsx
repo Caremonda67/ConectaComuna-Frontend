@@ -7,14 +7,15 @@
  */
 export function Logo({ className = '' }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    <span className={`inline-flex items-center gap-1.5 sm:gap-2 ${className}`}>
       <span
         aria-hidden="true"
-        className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-500 text-white"
+        className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white"
       >
         <svg
-          width="18"
-          height="18"
+          width="16"
+          height="16"
+          className="sm:w-[18px] sm:h-[18px]"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -29,7 +30,9 @@ export function Logo({ className = '' }: { className?: string }) {
           <circle cx="17.8" cy="14.6" r="1.9" fill="currentColor" stroke="none" />
         </svg>
       </span>
-      <span className="text-lg font-bold tracking-tight text-ink-900">ConectaComuna</span>
+      <span className="text-sm sm:text-lg font-bold tracking-tight text-ink-900 whitespace-nowrap">
+        Conecta<span className="text-brand-600">Comuna</span>
+      </span>
     </span>
   )
 }

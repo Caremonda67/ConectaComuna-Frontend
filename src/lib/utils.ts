@@ -1,5 +1,5 @@
 import { BADGE_ICONS } from '@/components/ui/icons'
-import type { Badge, Business, Coordinates, OrderStatus } from '@/types'
+import type { Badge, Business, BusinessHours, Coordinates, OrderStatus } from '@/types'
 
 /** Une clases condicionales sin dependencias extra (evitamos peso de clsx). */
 export function cn(...parts: Array<string | false | null | undefined>): string {
@@ -78,6 +78,26 @@ export const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
  */
 export function getBadges(business: Business): Badge[] {
   const badges: Badge[] = []
+
+  if (business.verification_status === 'verified') {
+    badges.push({
+      id: 'verified-territory',
+      label: 'Verificado en territorio',
+      description: business.verification_note
+        ? `${business.verification_note}${business.verification_by ? ` (por ${business.verification_by})` : ''}`
+        : 'Negocio validado en persona por facilitador o junta comunal',
+      icon: BADGE_ICONS.verified,
+      tone: 'verified',
+    })
+  } else if (business.verification_status === 'under_review') {
+    badges.push({
+      id: 'under-review',
+      label: 'Bajo observación comunitaria',
+      description: 'Este negocio tiene reportes recientes en revisión por el equipo',
+      icon: BADGE_ICONS.underReview,
+      tone: 'danger',
+    })
+  }
 
   if (business.completed_orders >= 50) {
     badges.push({
@@ -161,3 +181,65 @@ export function profileCompletion(business: Business): {
 }
 
 export const DAY_NAMES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+
+export const SKIP_TRATO_SEGURO_KEY = 'cc_skip_trato_seguro'
+
+export function shouldSkipTratoSeguro(): boolean {
+  try {
+    return sessionStorage.getItem(SKIP_TRATO_SEGURO_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+export interface OpenStatus {
+  isOpen: boolean
+  label: string
+  detail?: string
+}
+
+/**
+ * Determina si el negocio está atendiendo en tiempo real según el día y la hora local.
+ */
+export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
+  if (!hours || hours.length === 0) {
+    return { isOpen: false, label: 'Horario por consultar' }
+  }
+
+  const now = new Date()
+  const currentDay = now.getDay() // 0 = Dom, 1 = Lun ... 6 = Sáb
+  const today = hours.find((h) => h.day === currentDay)
+
+  if (!today || today.closed || !today.opens || !today.closes) {
+    return { isOpen: false, label: 'Cerrado hoy' }
+  }
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const [openH, openM] = today.opens.split(':').map(Number)
+  const [closeH, closeM] = today.closes.split(':').map(Number)
+  const openMinutes = openH * 60 + (openM || 0)
+  const closeMinutes = closeH * 60 + (closeM || 0)
+
+  if (currentMinutes >= openMinutes && currentMinutes < closeMinutes) {
+    return {
+      isOpen: true,
+      label: 'Abierto ahora',
+      detail: `Atiende hasta las ${today.closes}`,
+    }
+  }
+
+  if (currentMinutes < openMinutes) {
+    return {
+      isOpen: false,
+      label: 'Cerrado ahora',
+      detail: `Abre hoy a las ${today.opens}`,
+    }
+  }
+
+  return {
+    isOpen: false,
+    label: 'Cerrado por hoy',
+  }
+}
+
+

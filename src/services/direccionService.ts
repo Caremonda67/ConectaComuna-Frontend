@@ -17,13 +17,14 @@ export interface DireccionInput {
   lng: number
 }
 
-/**
- * Catálogo local de lugares conocidos de la comuna para el modo demo.
- * No es un geocoder real: resuelve los nombres que la gente dice en la calle
- * ("El Rodeo", "Antonio Nariño") a un punto aproximado. En producción deja
- * paso a OSM Nominatim.
- */
-const LUGARES_DEMO: UbicacionGeocodificada[] = [
+export const BARRIOS_COMUNA = [
+  { nombre: 'Antonio Nariño', center: { lat: 3.4365, lng: -76.5255 } },
+  { nombre: 'El Rodeo', center: { lat: 3.4401, lng: -76.5209 } },
+  { nombre: 'Nueva Floresta', center: { lat: 3.4342, lng: -76.5281 } },
+  { nombre: 'Centro Comuna 20', center: { lat: 3.4372, lng: -76.5225 } },
+]
+
+export const LUGARES_DEMO: UbicacionGeocodificada[] = [
   { etiqueta: 'El Rodeo', center: { lat: 3.4401, lng: -76.5209 } },
   { etiqueta: 'Antonio Nariño', center: { lat: 3.4365, lng: -76.5255 } },
   { etiqueta: 'Nueva Floresta', center: { lat: 3.4342, lng: -76.5281 } },

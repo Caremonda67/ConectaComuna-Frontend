@@ -5,7 +5,8 @@ import { LazyMap } from '@/components/map/LazyMap'
 import { cn } from '@/lib/utils'
 import { COMUNA_CENTER } from '@/lib/env'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { geocodificar, type UbicacionGeocodificada } from '@/services/direccionService'
+import { geocodificar, BARRIOS_COMUNA, type UbicacionGeocodificada } from '@/services/direccionService'
+import { UI_ICONS } from '@/components/ui/icons'
 import type { UbicacionElegida } from '@/lib/ubicacion'
 import type { Coordinates } from '@/types'
 
@@ -80,10 +81,24 @@ export function UbicacionPicker({ value, onChange }: Props) {
       }, 0)
       return () => clearTimeout(t)
     }
+    if (status === 'insecure_context') {
+      const t = setTimeout(() => {
+        setGpsActivo(false)
+        setError('El navegador restringe el GPS en redes locales sin HTTPS. Elige tu barrio en 1 toque:')
+      }, 0)
+      return () => clearTimeout(t)
+    }
+    if (status === 'timeout') {
+      const t = setTimeout(() => {
+        setGpsActivo(false)
+        setError('El GPS tardó en responder. Elige tu barrio en 1 toque:')
+      }, 0)
+      return () => clearTimeout(t)
+    }
     if (status === 'denied' || status === 'unsupported') {
       const t = setTimeout(() => {
         setGpsActivo(false)
-        setError('No pudimos acceder a tu ubicación. Usa el buscador o el mapa.')
+        setError('Permiso de GPS no concedido o no disponible. Elige tu barrio en 1 toque:')
       }, 0)
       return () => clearTimeout(t)
     }
@@ -139,6 +154,29 @@ export function UbicacionPicker({ value, onChange }: Props) {
             <LocateFixed aria-hidden="true" size={16} strokeWidth={1.75} />
             Usar mi ubicación
           </Button>
+
+          {/* Accesos directos a barrios de la comuna en 1 toque */}
+          <div className="rounded-xl border border-ink-100 bg-cream-50 p-2.5 space-y-1.5">
+            <span className="text-[11px] font-semibold text-ink-600 uppercase tracking-wider block">
+              Barrios de la comuna (1 toque)
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {BARRIOS_COMUNA.map((b) => (
+                <button
+                  key={b.nombre}
+                  type="button"
+                  onClick={() => {
+                    onChange({ etiqueta: b.nombre, center: b.center, origen: 'busqueda' })
+                    cerrar()
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-900 active:scale-95 transition-all cursor-pointer shadow-xs"
+                >
+                  <MapPin size={12} className="text-brand-600 shrink-0" />
+                  {b.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <label htmlFor="buscador-ubicacion" className="mb-1 block text-xs font-medium text-ink-600">
@@ -224,9 +262,15 @@ export function UbicacionPicker({ value, onChange }: Props) {
           )}
 
           {error && (
-            <p role="alert" className="text-sm text-rose-700">
-              {error}
-            </p>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 flex items-start gap-2">
+              <UI_ICONS.alert size={16} className="text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold block">{error}</span>
+                <span className="text-amber-800 text-[11px]">
+                  Toca cualquiera de los barrios de arriba o marca un punto en el mapa.
+                </span>
+              </div>
+            </div>
           )}
         </div>
       )}
