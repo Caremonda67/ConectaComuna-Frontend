@@ -137,7 +137,7 @@ export default function BusinessDashboard() {
             className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white"
           >
             <div
-              className="h-full bg-brand-500"
+              className="h-full bg-brand-500 rounded-full transition-all duration-700 ease-out"
               style={{ width: `${completion.percent}%` }}
             />
           </div>
@@ -222,7 +222,7 @@ export default function BusinessDashboard() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-cream-100 p-2">
+    <div className="rounded-xl bg-cream-100 p-2.5 transition-all duration-200 hover:bg-cream-200/80 hover:-translate-y-0.5 hover:shadow-2xs">
       <dt className="text-xs text-ink-500">{label}</dt>
       <dd className="text-xl font-extrabold text-ink-900">{value}</dd>
     </div>

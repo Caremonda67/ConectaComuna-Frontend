@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { SocialAuthButtons } from './SocialAuthButtons'
@@ -21,17 +22,20 @@ export function AuthGate({ open, onClose, from, motivo }: Props) {
   const state = { from }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center">
+    <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center backdrop-blur-xs">
       <button
         type="button"
         className="absolute inset-0 bg-ink-900/40"
         aria-label="Cerrar"
         onClick={onClose}
       />
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
         aria-labelledby="auth-gate-titulo"
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
         className="relative z-10 w-full max-w-sm rounded-t-[18px] border border-ink-200 bg-white p-4 shadow-lg sm:rounded-[18px]"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
@@ -77,7 +81,7 @@ export function AuthGate({ open, onClose, from, motivo }: Props) {
         <div className="mt-4">
           <SocialAuthButtons from={from} />
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
