@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
+import { BARRIOS_COMUNA } from '@/services/direccionService'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
@@ -59,7 +60,13 @@ export default function RegisterPage() {
         neighborhood: values.neighborhood || undefined,
         accountType,
       })
-      navigate('/verificacion', { replace: true })
+      const destino =
+        accountType === 'business'
+          ? '/panel/negocio'
+          : accountType === 'facilitador'
+            ? '/panel/facilitador'
+            : '/panel'
+      navigate(destino, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
     }
@@ -150,6 +157,24 @@ export default function RegisterPage() {
               </>
             )}
           </button>
+          {serverError && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <span className="text-xs text-ink-500 w-full">O elige tu barrio:</span>
+              {BARRIOS_COMUNA.map((b) => (
+                <button
+                  key={b.nombre}
+                  type="button"
+                  onClick={() => {
+                    setValue('neighborhood', b.nombre)
+                    setServerError(null)
+                  }}
+                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 active:scale-95 transition-transform"
+                >
+                  📍 {b.nombre}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {serverError && (
@@ -201,15 +226,15 @@ function TypeCard({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'rounded-[14px] border-2 p-3 text-left',
-        active ? 'border-brand-500 bg-brand-50' : 'border-ink-200 bg-white',
+        'group relative rounded-[14px] border-2 p-3 text-left transition-all duration-200 active:scale-[0.97] hover:-translate-y-0.5 cursor-pointer select-none',
+        active ? 'border-brand-500 bg-brand-50 shadow-xs' : 'border-ink-200 bg-white hover:border-ink-300',
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          'mb-2 flex h-9 w-9 items-center justify-center rounded-full',
-          active ? 'bg-brand-500 text-white' : 'bg-cream-200 text-ink-700',
+          'mb-2 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200',
+          active ? 'bg-brand-500 text-white scale-105' : 'bg-cream-200 text-ink-700 group-hover:scale-105',
         )}
       >
         <Icon size={18} strokeWidth={1.75} />

@@ -1,8 +1,8 @@
 import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
-import { distanceKm } from '@/lib/utils'
+import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
-import type { Business, BusinessFilters, BusinessWithDistance, Review } from '@/types'
+import type { Business, BusinessFilters, BusinessWithDistance, ReporteComunitario, Review } from '@/types'
 
 function withDistance(
   list: Business[],
@@ -22,6 +22,23 @@ function applySort(list: BusinessWithDistance[], sort: BusinessFilters['sort']) 
   return copy.sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
 }
 
+export function overlayLocalTrust<T extends Business>(b: T): T {
+  try {
+    const raw = localStorage.getItem(`cc_verif_${b.id}`)
+    if (raw) {
+      const v = JSON.parse(raw)
+      return {
+        ...b,
+        verification_status: v.status ?? b.verification_status,
+        verification_by: v.by ?? b.verification_by,
+        verification_note: v.note ?? b.verification_note,
+        verification_date: v.date ?? b.verification_date,
+      }
+    }
+  } catch {}
+  return b
+}
+
 export const businessService = {
   async search(filters: BusinessFilters): Promise<BusinessWithDistance[]> {
     if (isDemoMode) {
@@ -39,11 +56,14 @@ export const businessService = {
         )
       }
       if (filters.minRating) list = list.filter((b) => b.rating_avg >= filters.minRating!)
+      if (filters.openNow) {
+        list = list.filter((b) => getBusinessOpenStatus(b.hours).isOpen)
+      }
       let result = withDistance(list, filters.center)
       if (filters.center && filters.radiusKm) {
         result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
       }
-      return delay(applySort(result, filters.sort))
+      return delay(applySort(result.map(overlayLocalTrust), filters.sort))
     }
 
     // Filtrado en el servidor: menos bytes viajando, clave con conexiones lentas.
@@ -79,12 +99,16 @@ export const businessService = {
     if (filters.center && filters.radiusKm) {
       result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
     }
-    return applySort(result, filters.sort)
+    if (filters.openNow) {
+      result = result.filter((b) => getBusinessOpenStatus(b.hours).isOpen)
+    }
+    return applySort(result.map(overlayLocalTrust), filters.sort)
   },
 
   async getById(id: string): Promise<Business | null> {
     if (isDemoMode) {
-      return delay(readDb().businesses.find((b) => b.id === id) ?? null, 200)
+      const found = readDb().businesses.find((b) => b.id === id) ?? null
+      return delay(found ? overlayLocalTrust(found) : null, 200)
     }
     const { data, error } = await requireSupabase()
       .from('businesses')
@@ -92,7 +116,7 @@ export const businessService = {
       .eq('id', id)
       .maybeSingle()
     if (error) throw error
-    return data as Business | null
+    return data ? overlayLocalTrust(data as Business) : null
   },
 
   async getByOwner(ownerId: string): Promise<Business | null> {
@@ -133,8 +157,10 @@ export const businessService = {
         rating_count: existing?.rating_count ?? 0,
         completed_orders: existing?.completed_orders ?? 0,
         verification_status: existing?.verification_status ?? 'unverified',
-        verification_score: existing?.verification_score ?? null,
-        verification_selfie_url: existing?.verification_selfie_url ?? null,
+        verification_by: existing?.verification_by ?? null,
+        verification_note: existing?.verification_note ?? null,
+        verification_date: existing?.verification_date ?? null,
+        report_count: existing?.report_count ?? 0,
         is_active: input.is_active ?? existing?.is_active ?? true,
         created_at: existing?.created_at ?? new Date().toISOString(),
       }
@@ -188,5 +214,199 @@ export const businessService = {
     })
     if (error) throw error
     return sb.storage.from('business-photos').getPublicUrl(path).data.publicUrl
+  },
+
+  /**
+   * Validación en territorio efectuada por un facilitador o líder comunal.
+   */
+  async verificarTerritorialmente(
+    negocioId: string,
+    facilitadorNombre: string,
+    nota?: string,
+  ): Promise<void> {
+    const fecha = new Date().toISOString()
+    const notaLimpia = nota?.trim() || 'Verificado en visita de campo por facilitador'
+
+    // Persistir en caché local
+    try {
+      localStorage.setItem(
+        `cc_verif_${negocioId}`,
+        JSON.stringify({
+          status: 'verified',
+          by: facilitadorNombre,
+          note: notaLimpia,
+          date: fecha,
+        }),
+      )
+    } catch {}
+
+    if (isDemoMode) {
+      mutateDb((d) => {
+        const b = d.businesses.find((x) => x.id === negocioId)
+        if (b) {
+          b.verification_status = 'verified'
+          b.verification_by = facilitadorNombre
+          b.verification_note = notaLimpia
+          b.verification_date = fecha
+        }
+      })
+      return delay(undefined, 250)
+    }
+
+    try {
+      await requireSupabase()
+        .from('businesses')
+        .update({
+          verification_status: 'verified',
+        })
+        .eq('id', negocioId)
+    } catch (e) {
+      console.warn('Actualización remota de verificación:', e)
+    }
+  },
+
+  /**
+   * Revoca o retira la verificación territorial si se detectan anomalías.
+   */
+  async revocarVerificacion(negocioId: string): Promise<void> {
+    try {
+      localStorage.setItem(
+        `cc_verif_${negocioId}`,
+        JSON.stringify({
+          status: 'unverified',
+          by: null,
+          note: null,
+          date: null,
+        }),
+      )
+    } catch {}
+
+    if (isDemoMode) {
+      mutateDb((d) => {
+        const b = d.businesses.find((x) => x.id === negocioId)
+        if (b) {
+          b.verification_status = 'unverified'
+          b.verification_by = null
+          b.verification_note = null
+          b.verification_date = null
+        }
+      })
+      return delay(undefined, 250)
+    }
+
+    try {
+      await requireSupabase()
+        .from('businesses')
+        .update({
+          verification_status: 'unverified',
+        })
+        .eq('id', negocioId)
+    } catch (e) {
+      console.warn('Actualización remota de revocación:', e)
+    }
+  },
+
+  /**
+   * Registra una denuncia o reporte de un vecino sobre un negocio.
+   * Si acumula varios reportes, se marca bajo observación comunitaria.
+   */
+  async reportarNegocio(
+    reporte: Omit<ReporteComunitario, 'id' | 'creado_en'>,
+  ): Promise<void> {
+    const fecha = new Date().toISOString()
+    const nuevo: ReporteComunitario = {
+      id: uid('rep'),
+      ...reporte,
+      creado_en: fecha,
+    }
+
+    // Persistir localmente
+    try {
+      const raw = localStorage.getItem('cc_reportes_local')
+      const arr: ReporteComunitario[] = raw ? JSON.parse(raw) : []
+      arr.unshift(nuevo)
+      localStorage.setItem('cc_reportes_local', JSON.stringify(arr))
+
+      const reportesNegocio = arr.filter((r) => r.negocio_id === reporte.negocio_id)
+      if (reportesNegocio.length >= 2) {
+        localStorage.setItem(
+          `cc_verif_${reporte.negocio_id}`,
+          JSON.stringify({
+            status: 'under_review',
+            by: null,
+            note: 'Bajo observación comunitaria por reportes vecinales',
+            date: fecha,
+          }),
+        )
+      }
+    } catch {}
+
+    if (isDemoMode) {
+      mutateDb((d) => {
+        d.reportes.push(nuevo)
+        const b = d.businesses.find((x) => x.id === reporte.negocio_id)
+        if (b) {
+          b.report_count = (b.report_count ?? 0) + 1
+          if (b.report_count >= 2) {
+            b.verification_status = 'under_review'
+          }
+        }
+      })
+      return delay(undefined, 300)
+    }
+
+    try {
+      await requireSupabase()
+        .from('reportes_comunitarios')
+        .insert({
+          negocio_id: reporte.negocio_id,
+          reportado_por_id: reporte.reportado_por_id,
+          motivo: reporte.motivo,
+          descripcion: reporte.descripcion,
+        })
+    } catch {}
+  },
+
+  /**
+   * Lista los reportes registrados para seguimiento y mediación comunitaria.
+   */
+  async listarReportes(negocioId?: string): Promise<ReporteComunitario[]> {
+    let localList: ReporteComunitario[] = []
+    try {
+      const raw = localStorage.getItem('cc_reportes_local')
+      if (raw) localList = JSON.parse(raw)
+    } catch {}
+
+    if (isDemoMode) {
+      const db = readDb()
+      let list = [...localList, ...db.reportes]
+      if (negocioId) {
+        list = list.filter((r) => r.negocio_id === negocioId)
+      }
+      return delay(list.sort((a, b) => b.creado_en.localeCompare(a.creado_en)), 200)
+    }
+
+    try {
+      let query = requireSupabase()
+        .from('reportes_comunitarios')
+        .select('*')
+        .order('creado_en', { ascending: false })
+        .limit(50)
+
+      if (negocioId) {
+        query = query.eq('negocio_id', negocioId)
+      }
+
+      const { data, error } = await query
+      if (!error && data && data.length > 0) {
+        const ids = new Set((data as ReporteComunitario[]).map((r) => r.id))
+        const unicos = localList.filter((r) => !ids.has(r.id))
+        return [...unicos, ...(data as ReporteComunitario[])].sort((a, b) =>
+          b.creado_en.localeCompare(a.creado_en),
+        )
+      }
+    } catch {}
+
+    return localList.filter((r) => !negocioId || r.negocio_id === negocioId)
   },
 }

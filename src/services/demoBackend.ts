@@ -5,7 +5,7 @@
  * Toda mutación aquí replica exactamente la firma de los servicios Supabase.
  */
 import { demoBusinesses, demoDirecciones, demoOrders, demoProfiles, demoReviews, demoVinculaciones } from '@/data/demoData'
-import type { Business, DireccionUsuario, FacilitadorNegocio, Order, Profile, Review } from '@/types'
+import type { Business, DireccionUsuario, FacilitadorNegocio, Order, Profile, ReporteComunitario, Review } from '@/types'
 
 const KEY = 'conectacomuna.demo.v1'
 
@@ -16,6 +16,7 @@ interface DemoDb {
   reviews: Review[]
   vinculaciones: FacilitadorNegocio[]
   direcciones: DireccionUsuario[]
+  reportes: ReporteComunitario[]
   sessionUserId: string | null
 }
 
@@ -27,6 +28,7 @@ function seed(): DemoDb {
     reviews: structuredClone(demoReviews),
     vinculaciones: structuredClone(demoVinculaciones),
     direcciones: structuredClone(demoDirecciones),
+    reportes: [],
     sessionUserId: null,
   }
 }
@@ -41,9 +43,14 @@ export function readDb(): DemoDb {
     }
     const parsed = JSON.parse(raw) as Partial<DemoDb>
     // Mezcla con un seed: si una sesión anterior guardó la base con un esquema
-    // más viejo (p.ej. sin `direcciones`), los campos nuevos se rellenan con
+    // más viejo (p.ej. sin `direcciones` o `reportes`), los campos nuevos se rellenan con
     // sus valores iniciales en lugar de romper en `undefined`.
-    const merged = { ...seed(), ...parsed, direcciones: parsed.direcciones ?? seed().direcciones }
+    const merged: DemoDb = {
+      ...seed(),
+      ...parsed,
+      direcciones: parsed.direcciones ?? seed().direcciones,
+      reportes: parsed.reportes ?? [],
+    }
     localStorage.setItem(KEY, JSON.stringify(merged))
     return merged
   } catch {

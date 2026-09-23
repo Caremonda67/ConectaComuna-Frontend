@@ -6,11 +6,11 @@ import { useAsync } from '@/hooks/useAsync'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { businessService } from '@/services/businessService'
 import { CATEGORIES } from '@/data/categories'
-import { CATEGORY_ICONS } from '@/components/ui/icons'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
+import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
 import { DEFAULT_RADIUS_KM } from '@/lib/env'
 
 export default function HomePage() {
@@ -66,34 +66,22 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Ilustración construida con CSS e iconos: sin imágenes que descargar. */}
-        <div
-          aria-hidden="true"
-          className="relative hidden h-64 overflow-hidden rounded-[14px] bg-brand-50 lg:block"
-        >
-          <span className="absolute left-12 top-12 flex h-16 w-16 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm">
-            <CATEGORY_ICONS.costura size={30} strokeWidth={1.5} />
-          </span>
-          <span className="absolute right-20 top-16 flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm">
-            <CATEGORY_ICONS.manicure size={26} strokeWidth={1.5} />
-          </span>
-          <span className="absolute bottom-12 left-28 flex h-14 w-14 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm">
-            <CATEGORY_ICONS.cerrajeria size={26} strokeWidth={1.5} />
-          </span>
-          <span className="absolute bottom-16 right-14 flex h-16 w-16 items-center justify-center rounded-full bg-white text-brand-600 shadow-sm">
-            <CATEGORY_ICONS.ambulante size={30} strokeWidth={1.5} />
-          </span>
-          <span className="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-brand-500 text-white">
-            <MapPin size={36} strokeWidth={1.75} />
-          </span>
+        {/* Ilustración animada interactiva con servicios orbitando */}
+        <div className="w-full">
+          <HomeHeroIllustration />
         </div>
       </section>
 
       {status !== 'granted' && (
-        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm text-ink-700">
-            Activa tu ubicación para ver quién está más cerca de ti.
-          </p>
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4 border-brand-200/80 bg-brand-50/50">
+          <div className="flex items-center gap-3">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white shadow-xs">
+              <MapPin size={18} strokeWidth={2} className="animate-bounce" />
+            </span>
+            <p className="text-sm font-medium text-ink-800">
+              Activa tu ubicación para ver los servicios más cercanos en tu barrio.
+            </p>
+          </div>
           <Button size="sm" variant="secondary" onClick={request} loading={status === 'locating'}>
             Usar mi ubicación
           </Button>
@@ -109,15 +97,15 @@ export default function HomePage() {
             <li key={c.slug}>
               <Link
                 to={`/explorar?categoria=${c.slug}`}
-                className="card flex min-h-28 flex-col items-center justify-center gap-2 p-3 text-center transition-colors hover:border-brand-300 hover:bg-brand-50"
+                className="group card flex min-h-28 flex-col items-center justify-center gap-2 p-3 text-center transition-all duration-200 hover:border-brand-300 hover:bg-brand-50 hover:-translate-y-0.5 hover:shadow-xs active:scale-95"
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 text-brand-700"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-700 transition-all duration-200 group-hover:scale-115 group-hover:bg-brand-500 group-hover:text-white group-hover:rotate-6"
                 >
-                  <c.icon size={20} strokeWidth={1.75} />
+                  <c.icon size={20} strokeWidth={1.8} />
                 </span>
-                <span className="text-xs font-medium text-ink-700">{c.name}</span>
+                <span className="text-xs font-semibold text-ink-700 group-hover:text-brand-900">{c.name}</span>
               </Link>
             </li>
           ))}

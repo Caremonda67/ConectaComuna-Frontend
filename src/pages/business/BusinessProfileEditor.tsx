@@ -12,6 +12,7 @@ import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
 import { DAY_NAMES } from '@/lib/utils'
+import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates } from '@/types'
 
 const schema = z.object({
@@ -80,12 +81,7 @@ export default function BusinessProfileEditor() {
   const [serverError, setServerError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!managedBusiness) {
-      if (business) {
-        setManagedBusiness(business)
-      }
-      return
-    }
+    if (!managedBusiness) return
 
     setPosition({ lat: managedBusiness.lat, lng: managedBusiness.lng })
     setPhotos(managedBusiness.photos ?? [])
@@ -99,7 +95,7 @@ export default function BusinessProfileEditor() {
       address: managedBusiness.address ?? '',
       neighborhood: managedBusiness.neighborhood ?? '',
     })
-  }, [managedBusiness, business, reset])
+  }, [managedBusiness, reset])
 
   useEffect(() => {
     const targetBusinessId = requestedBusinessId
@@ -160,7 +156,7 @@ export default function BusinessProfileEditor() {
     return () => {
       alive = false
     }
-  }, [requestedBusinessId, userId, profile?.account_type])
+  }, [requestedBusinessId, userId, profile?.account_type, business])
 
   const description = useWatch({ control, name: 'description' }) ?? ''
 
@@ -229,6 +225,30 @@ export default function BusinessProfileEditor() {
       <h1 className="text-xl font-bold">
         {managedBusiness ? 'Editar mi negocio' : 'Crear mi negocio'}
       </h1>
+
+      {managedBusiness?.verification_status === 'verified' && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs text-emerald-900 flex items-start gap-2.5">
+          <UI_ICONS.shieldCheck size={20} className="text-emerald-700 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold block text-sm">Tu negocio cuenta con el Sello de Verificación en Territorio</span>
+            <span className="text-emerald-800">
+              {managedBusiness.verification_note || 'Validado en persona en la comuna por un facilitador o líder comunal.'}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {managedBusiness && managedBusiness.verification_status !== 'verified' && (
+        <div className="rounded-xl border border-ink-200 bg-cream-100 p-3.5 text-xs text-ink-700 flex items-start gap-2.5">
+          <UI_ICONS.shieldCheck size={20} className="text-ink-400 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-semibold block text-sm text-ink-900">¿Cómo obtener el Sello de Verificación en Territorio?</span>
+            <p className="mt-0.5 text-ink-600 leading-relaxed">
+              Los facilitadores comunitarios y líderes de la Junta de Acción Comunal validan presencialmente que tu negocio o taller existe físicamente en el barrio. Comparte tu código de apadrinamiento con tu facilitador asignado para registrar tu visita.
+            </p>
+          </div>
+        </div>
+      )}
 
       <section className="space-y-3 card p-4">
         <h2 className="font-bold">Lo básico</h2>
@@ -335,26 +355,36 @@ export default function BusinessProfileEditor() {
         )}
       </section>
 
-      <section className="space-y-2 card p-4">
-        <h2 className="font-bold">Horarios</h2>
-        <ul className="space-y-2">
+      <section className="space-y-3 card p-4">
+        <div>
+          <h2 className="font-bold">Horarios de atención</h2>
+          <p className="text-xs text-ink-500 mt-0.5">
+            Indica qué días atiendes. Esto activa el indicador de "Abierto ahora" para que los vecinos sepan cuándo contactarte.
+          </p>
+        </div>
+        <ul className="divide-y divide-ink-100">
           {hours.map((h, i) => (
-            <li key={h.day} className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="w-10 font-medium">{DAY_NAMES[h.day]}</span>
-              <label className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={!h.closed}
-                  onChange={(e) =>
-                    setHours((prev) =>
-                      prev.map((x, j) => (i === j ? { ...x, closed: !e.target.checked } : x)),
-                    )
-                  }
-                />
-                Abierto
-              </label>
-              {!h.closed && (
-                <>
+            <li key={h.day} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
+              <div className="flex items-center justify-between sm:justify-start gap-3 sm:min-w-28">
+                <span className="w-12 font-semibold text-ink-900">{DAY_NAMES[h.day]}</span>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-medium text-ink-700">
+                  <input
+                    type="checkbox"
+                    checked={!h.closed}
+                    onChange={(e) =>
+                      setHours((prev) =>
+                        prev.map((x, j) => (i === j ? { ...x, closed: !e.target.checked } : x)),
+                      )
+                    }
+                    className="rounded border-ink-300 text-brand-600 focus:ring-brand-500 h-4 w-4"
+                  />
+                  <span>{!h.closed ? 'Abierto' : 'Cerrado'}</span>
+                </label>
+              </div>
+
+              {!h.closed ? (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-ink-500">De</span>
                   <input
                     type="time"
                     aria-label={`Hora de apertura ${DAY_NAMES[h.day]}`}
@@ -364,8 +394,9 @@ export default function BusinessProfileEditor() {
                         prev.map((x, j) => (i === j ? { ...x, opens: e.target.value } : x)),
                       )
                     }
-                    className="min-h-9 rounded-lg border border-ink-200 px-2"
+                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500"
                   />
+                  <span className="text-ink-500">a</span>
                   <input
                     type="time"
                     aria-label={`Hora de cierre ${DAY_NAMES[h.day]}`}
@@ -375,9 +406,11 @@ export default function BusinessProfileEditor() {
                         prev.map((x, j) => (i === j ? { ...x, closes: e.target.value } : x)),
                       )
                     }
-                    className="min-h-9 rounded-lg border border-ink-200 px-2"
+                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500"
                   />
-                </>
+                </div>
+              ) : (
+                <span className="text-xs text-ink-400 italic">No atiende este día</span>
               )}
             </li>
           ))}

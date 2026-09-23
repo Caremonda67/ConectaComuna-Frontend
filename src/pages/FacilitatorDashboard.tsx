@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { facilitadorService } from '@/services/facilitadorService'
 import { profileService } from '@/services/profileService'
+import { businessService } from '@/services/businessService'
 import { Button } from '@/components/ui/Button'
-import type { Business, FacilitadorNegocio } from '@/types'
+import { UI_ICONS } from '@/components/ui/icons'
+import { formatDate } from '@/lib/utils'
+import type { Business, FacilitadorNegocio, ReporteComunitario } from '@/types'
 
 export default function FacilitatorDashboard() {
   const { userId, profile, email, refresh } = useAuth()
@@ -23,12 +26,24 @@ export default function FacilitatorDashboard() {
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null)
   const [exitoCodigo, setExitoCodigo] = useState(false)
 
+  // Verificación en territorio y reportes
+  const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
+  const [notaVerificacion, setNotaVerificacion] = useState('')
+  const [guardandoVerif, setGuardandoVerif] = useState(false)
+  const [reportes, setReportes] = useState<ReporteComunitario[]>([])
+
   useEffect(() => {
     if (userId) {
-      facilitadorService.getNegociosVinculados(userId).then((data) => {
-        setVinculaciones(data)
-        setLoading(false)
-      })
+      facilitadorService
+        .getNegociosVinculados(userId)
+        .then((data) => setVinculaciones(data))
+        .catch((e) => console.warn('Error cargando vinculados:', e))
+        .finally(() => setLoading(false))
+
+      businessService
+        .listarReportes()
+        .then((reps) => setReportes(reps))
+        .catch(() => {})
     }
   }, [userId])
 
@@ -64,6 +79,33 @@ export default function FacilitatorDashboard() {
       setErrorCodigo(e instanceof Error ? e.message : 'No pudimos vincular. Revisa el código.')
     } finally {
       setVinculando(false)
+    }
+  }
+
+  async function handleConfirmarVerificacion(negocioId: string) {
+    if (!profile) return
+    setGuardandoVerif(true)
+    try {
+      await businessService.verificarTerritorialmente(
+        negocioId,
+        profile.full_name || 'Facilitador Comunal',
+        notaVerificacion,
+      )
+      setVerificandoBizId(null)
+      if (userId) {
+        const data = await facilitadorService.getNegociosVinculados(userId)
+        setVinculaciones(data)
+      }
+    } finally {
+      setGuardandoVerif(false)
+    }
+  }
+
+  async function handleRevocarVerificacion(negocioId: string) {
+    await businessService.revocarVerificacion(negocioId)
+    if (userId) {
+      const data = await facilitadorService.getNegociosVinculados(userId)
+      setVinculaciones(data)
     }
   }
 
@@ -227,13 +269,110 @@ export default function FacilitatorDashboard() {
                 </div>
 
                 {vinculacion.estado_vinculacion === 'aprobado' && (
-                  <div className="mt-4 flex flex-wrap gap-2 border-t border-ink-100 pt-4">
-                    <Button onClick={() => navigate(`/panel/negocio?id=${negocio.id}`)} variant="secondary" size="sm">
-                      Editar perfil
-                    </Button>
-                    <Button onClick={() => navigate(`/negocio/${negocio.id}`)} variant="ghost" size="sm">
-                      Ver público
-                    </Button>
+                  <div className="mt-4 space-y-3 border-t border-ink-100 pt-3">
+                    <div className="rounded-xl border p-3 text-xs bg-cream-50 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-ink-900 flex items-center gap-1.5">
+                          <UI_ICONS.shieldCheck
+                            size={16}
+                            className={negocio.verification_status === 'verified' ? 'text-emerald-700' : 'text-ink-400'}
+                          />
+                          Sello de verificación en territorio
+                        </span>
+                        {negocio.verification_status === 'verified' ? (
+                          <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 font-medium text-[11px]">
+                            Verificado
+                          </span>
+                        ) : negocio.verification_status === 'under_review' ? (
+                          <span className="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 font-medium text-[11px]">
+                            Bajo observación
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-ink-200 text-ink-700 px-2 py-0.5 font-medium text-[11px]">
+                            Sin verificar
+                          </span>
+                        )}
+                      </div>
+
+                      {negocio.verification_status === 'verified' ? (
+                        <div className="text-ink-600 text-[11px] space-y-1">
+                          <p>
+                            <strong>Validado por:</strong> {negocio.verification_by || 'Facilitador comunal'}
+                          </p>
+                          {negocio.verification_note && (
+                            <p>
+                              <strong>Nota de campo:</strong> {negocio.verification_note}
+                            </p>
+                          )}
+                          <div className="pt-1">
+                            <button
+                              type="button"
+                              onClick={() => handleRevocarVerificacion(negocio.id)}
+                              className="text-rose-700 hover:underline text-[11px] cursor-pointer"
+                            >
+                              Retirar verificación
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-ink-600 text-[11px] space-y-2">
+                          <p>
+                            Si ya visitaste el taller/local o conoces personalmente a la persona en el barrio, valida su autenticidad para dar confianza a los clientes.
+                          </p>
+                          {verificandoBizId !== negocio.id ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => {
+                                setVerificandoBizId(negocio.id)
+                                setNotaVerificacion('Local y taller visitados presencialmente en la comuna.')
+                              }}
+                            >
+                              <UI_ICONS.shieldCheck size={14} className="text-emerald-700" />
+                              Validar en territorio
+                            </Button>
+                          ) : (
+                            <div className="mt-2 p-2.5 bg-white rounded-xl border border-brand-300 space-y-2 text-xs">
+                              <p className="font-semibold text-ink-900">
+                                Certificar visita territorial:
+                              </p>
+                              <input
+                                type="text"
+                                value={notaVerificacion}
+                                onChange={(e) => setNotaVerificacion(e.target.value)}
+                                placeholder="Nota de campo (ej: Local visitado en Carrera 41)"
+                                className="w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-xs text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                              />
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  loading={guardandoVerif}
+                                  onClick={() => handleConfirmarVerificacion(negocio.id)}
+                                >
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setVerificandoBizId(null)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={() => navigate(`/panel/negocio?id=${negocio.id}`)} variant="secondary" size="sm">
+                        Editar perfil
+                      </Button>
+                      <Button onClick={() => navigate(`/negocio/${negocio.id}`)} variant="ghost" size="sm">
+                        Ver público
+                      </Button>
+                    </div>
                   </div>
                 )}
               </li>
@@ -258,12 +397,13 @@ export default function FacilitatorDashboard() {
               setErrorCodigo(null)
               setExitoCodigo(false)
             }}
-            className="flex-1 rounded-lg border border-ink-200 px-3 py-2 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="flex-1 min-w-0 rounded-lg border border-ink-200 px-3 py-2 text-center font-mono text-lg tracking-widest focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
           <Button
             loading={vinculando}
             disabled={codigo.length !== 6}
             onClick={vincular}
+            className="shrink-0"
           >
             Vincular
           </Button>
@@ -275,6 +415,40 @@ export default function FacilitatorDashboard() {
           <p className="mt-2 text-sm text-green-700">¡Vinculación exitosa! Ya puedes administrar el negocio.</p>
         )}
       </section>
+
+      {reportes.length > 0 && (
+        <section aria-labelledby="reportes-comuna" className="card p-4 space-y-3">
+          <div className="flex items-center justify-between border-b border-ink-100 pb-2">
+            <div className="flex items-center gap-2">
+              <UI_ICONS.shieldAlert size={18} className="text-amber-700 shrink-0" />
+              <h2 id="reportes-comuna" className="font-bold text-ink-900">
+                Alertas y reportes comunitarios
+              </h2>
+            </div>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+              {reportes.length} {reportes.length === 1 ? 'reporte' : 'reportes'}
+            </span>
+          </div>
+          <p className="text-xs text-ink-600">
+            Reportes enviados por vecinos para que los facilitadores y la JAC puedan mediar y confirmar en terreno.
+          </p>
+          <ul className="divide-y divide-ink-100 text-xs">
+            {reportes.map((rep) => (
+              <li key={rep.id} className="py-2 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-ink-900 capitalize">
+                    {rep.motivo.replace(/_/g, ' ')}
+                  </span>
+                  <span className="text-ink-400 text-[11px]">{formatDate(rep.creado_en)}</span>
+                </div>
+                {rep.descripcion && (
+                  <p className="text-ink-600 italic">"{rep.descripcion}"</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card p-4 bg-brand-50 border-brand-100">
         <h3 className="font-bold text-brand-900 mb-2">¿Cómo apadrinar a un emprendedor?</h3>

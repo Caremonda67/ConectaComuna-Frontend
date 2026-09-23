@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { useAsync } from '@/hooks/useAsync'
 import { useAuth } from '@/hooks/useAuth'
 import { businessService } from '@/services/businessService'
@@ -12,9 +13,12 @@ import { TextAreaField, TextField } from '@/components/ui/Field'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { categoryLabel } from '@/data/categories'
-import { DAY_NAMES, formatDate, getBadges } from '@/lib/utils'
+import { DAY_NAMES, formatDate, getBadges, shouldSkipTratoSeguro, getBusinessOpenStatus, cn } from '@/lib/utils'
 import { AuthGate } from '@/components/auth/AuthGate'
 import { UI_ICONS } from '@/components/ui/icons'
+import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
+import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
+import { BusinessShareModal } from '@/components/business/BusinessShareModal'
 
 export default function BusinessDetailPage() {
   const { id = '' } = useParams()
@@ -22,6 +26,10 @@ export default function BusinessDetailPage() {
   const { userId, profile, activeRole } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [pedirCuenta, setPedirCuenta] = useState(false)
+  const [tratoModalOpen, setTratoModalOpen] = useState(false)
+  const [tratoAction, setTratoAction] = useState<'whatsapp' | 'call'>('whatsapp')
+  const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const rutaNegocio = `/negocio/${id}`
 
   const { data: business, loading, error, reload } = useAsync(
@@ -47,6 +55,52 @@ export default function BusinessDetailPage() {
     )
 
   const isOwner = business.owner_id === userId
+  const openStatus = getBusinessOpenStatus(business.hours)
+
+  function getWhatsAppUrl() {
+    if (!business?.whatsapp) return ''
+    const clean = business.whatsapp.replace(/\D/g, '')
+    const cat = categoryLabel(business.category)
+    const text = encodeURIComponent(
+      `Hola ${business.name}, vi tu servicio de ${cat} en Conecta Comuna. Me gustaría consultar sobre un trabajo.`,
+    )
+    return `https://wa.me/57${clean}?text=${text}`
+  }
+
+  function handleWhatsApp() {
+    if (!userId) {
+      setPedirCuenta(true)
+      return
+    }
+    if (shouldSkipTratoSeguro()) {
+      window.open(getWhatsAppUrl(), '_blank', 'noopener,noreferrer')
+      return
+    }
+    setTratoAction('whatsapp')
+    setTratoModalOpen(true)
+  }
+
+  function handleCall() {
+    if (!userId) {
+      setPedirCuenta(true)
+      return
+    }
+    if (shouldSkipTratoSeguro()) {
+      window.location.href = `tel:+57${business?.phone}`
+      return
+    }
+    setTratoAction('call')
+    setTratoModalOpen(true)
+  }
+
+  function proceedTratoSeguro() {
+    setTratoModalOpen(false)
+    if (tratoAction === 'whatsapp' && business?.whatsapp) {
+      window.open(getWhatsAppUrl(), '_blank', 'noopener,noreferrer')
+    } else if (tratoAction === 'call' && business?.phone) {
+      window.location.href = `tel:+57${business.phone}`
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -55,17 +109,59 @@ export default function BusinessDetailPage() {
           {categoryLabel(business.category)}
         </p>
         <h1 className="text-2xl font-extrabold">{business.name}</h1>
-        <div className="mt-1">
+        <div className="mt-1 flex flex-wrap items-center gap-3">
           <RatingStars
             value={business.rating_avg}
             count={business.rating_count}
             size="md"
           />
+          {business.hours && business.hours.length > 0 && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full',
+                openStatus.isOpen
+                  ? 'text-emerald-800 bg-emerald-100/80 border border-emerald-300'
+                  : 'text-ink-700 bg-cream-200 border border-ink-200',
+              )}
+            >
+              <span
+                className={cn(
+                  'h-2 w-2 rounded-full shrink-0',
+                  openStatus.isOpen ? 'bg-emerald-600 animate-pulse' : 'bg-ink-400',
+                )}
+              />
+              {openStatus.label} {openStatus.detail ? `· ${openStatus.detail}` : ''}
+            </span>
+          )}
         </div>
         <p className="mt-2 text-ink-700">{business.description}</p>
         <div className="mt-3">
           <BadgeList badges={getBadges(business)} />
         </div>
+
+        {business.verification_status === 'verified' && (
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900">
+            <UI_ICONS.shieldCheck size={18} className="text-emerald-700 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold block">Negocio verificado en territorio</span>
+              <span className="text-[11px] text-emerald-800">
+                {business.verification_note || 'Validado en persona en la comuna por un facilitador o junta comunitaria.'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {business.verification_status === 'under_review' && (
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900">
+            <UI_ICONS.alert size={18} className="text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold block">Bajo observación comunitaria</span>
+              <span className="text-[11px] text-amber-800">
+                Este negocio cuenta con reportes recientes que están siendo verificados por la comunidad.
+              </span>
+            </div>
+          </div>
+        )}
 
         <dl className="mt-4 grid gap-1 text-sm text-ink-700">
           {business.address && (
@@ -86,70 +182,105 @@ export default function BusinessDetailPage() {
           </div>
         </dl>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {business.whatsapp &&
-            (userId ? (
-              <a
-                href={`https://wa.me/57${business.whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="min-h-11 rounded-full bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600"
-              >
-                WhatsApp
-              </a>
-            ) : (
-              <Button type="button" onClick={() => setPedirCuenta(true)}>
-                WhatsApp
-              </Button>
-            ))}
-          {business.phone &&
-            (userId ? (
-              <a
-                href={`tel:+57${business.phone}`}
-                className="min-h-11 rounded-xl border border-ink-200 bg-white px-4 py-2.5 font-semibold"
-              >
-                Llamar
-              </a>
-            ) : (
-              <Button type="button" variant="secondary" onClick={() => setPedirCuenta(true)}>
-                Llamar
-              </Button>
-            ))}
-          {isOwner ? (
-            <Link
-              to="/panel/negocio"
-              className="min-h-11 rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white"
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {business.whatsapp && (
+            <button
+              type="button"
+              onClick={handleWhatsApp}
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
             >
-              Editar mi negocio
-            </Link>
-          ) : (
-            <>
-              {activeRole === 'client' && (
-                <Button
-                  onClick={() => {
-                    if (!userId) {
-                      setPedirCuenta(true)
-                      return
-                    }
-                    setShowForm((v) => !v)
-                  }}
-                >
-                  Solicitar servicio
-                </Button>
-              )}
-              {activeRole === 'business' && (
-                <p className="text-sm text-ink-500">
-                  Para contratar este servicio, cambia al rol de <strong>Cliente</strong> en el menú superior.
-                </p>
-              )}
-              {activeRole === 'facilitador' && (
-                <p className="text-sm text-ink-500">
-                  Para apadrinar este negocio, pídele el código al dueño e ingrésalo en tu panel de facilitador.
-                </p>
-              )}
-            </>
+              <UI_ICONS.whatsapp size={18} />
+              Contactar por WhatsApp
+            </button>
+          )}
+
+          {business.phone && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCall}
+              fullWidth
+              className="min-h-12"
+            >
+              <UI_ICONS.phone size={18} />
+              Llamar directo
+            </Button>
+          )}
+
+          {!isOwner && activeRole === 'client' && (
+            <div className="sm:col-span-2">
+              <Button
+                onClick={() => {
+                  if (!userId) {
+                    setPedirCuenta(true)
+                    return
+                  }
+                  setShowForm((v) => !v)
+                }}
+                fullWidth
+                className="min-h-12"
+              >
+                {showForm ? 'Ocultar solicitud' : 'Solicitar servicio en la plataforma'}
+              </Button>
+            </div>
+          )}
+
+          <div className="sm:col-span-2 flex flex-col sm:flex-row gap-2 pt-1">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShareModalOpen(true)}
+              className="flex-1 min-h-11"
+            >
+              <UI_ICONS.share size={18} />
+              Compartir tarjeta del negocio
+            </Button>
+
+            {isOwner && (
+              <Link
+                to="/panel/negocio"
+                className="flex-1 min-h-11 inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600 transition-colors text-center"
+              >
+                Editar mi negocio
+              </Link>
+            )}
+          </div>
+
+          {activeRole === 'business' && !isOwner && (
+            <div className="sm:col-span-2">
+              <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
+                Para contratar este servicio, cambia al rol de <strong>Cliente</strong> en el menú superior.
+              </p>
+            </div>
+          )}
+
+          {activeRole === 'facilitador' && (
+            <div className="sm:col-span-2">
+              <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
+                Para apadrinar este negocio, pídele el código al dueño e ingrésalo en tu panel de facilitador.
+              </p>
+            </div>
           )}
         </div>
+
+        {!isOwner && (
+          <div className="mt-4 pt-3 border-t border-ink-100 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                if (!userId) {
+                  setPedirCuenta(true)
+                  return
+                }
+                setReportModalOpen(true)
+              }}
+              className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-rose-700 transition-colors cursor-pointer"
+            >
+              <UI_ICONS.flag size={13} className="shrink-0" />
+              Reportar irregularidad o posible fraude
+            </button>
+          </div>
+        )}
       </header>
 
       <AuthGate
@@ -159,13 +290,44 @@ export default function BusinessDetailPage() {
         motivo={motivoContacto}
       />
 
+      <TratoSeguroModal
+        open={tratoModalOpen}
+        onClose={() => setTratoModalOpen(false)}
+        onProceed={proceedTratoSeguro}
+        businessName={business.name}
+        isVerified={business.verification_status === 'verified'}
+        actionType={tratoAction}
+      />
+
+      <ReportBusinessModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        businessId={business.id}
+        businessName={business.name}
+        userId={userId}
+        onRequireAuth={() => setPedirCuenta(true)}
+        onReportSubmitted={reload}
+      />
+
+      <BusinessShareModal
+        open={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        business={business}
+      />
+
       {showForm && userId && (
-        <RequestForm
-          businessId={business.id}
-          clientId={userId}
-          onDone={() => navigate('/panel')}
-          onCancel={() => setShowForm(false)}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: -12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        >
+          <RequestForm
+            businessId={business.id}
+            clientId={userId}
+            onDone={() => navigate('/panel')}
+            onCancel={() => setShowForm(false)}
+          />
+        </motion.div>
       )}
 
       {business.photos.length > 0 && (
@@ -221,9 +383,15 @@ export default function BusinessDetailPage() {
       )}
 
       <section aria-labelledby="resenas">
-        <h2 id="resenas" className="mb-2 text-lg font-bold">
-          Reseñas
-        </h2>
+        <div className="mb-2">
+          <h2 id="resenas" className="text-lg font-bold">
+            Reseñas
+          </h2>
+          <p className="text-xs text-ink-500 flex items-center gap-1.5 mt-0.5">
+            <UI_ICONS.shieldCheck size={14} className="text-emerald-700 shrink-0" />
+            Opiniones verificadas de vecinos con servicios completados en la plataforma.
+          </p>
+        </div>
         {!reviews || reviews.length === 0 ? (
           <EmptyState
             icon={UI_ICONS.message}

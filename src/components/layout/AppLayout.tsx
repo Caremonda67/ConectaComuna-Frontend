@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { motion } from 'motion/react'
 import { useAuth } from '@/hooks/useAuth'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
@@ -16,18 +17,47 @@ const topNav = [
   { to: '/como-funciona', label: 'Cómo funciona' },
 ]
 
-/** En móvil la navegación baja al alcance del pulgar. */
-const bottomNav = [
-  { to: '/', label: 'Inicio', icon: UI_ICONS.home, end: true },
-  { to: '/explorar', label: 'Explorar', icon: UI_ICONS.search, end: false },
-  { to: '/mapa', label: 'Mapa', icon: UI_ICONS.map, end: false },
-  { to: '/panel', label: 'Panel', icon: UI_ICONS.dashboard, end: false },
-]
+
 
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const bottomNav = profile
+    ? [
+        { to: '/', label: 'Inicio', icon: UI_ICONS.home, end: true },
+        { to: '/explorar', label: 'Explorar', icon: UI_ICONS.search, end: false },
+        { to: '/mapa', label: 'Mapa', icon: UI_ICONS.map, end: false },
+        { to: '/panel', label: 'Mi cuenta', icon: UI_ICONS.dashboard, end: false },
+      ]
+    : [
+        { to: '/', label: 'Inicio', icon: UI_ICONS.home, end: true },
+        { to: '/explorar', label: 'Explorar', icon: UI_ICONS.search, end: false },
+        { to: '/mapa', label: 'Mapa', icon: UI_ICONS.map, end: false },
+        { to: '/entrar', label: 'Ingresar', icon: UI_ICONS.user, end: false },
+      ]
+  const [largeText, setLargeText] = useState(() => {
+    try {
+      return localStorage.getItem('cc_large_text') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    if (largeText) {
+      document.documentElement.classList.add('large-text-mode')
+      try {
+        localStorage.setItem('cc_large_text', 'true')
+      } catch {}
+    } else {
+      document.documentElement.classList.remove('large-text-mode')
+      try {
+        localStorage.removeItem('cc_large_text')
+      } catch {}
+    }
+  }, [largeText])
 
   useEffect(() => {
     if (!loading && profile) {
@@ -37,21 +67,11 @@ export function AppLayout() {
         }
         return
       }
-
-      if (isDemoMode) return
-
-      if (location.pathname !== '/verificacion') {
-        const isVerified = localStorage.getItem('facial_verified_' + profile.id) === 'true'
-        if (!isVerified) {
-          navigate('/verificacion')
-          return
-        }
-      }
     }
   }, [loading, profile, location.pathname, navigate])
 
   return (
-    <div className="flex min-h-dvh flex-col bg-cream-100">
+    <div className="flex min-h-dvh flex-col bg-cream-100 overflow-x-clip">
       <a
         href="#contenido"
         className="sr-only-focusable absolute left-2 top-2 z-50 rounded bg-brand-600 px-3 py-2 text-white"
@@ -59,9 +79,9 @@ export function AppLayout() {
         Saltar al contenido
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-ink-200 bg-cream-100/95 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-          <NavLink to="/" aria-label="ConectaComuna, ir al inicio">
+      <header className="sticky top-0 z-20 border-b border-ink-200 bg-cream-100/95 backdrop-blur overflow-x-clip">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3">
+          <NavLink to="/" aria-label="ConectaComuna, ir al inicio" className="shrink-0 min-w-0">
             <Logo />
           </NavLink>
 
@@ -86,30 +106,66 @@ export function AppLayout() {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Botón de accesibilidad: lectura cómoda para personas mayores */}
+            <button
+              type="button"
+              onClick={() => setLargeText((v) => !v)}
+              title={largeText ? 'Modo lectura cómoda activo (clic para tamaño estándar)' : 'Activar letra grande para lectura cómoda'}
+              aria-label={largeText ? 'Desactivar letra grande' : 'Activar letra grande para lectura cómoda'}
+              aria-pressed={largeText}
+              className={cn(
+                'min-h-7 min-w-7 sm:min-h-8 sm:min-w-8 px-1 sm:px-1.5 rounded-full border text-[10px] sm:text-xs font-bold transition-colors cursor-pointer flex items-center justify-center',
+                largeText
+                  ? 'border-brand-500 bg-brand-100 text-brand-900 shadow-sm'
+                  : 'border-ink-200 bg-white text-ink-600 hover:bg-cream-200',
+              )}
+            >
+              {largeText ? 'A−' : 'A+'}
+            </button>
+
             {/* Rol dual: negocio o facilitador pueden alternar a cliente */}
             {isDual && profile && (
               <div
                 role="group"
                 aria-label="Cambiar de rol"
-                className="flex rounded-full border border-ink-200 bg-white p-0.5 text-xs"
+                className="relative flex rounded-full border border-ink-200 bg-cream-100 p-0.5 text-[10px] sm:text-xs shrink-0 shadow-2xs"
               >
-                {(['client', profile.account_type] as const).map((role) => (
-                  <button
-                    key={role}
-                    type="button"
-                    aria-pressed={activeRole === role}
-                    onClick={() => setActiveRole(role as ActiveRole)}
-                    className={cn(
-                      'min-h-8 rounded-full px-2.5 font-medium transition-colors capitalize',
-                      activeRole === role
-                        ? 'bg-brand-100 text-brand-800'
-                        : 'text-ink-500 hover:text-ink-900',
-                    )}
-                  >
-                    {role === 'client' ? 'Cliente' : role === 'business' ? 'Negocio' : 'Facilitador'}
-                  </button>
-                ))}
+                {(['client', profile.account_type] as const).map((role) => {
+                  const isSelected = activeRole === role
+                  return (
+                    <button
+                      key={role}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => setActiveRole(role as ActiveRole)}
+                      className={cn(
+                        'relative min-h-6 sm:min-h-7 rounded-full px-2 sm:px-3 font-semibold transition-colors capitalize z-10 cursor-pointer select-none flex items-center justify-center',
+                        isSelected ? 'text-white' : 'text-ink-600 hover:text-ink-900',
+                      )}
+                    >
+                      {isSelected && (
+                        <motion.span
+                          layoutId="activeRoleIndicator"
+                          className="absolute inset-0 rounded-full bg-brand-500 shadow-xs"
+                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                      <span className="relative z-10">
+                        {role === 'client' ? (
+                          'Cliente'
+                        ) : role === 'business' ? (
+                          'Negocio'
+                        ) : (
+                          <>
+                            <span className="sm:hidden">Facil.</span>
+                            <span className="hidden sm:inline">Facilitador</span>
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             )}
 
@@ -117,7 +173,7 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/panel"
-                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-medium text-ink-900 sm:inline-flex"
+                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white px-3 text-sm font-medium text-ink-900 sm:inline-flex"
                 >
                   Mi cuenta
                 </NavLink>
@@ -127,7 +183,7 @@ export function AppLayout() {
                     await signOut()
                     navigate('/')
                   }}
-                  className="min-h-9 rounded-full px-2 text-sm font-medium text-ink-500 hover:text-ink-900"
+                  className="min-h-7 sm:min-h-8 rounded-full px-1.5 sm:px-2 text-[11px] sm:text-sm font-medium text-ink-500 hover:text-ink-900"
                 >
                   Salir
                 </button>
@@ -136,15 +192,17 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/entrar"
-                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white px-3.5 text-sm font-medium text-ink-900 sm:inline-flex"
+                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 hover:bg-cream-200 transition-colors"
                 >
-                  Iniciar sesión
+                  <span className="sm:hidden">Entrar</span>
+                  <span className="hidden sm:inline">Iniciar sesión</span>
                 </NavLink>
                 <NavLink
                   to="/registro"
-                  className="inline-flex min-h-9 items-center rounded-full bg-brand-500 px-3.5 text-sm font-semibold text-white hover:bg-brand-600"
+                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full bg-brand-500 px-2 sm:px-3.5 text-xs sm:text-sm font-semibold text-white hover:bg-brand-600 transition-colors"
                 >
-                  Registrarse
+                  <span className="sm:hidden">Registro</span>
+                  <span className="hidden sm:inline">Registrarse</span>
                 </NavLink>
               </>
             )}
@@ -167,7 +225,7 @@ export function AppLayout() {
 
       <nav
         aria-label="Navegación rápida"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-ink-200 bg-white lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 border-t border-ink-200 bg-white/95 backdrop-blur-xs lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {bottomNav.map((item) => {
@@ -179,13 +237,29 @@ export function AppLayout() {
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      'flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium',
-                      isActive ? 'text-brand-700' : 'text-ink-500',
+                      'relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors select-none',
+                      isActive ? 'text-brand-700 font-semibold' : 'text-ink-500 hover:text-ink-900',
                     )
                   }
                 >
-                  <Icon aria-hidden="true" size={20} strokeWidth={1.75} />
-                  {item.label}
+                  {({ isActive }) => (
+                    <>
+                      {isActive && (
+                        <motion.span
+                          layoutId="bottomNavActiveBar"
+                          className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-500"
+                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                      <Icon
+                        aria-hidden="true"
+                        size={20}
+                        strokeWidth={isActive ? 2.2 : 1.75}
+                        className={cn('transition-transform duration-200', isActive && 'scale-110')}
+                      />
+                      {item.label}
+                    </>
+                  )}
                 </NavLink>
               </li>
             )

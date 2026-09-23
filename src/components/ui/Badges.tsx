@@ -10,6 +10,8 @@ const tones: Record<Badge['tone'], string> = {
   silver: 'bg-cream-200 text-ink-700 border-ink-200',
   bronze: 'bg-cream-300 text-ink-700 border-ink-200',
   info: 'bg-brand-50 text-brand-700 border-brand-100',
+  verified: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold',
+  danger: 'bg-amber-50 text-amber-900 border-amber-300 font-semibold',
 }
 
 export function BadgePill({ badge }: { badge: Badge }) {
