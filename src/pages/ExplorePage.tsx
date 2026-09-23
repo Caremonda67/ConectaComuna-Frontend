@@ -36,6 +36,7 @@ export default function ExplorePage() {
       radiusKm: Number(params.get('radio') ?? DEFAULT_RADIUS_KM),
       center: ubicacion?.center ?? COMUNA_CENTER,
       sort: (params.get('orden') as BusinessFilters['sort']) ?? 'distance',
+      openNow: params.get('abierto') === '1',
     }),
     [params, ubicacion],
   )
@@ -62,6 +63,10 @@ export default function ExplorePage() {
       }
       if (patch.radiusKm !== undefined) next.set('radio', String(patch.radiusKm))
       if (patch.sort !== undefined) next.set('orden', patch.sort)
+      if (patch.openNow !== undefined) {
+        if (patch.openNow) next.set('abierto', '1')
+        else next.delete('abierto')
+      }
       setParams(next, { replace: true })
     },
     [params, setParams],
@@ -97,7 +102,7 @@ export default function ExplorePage() {
         />
       )}
       {!loading && !error && data && data.length > 0 && (
-        <div className="grid gap-3">
+        <div className="grid grid-cols-1 gap-3">
           {data.map((b) => (
             <BusinessCard key={b.id} business={b} />
           ))}

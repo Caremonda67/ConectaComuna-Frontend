@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { profileService } from '@/services/profileService'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
+import { BARRIOS_COMUNA } from '@/services/direccionService'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { UI_ICONS } from '@/components/ui/icons'
@@ -48,11 +49,17 @@ export default function OnboardingPage() {
         onboarding_completado: true,
       })
       await refresh()
-      navigate('/verificacion')
-    } catch (e: any) {
+      const destino =
+        formData.accountType === 'business'
+          ? '/panel/negocio'
+          : formData.accountType === 'facilitador'
+            ? '/panel/facilitador'
+            : '/panel'
+      navigate(destino)
+    } catch (e: unknown) {
       console.error('Error guardando perfil:', e)
-      if (e?.message) {
-        setError(e.message)
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+        setError((e as { message: string }).message)
       } else if (e instanceof Error) {
         setError(e.message)
       } else {
@@ -115,6 +122,24 @@ export default function OnboardingPage() {
               </>
             )}
           </button>
+          {error && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <span className="text-xs text-ink-500 w-full">O elige tu barrio:</span>
+              {BARRIOS_COMUNA.map((b) => (
+                <button
+                  key={b.nombre}
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, neighborhood: b.nombre }))
+                    setError(null)
+                  }}
+                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 active:scale-95 transition-transform"
+                >
+                  📍 {b.nombre}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -127,10 +152,10 @@ export default function OnboardingPage() {
                 key={type}
                 type="button"
                 onClick={() => setFormData({ ...formData, accountType: type })}
-                className={`flex items-center justify-between rounded-xl border p-3 text-left transition-all ${
+                className={`flex items-center justify-between rounded-xl border p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer select-none ${
                   formData.accountType === type
-                    ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
-                    : 'border-ink-200 bg-white hover:bg-cream-100'
+                    ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500 shadow-xs'
+                    : 'border-ink-200 bg-white hover:bg-cream-100 hover:border-ink-300'
                 }`}
               >
                 <div>
