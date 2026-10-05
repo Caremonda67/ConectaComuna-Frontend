@@ -70,6 +70,9 @@ export function mutateDb(fn: (db: DemoDb) => void): DemoDb {
   const db = readDb()
   fn(db)
   writeDb(db)
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('conectacomuna:db-updated'))
+  }
   return db
 }
 

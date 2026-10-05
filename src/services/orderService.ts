@@ -96,6 +96,36 @@ export const orderService = {
     return (data ?? []) as unknown as Order[]
   },
 
+  /** Cantidad de pedidos pendientes por atender para el negocio. */
+  async countPendingAsBusiness(businessId: string): Promise<number> {
+    if (isDemoMode) {
+      return readDb().orders.filter((o) => o.business_id === businessId && o.status === 'pending').length
+    }
+    const { count, error } = await requireSupabase()
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('business_id', businessId)
+      .eq('status', 'pending')
+    if (error) return 0
+    return count ?? 0
+  },
+
+  /** Cantidad de pedidos activos o pendientes para el cliente. */
+  async countPendingAsClient(clientId: string): Promise<number> {
+    if (isDemoMode) {
+      return readDb().orders.filter(
+        (o) => o.client_id === clientId && (o.status === 'pending' || o.status === 'accepted'),
+      ).length
+    }
+    const { count, error } = await requireSupabase()
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', clientId)
+      .in('status', ['pending', 'accepted'])
+    if (error) return 0
+    return count ?? 0
+  },
+
   async create(input: CreateOrderInput): Promise<Order> {
     if (isDemoMode) {
       const now = new Date().toISOString()
