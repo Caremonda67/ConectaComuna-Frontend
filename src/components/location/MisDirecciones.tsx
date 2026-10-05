@@ -95,11 +95,11 @@ export function MisDirecciones({ usuarioId }: Props) {
         {direcciones?.map((d) => (
           <div
             key={d.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 bg-white p-3"
+            className="flex items-center justify-between gap-3 rounded-xl border border-ink-200 bg-white dark:bg-cream-50 p-3"
           >
             <div className="min-w-0">
               <p className="font-semibold text-ink-900">{d.etiqueta}</p>
-              <p className="truncate text-sm text-ink-500">{d.direccion_texto}</p>
+              <p className="truncate text-sm text-ink-500 dark:text-ink-400">{d.direccion_texto}</p>
             </div>
             <div className="flex shrink-0 gap-2">
               <Button size="sm" variant="secondary" onClick={() => usar(d)}>
@@ -120,7 +120,7 @@ export function MisDirecciones({ usuarioId }: Props) {
       </div>
 
       <form
-        className="space-y-3 rounded-[14px] border border-ink-200 bg-white p-3"
+        className="space-y-3 rounded-[14px] border border-ink-200 bg-white dark:bg-cream-50 p-3"
         onSubmit={(e) => {
           e.preventDefault()
           void guardar()

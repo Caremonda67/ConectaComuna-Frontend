@@ -92,21 +92,21 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-bold text-ink-900 text-base">{business.name}</h3>
             {business.verification_status === 'verified' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
-                <UI_ICONS.shieldCheck size={11} className="text-emerald-700" />
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 text-[10px] font-semibold text-emerald-800 dark:text-emerald-300">
+                <UI_ICONS.shieldCheck size={11} className="text-emerald-700 dark:text-emerald-400" />
                 Verificado
               </span>
             )}
           </div>
-          <p className="text-xs text-brand-800 font-medium">
+          <p className="text-xs text-brand-800 dark:text-brand-300 font-medium">
             {categoryLabel(business.category)} {business.neighborhood ? `· Barrio ${business.neighborhood}` : ''}
           </p>
           {business.description && (
-            <p className="text-xs text-ink-700 line-clamp-2 italic bg-white/80 dark:bg-cream-100/80 p-2 rounded-lg border border-ink-100">
+            <p className="text-xs text-ink-700 dark:text-ink-300 line-clamp-2 italic bg-white/80 dark:bg-cream-100/80 p-2 rounded-lg border border-ink-100 dark:border-ink-200">
               "{business.description}"
             </p>
           )}
-          <div className="flex items-center justify-between text-[11px] text-ink-500 pt-1 border-t border-brand-100">
+          <div className="flex items-center justify-between text-[11px] text-ink-500 pt-1 border-t border-brand-100 dark:border-brand-900/60">
             <span>ConectaComuna</span>
             <span>📱 {business.whatsapp || business.phone || 'Disponible en el barrio'}</span>
           </div>

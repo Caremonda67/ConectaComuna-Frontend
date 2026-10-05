@@ -120,7 +120,7 @@ export default function BusinessDetailPage() {
               className={cn(
                 'inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full',
                 openStatus.isOpen
-                  ? 'text-emerald-800 bg-emerald-100/80 border border-emerald-300'
+                  ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800/60'
                   : 'text-ink-700 bg-cream-200 border border-ink-200',
               )}
             >
@@ -140,11 +140,11 @@ export default function BusinessDetailPage() {
         </div>
 
         {business.verification_status === 'verified' && (
-          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900">
-            <UI_ICONS.shieldCheck size={18} className="text-emerald-700 shrink-0 mt-0.5" />
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-3 text-xs text-emerald-900 dark:text-emerald-200">
+            <UI_ICONS.shieldCheck size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold block">Negocio verificado en territorio</span>
-              <span className="text-[11px] text-emerald-800">
+              <span className="text-[11px] text-emerald-800 dark:text-emerald-300">
                 {business.verification_note || 'Validado en persona en la comuna por un facilitador o junta comunitaria.'}
               </span>
             </div>
@@ -152,11 +152,11 @@ export default function BusinessDetailPage() {
         )}
 
         {business.verification_status === 'under_review' && (
-          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900">
-            <UI_ICONS.alert size={18} className="text-amber-700 shrink-0 mt-0.5" />
+          <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200">
+            <UI_ICONS.alert size={18} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold block">Bajo observación comunitaria</span>
-              <span className="text-[11px] text-amber-800">
+              <span className="text-[11px] text-amber-800 dark:text-amber-300">
                 Este negocio cuenta con reportes recientes que están siendo verificados por la comunidad.
               </span>
             </div>

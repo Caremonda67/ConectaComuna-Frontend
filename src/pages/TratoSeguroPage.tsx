@@ -13,7 +13,7 @@ const ACUERDOS = [
     detalle:
       'Evita transferir el valor total por adelantado a personas que no conozcas en persona. En oficios que exigen comprar materiales antes (como telas para modistería, cerraduras nuevas o pintura), acuerden un anticipo máximo del 50% y pide copia o foto de la factura del almacén.',
     icon: UI_ICONS.handshake,
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    badgeColor: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60',
   },
   {
     numero: 2,
@@ -22,7 +22,7 @@ const ACUERDOS = [
     detalle:
       'Antes de autorizar el trabajo, pide confirmación escrita: ¿el precio incluye mano de obra y repuestos?, ¿cuánto tarda?, ¿hay costo por revisión o visita a domicilio? Tener el acuerdo en el chat evita malos entendidos al momento de cobrar.',
     icon: UI_ICONS.message,
-    badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+    badgeColor: 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800/60',
   },
   {
     numero: 3,
@@ -31,7 +31,7 @@ const ACUERDOS = [
     detalle:
       'Si vas a llevar prendas, calzado o electrodomésticos para reparación, acude directamente a la dirección publicada del taller o acuerden un punto visible y transitado (el parque, la panadería o la estación del MÍO). Si el servicio es a domicilio, avisa a alguien en tu casa sobre la visita.',
     icon: UI_ICONS.map,
-    badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+    badgeColor: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800/60',
   },
   {
     numero: 4,
@@ -40,7 +40,7 @@ const ACUERDOS = [
     detalle:
       'El compromiso del trabajador es entregar a tiempo y con calidad. Pero los imprevistos pasan en cualquier taller: si surge una demora, avisar al cliente con anticipación demuestra seriedad y respeto por el tiempo del vecino.',
     icon: UI_ICONS.calendar,
-    badgeColor: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+    badgeColor: 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800/60',
   },
   {
     numero: 5,
@@ -49,7 +49,7 @@ const ACUERDOS = [
     detalle:
       'Todo trabajo bien hecho merece respaldo. Si una costura quedó ajustada o una chapa presenta dificultad, habla de inmediato con la persona que lo hizo. En el barrio la reputación se construye respondiendo con buena actitud.',
     icon: UI_ICONS.shieldCheck,
-    badgeColor: 'bg-teal-100 text-teal-800 border-teal-300',
+    badgeColor: 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800/60',
   },
 ]
 
@@ -166,10 +166,10 @@ export default function TratoSeguroPage() {
                   <h3 className="text-base font-bold text-ink-900 leading-snug">
                     {acuerdo.titulo}
                   </h3>
-                  <p className="text-xs font-medium text-brand-800 bg-brand-50/70 p-2 rounded-lg border border-brand-100">
+                  <p className="text-xs font-medium text-brand-800 dark:text-brand-300 bg-brand-50/70 dark:bg-brand-950/40 p-2 rounded-lg border border-brand-100 dark:border-brand-900/60">
                     {acuerdo.resumen}
                   </p>
-                  <p className="text-xs text-ink-600 leading-relaxed">{acuerdo.detalle}</p>
+                  <p className="text-xs text-ink-600 dark:text-ink-400 leading-relaxed">{acuerdo.detalle}</p>
                 </div>
               </article>
             )
@@ -256,34 +256,34 @@ export default function TratoSeguroPage() {
           Señales de confianza en las fichas
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="card p-4 space-y-2 border-emerald-200 bg-emerald-50/40">
-            <div className="flex items-center gap-2 text-emerald-800 font-semibold text-sm">
+          <div className="card p-4 space-y-2 border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/30">
+            <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-semibold text-sm">
               <UI_ICONS.shieldCheck size={18} />
               <span>Verificado en territorio</span>
             </div>
-            <p className="text-xs text-ink-600">
+            <p className="text-xs text-ink-600 dark:text-ink-400">
               Un facilitador comprobó presencialmente que el taller o negocio existe físicamente en
               la comuna.
             </p>
           </div>
 
-          <div className="card p-4 space-y-2 border-amber-200 bg-amber-50/40">
-            <div className="flex items-center gap-2 text-amber-900 font-semibold text-sm">
+          <div className="card p-4 space-y-2 border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/30">
+            <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300 font-semibold text-sm">
               <UI_ICONS.star size={18} />
               <span>Reseñas de la comunidad</span>
             </div>
-            <p className="text-xs text-ink-600">
+            <p className="text-xs text-ink-600 dark:text-ink-400">
               Calificaciones de vecinos que ya contrataron el servicio. Reflejan cumplimiento y
               trato recibido.
             </p>
           </div>
 
-          <div className="card p-4 space-y-2 border-blue-200 bg-blue-50/40">
-            <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
+          <div className="card p-4 space-y-2 border-blue-200 dark:border-blue-800/60 bg-blue-50/40 dark:bg-blue-950/30">
+            <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-semibold text-sm">
               <UI_ICONS.person size={18} />
               <span>Acompañamiento facilitador</span>
             </div>
-            <p className="text-xs text-ink-600">
+            <p className="text-xs text-ink-600 dark:text-ink-400">
               Apoyo a personas mayores o artesanos que requieren ayuda para coordinar su catálogo
               digital.
             </p>
@@ -292,34 +292,34 @@ export default function TratoSeguroPage() {
       </section>
 
       {/* Qué hacer si surge un desacuerdo */}
-      <section aria-labelledby="resolucion-titulo" className="card p-6 space-y-4 bg-cream-50">
+      <section aria-labelledby="resolucion-titulo" className="card p-6 space-y-4 bg-cream-50 dark:bg-cream-100/50">
         <div className="flex items-center gap-2 text-ink-900">
-          <UI_ICONS.alert size={20} className="text-amber-600" />
+          <UI_ICONS.alert size={20} className="text-amber-600 dark:text-amber-400" />
           <h2 id="resolucion-titulo" className="text-lg font-bold">
             ¿Qué hacer si surge un problema o desacuerdo?
           </h2>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 text-xs text-ink-700">
-          <div className="rounded-xl bg-white p-3.5 border border-ink-100 space-y-1">
+        <div className="grid gap-4 sm:grid-cols-3 text-xs text-ink-700 dark:text-ink-300">
+          <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">1. Conversar con calma</strong>
-            <p>
+            <p className="text-ink-600 dark:text-ink-400">
               Revisa lo hablado en el chat inicial. Casi siempre los desacuerdos se deben a una
               confusión de horarios o especificaciones.
             </p>
           </div>
 
-          <div className="rounded-xl bg-white p-3.5 border border-ink-100 space-y-1">
+          <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">2. Pedir la garantía</strong>
-            <p>
+            <p className="text-ink-600 dark:text-ink-400">
               Pide amablemente la corrección del trabajo en un plazo prudente. Un buen oficio
               responde siempre por su labor.
             </p>
           </div>
 
-          <div className="rounded-xl bg-white p-3.5 border border-ink-100 space-y-1">
+          <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">3. Reportar en la app</strong>
-            <p>
+            <p className="text-ink-600 dark:text-ink-400">
               Si detectas engaño o negativa injustificada, usa el botón "Reportar negocio" o
               escríbenos a la línea comunitaria de WhatsApp.
             </p>

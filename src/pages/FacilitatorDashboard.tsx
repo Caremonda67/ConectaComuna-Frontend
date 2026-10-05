@@ -253,10 +253,10 @@ export default function FacilitatorDashboard() {
                     <div className="mt-2">
                       <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
                         vinculacion.estado_vinculacion === 'aprobado'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-green-100 dark:bg-emerald-950/60 text-green-800 dark:text-emerald-300'
                           : vinculacion.estado_vinculacion === 'pendiente'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-rose-100 text-rose-800'
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
+                            : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
                       }`}>
                         {vinculacion.estado_vinculacion === 'aprobado'
                           ? 'Acceso concedido'
@@ -269,26 +269,26 @@ export default function FacilitatorDashboard() {
                 </div>
 
                 {vinculacion.estado_vinculacion === 'aprobado' && (
-                  <div className="mt-4 space-y-3 border-t border-ink-100 pt-3">
-                    <div className="rounded-xl border p-3 text-xs bg-cream-50 space-y-2">
+                  <div className="mt-4 space-y-3 border-t border-ink-100 dark:border-ink-200 pt-3">
+                    <div className="rounded-xl border border-ink-100 dark:border-ink-200 p-3 text-xs bg-cream-50 dark:bg-cream-100/50 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-ink-900 flex items-center gap-1.5">
                           <UI_ICONS.shieldCheck
                             size={16}
-                            className={negocio.verification_status === 'verified' ? 'text-emerald-700' : 'text-ink-400'}
+                            className={negocio.verification_status === 'verified' ? 'text-emerald-700 dark:text-emerald-400' : 'text-ink-400'}
                           />
                           Sello de verificación en territorio
                         </span>
                         {negocio.verification_status === 'verified' ? (
-                          <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 font-medium text-[11px]">
                             Verificado
                           </span>
                         ) : negocio.verification_status === 'under_review' ? (
-                          <span className="rounded-full bg-amber-100 text-amber-800 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 font-medium text-[11px]">
                             Bajo observación
                           </span>
                         ) : (
-                          <span className="rounded-full bg-ink-200 text-ink-700 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-ink-200 dark:bg-ink-100 text-ink-700 dark:text-ink-300 px-2 py-0.5 font-medium text-[11px]">
                             Sin verificar
                           </span>
                         )}
@@ -332,7 +332,7 @@ export default function FacilitatorDashboard() {
                               Validar en territorio
                             </Button>
                           ) : (
-                            <div className="mt-2 p-2.5 bg-white rounded-xl border border-brand-300 space-y-2 text-xs">
+                            <div className="mt-2 p-2.5 bg-white dark:bg-cream-100 rounded-xl border border-brand-300 dark:border-brand-800/60 space-y-2 text-xs">
                               <p className="font-semibold text-ink-900">
                                 Certificar visita territorial:
                               </p>
@@ -341,7 +341,7 @@ export default function FacilitatorDashboard() {
                                 value={notaVerificacion}
                                 onChange={(e) => setNotaVerificacion(e.target.value)}
                                 placeholder="Nota de campo (ej: Local visitado en Carrera 41)"
-                                className="w-full rounded-lg border border-ink-200 px-2.5 py-1.5 text-xs text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                className="w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1.5 text-xs text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                               />
                               <div className="flex gap-2">
                                 <Button
@@ -425,7 +425,7 @@ export default function FacilitatorDashboard() {
                 Alertas y reportes comunitarios
               </h2>
             </div>
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+            <span className="rounded-full bg-amber-100 dark:bg-amber-950/60 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
               {reportes.length} {reportes.length === 1 ? 'reporte' : 'reportes'}
             </span>
           </div>

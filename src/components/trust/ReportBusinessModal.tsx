@@ -73,7 +73,7 @@ export function ReportBusinessModal({
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
           className="w-full max-w-sm rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl text-center space-y-3 border border-ink-200"
         >
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300">
             <UI_ICONS.alert size={24} />
           </div>
           <h2 className="text-lg font-bold text-ink-900">Identificación requerida</h2>
@@ -143,11 +143,11 @@ export function ReportBusinessModal({
       >
         {enviado ? (
           <div className="text-center py-4 space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-800">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300">
               <UI_ICONS.shieldCheck size={24} />
             </div>
             <h2 className="text-lg font-bold text-ink-900">Reporte recibido</h2>
-            <p className="text-xs text-ink-600 leading-relaxed">
+            <p className="text-xs text-ink-600 dark:text-ink-400 leading-relaxed">
               Gracias por cuidar la seguridad de nuestra comuna. El equipo de facilitadores y la administración revisarán la información de {businessName}.
             </p>
             <Button
@@ -160,11 +160,11 @@ export function ReportBusinessModal({
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-800">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300">
                 <UI_ICONS.flag size={20} />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-rose-800">
+                <p className="text-xs font-semibold uppercase tracking-wider text-rose-800 dark:text-rose-300">
                   Protección comunitaria
                 </p>
                 <h2 id="reporte-titulo" className="text-lg font-bold text-ink-900">

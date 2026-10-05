@@ -55,7 +55,9 @@ export function TratoSeguroModal({
         <div className="flex items-start gap-3">
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-              isVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+              isVerified
+                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
+                : 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
             }`}
           >
             <ShieldIcon size={22} strokeWidth={2} />
@@ -71,12 +73,12 @@ export function TratoSeguroModal({
         </div>
 
         {isVerified ? (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900 leading-relaxed">
+          <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-3 text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
             <span className="font-semibold block">Negocio verificado en territorio</span>
             Un facilitador o líder comunitario visitó y validó la existencia física de {businessName} en la comuna.
           </div>
         ) : (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 leading-relaxed">
+          <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
             <span className="font-semibold block">Negocio sin verificación presencial</span>
             Este negocio aún no cuenta con visita territorial de un facilitador. Te aconsejamos especial precaución con pagos por adelantado.
           </div>
@@ -84,7 +86,7 @@ export function TratoSeguroModal({
 
         <div className="space-y-2.5 text-xs text-ink-700">
           <div className="flex items-start gap-2.5">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-800 text-[11px]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/60 font-bold text-brand-800 dark:text-brand-300 text-[11px]">
               1
             </span>
             <p>

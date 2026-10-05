@@ -262,11 +262,11 @@ export function UbicacionPicker({ value, onChange }: Props) {
           )}
 
           {error && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 flex items-start gap-2">
-              <UI_ICONS.alert size={16} className="text-amber-700 shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 p-2.5 text-xs text-amber-900 dark:text-amber-200 flex items-start gap-2">
+              <UI_ICONS.alert size={16} className="text-amber-700 dark:text-amber-400 shrink-0 mt-0.5" />
               <div>
                 <span className="font-semibold block">{error}</span>
-                <span className="text-amber-800 text-[11px]">
+                <span className="text-amber-800 dark:text-amber-300 text-[11px]">
                   Toca cualquiera de los barrios de arriba o marca un punto en el mapa.
                 </span>
               </div>

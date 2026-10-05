@@ -124,8 +124,8 @@ export default function BusinessDashboard() {
 
       {/* Gestión asistida: le decimos exactamente qué le falta y por qué importa. */}
       {completion.percent < 100 && (
-        <section className="rounded-2xl border border-brand-100 bg-brand-50 p-4">
-          <h2 className="font-bold text-brand-700">
+        <section className="rounded-2xl border border-brand-100 dark:border-brand-900/60 bg-brand-50 dark:bg-brand-950/40 p-4">
+          <h2 className="font-bold text-brand-700 dark:text-brand-300">
             Tu perfil está {completion.percent}% completo
           </h2>
           <div
@@ -134,14 +134,14 @@ export default function BusinessDashboard() {
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label="Completitud del perfil"
-            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white"
+            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white dark:bg-cream-200"
           >
             <div
               className="h-full bg-brand-500 rounded-full transition-all duration-700 ease-out"
               style={{ width: `${completion.percent}%` }}
             />
           </div>
-          <ul className="mt-3 space-y-1 text-sm text-brand-700">
+          <ul className="mt-3 space-y-1 text-sm text-brand-700 dark:text-brand-300">
             {completion.missing.map((m) => (
               <li key={m}>• {m}</li>
             ))}
@@ -300,7 +300,7 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
             {pendientes.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/60 p-3"
               >
                 <div>
                   <p className="font-semibold">{s.facilitador?.full_name ?? 'Vecino'}</p>

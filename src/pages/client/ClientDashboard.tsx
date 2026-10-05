@@ -88,7 +88,7 @@ export default function ClientDashboard() {
                 type="text"
                 value={nuevoNombre}
                 onChange={(e) => setNuevoNombre(e.target.value)}
-                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -98,7 +98,7 @@ export default function ClientDashboard() {
                 type="tel"
                 value={nuevoTelefono}
                 onChange={(e) => setNuevoTelefono(e.target.value)}
-                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -109,14 +109,14 @@ export default function ClientDashboard() {
                 value={nuevoBarrio}
                 onChange={(e) => setNuevoBarrio(e.target.value)}
                 placeholder="Escribe tu barrio"
-                className="w-full rounded-lg border border-ink-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={detectarBarrio}
                   disabled={detectando}
-                  className="flex items-center text-xs font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+                  className="flex items-center text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 disabled:opacity-50"
                 >
                   {detectando ? '⏳ Detectando...' : (
                     <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
@@ -170,13 +170,13 @@ export default function ClientDashboard() {
         )}
 
         {!isDual && (
-          <div className="mt-4 rounded-xl bg-brand-50 p-3">
-            <p className="text-sm text-brand-700">
+          <div className="mt-4 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40 p-3">
+            <p className="text-sm text-brand-700 dark:text-brand-300">
               ¿Tienes un oficio? Activa tu cuenta de negocio y empieza a recibir clientes de
               la comuna.
             </p>
             {errorActivacion && (
-              <p className="mt-2 text-xs font-medium text-rose-600">{errorActivacion}</p>
+              <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">{errorActivacion}</p>
             )}
             <Button
               size="sm"

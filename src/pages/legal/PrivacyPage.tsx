@@ -32,12 +32,12 @@ export default function PrivacyPage() {
       </header>
 
       {/* Regla de oro de privacidad comunal */}
-      <div className="card p-5 border-emerald-200 bg-emerald-50/60 space-y-2">
-        <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm sm:text-base">
-          <UI_ICONS.shieldCheck size={20} className="text-emerald-700 shrink-0" />
+      <div className="card p-5 border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 space-y-2">
+        <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-300 font-bold text-sm sm:text-base">
+          <UI_ICONS.shieldCheck size={20} className="text-emerald-700 dark:text-emerald-400 shrink-0" />
           <span>Regla de oro: Tu barrio, nunca tu dirección privada exacta</span>
         </div>
-        <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">
+        <p className="text-xs sm:text-sm text-emerald-950 dark:text-emerald-100/90 leading-relaxed">
           Por seguridad de las familias del barrio, ConectaComuna <strong>no expone la dirección exacta
           residencial</strong> (número de manzana, casa o apartamento) en los mapas públicos sin tu
           consentimiento explícito. Mostramos el <strong>barrio</strong> y el sector de referencia
