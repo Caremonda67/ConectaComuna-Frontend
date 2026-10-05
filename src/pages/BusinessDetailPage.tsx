@@ -862,20 +862,23 @@ function SolicitudEnviadaModal({
             <h2 className="text-lg font-bold text-ink-900 dark:text-ink-100">
               ¡Solicitud registrada!
             </h2>
-            <p className="text-xs text-ink-500">
-              Código de seguimiento: <span className="font-mono font-bold text-brand-700 dark:text-brand-300">{code}</span>
+            <p className="text-xs text-ink-600 dark:text-ink-300 mt-0.5">
+              Código de seguimiento:{' '}
+              <span className="font-mono font-bold text-brand-800 dark:text-brand-200 bg-brand-100/70 dark:bg-brand-900/60 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-700">
+                {code}
+              </span>
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-50/5 p-3.5 space-y-2 text-sm">
+        <div className="rounded-xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
           <div className="flex justify-between items-start">
-            <span className="text-ink-500 text-xs">Servicio:</span>
+            <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Servicio:</span>
             <span className="font-semibold text-ink-900 dark:text-ink-100 text-right">{order.title}</span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="text-ink-500 text-xs">Modalidad:</span>
+            <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Modalidad:</span>
             <span className="text-xs font-medium text-ink-800 dark:text-ink-200">
               {order.service_location_type === 'home_delivery'
                 ? `A domicilio (${order.delivery_address || 'Dirección acordada'})`
@@ -884,9 +887,9 @@ function SolicitudEnviadaModal({
           </div>
 
           {order.price_estimate && (
-            <div className="flex justify-between items-center pt-1 border-t border-ink-100 dark:border-ink-800">
-              <span className="text-ink-500 text-xs">Presupuesto inicial:</span>
-              <span className="font-bold text-brand-700 dark:text-brand-300">
+            <div className="flex justify-between items-center pt-2 border-t border-ink-200 dark:border-ink-700">
+              <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Presupuesto inicial:</span>
+              <span className="font-bold text-brand-800 dark:text-brand-300">
                 {formatCurrency(order.price_estimate)}
               </span>
             </div>
@@ -894,8 +897,8 @@ function SolicitudEnviadaModal({
         </div>
 
         <div className="rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3 text-xs text-brand-900 dark:text-brand-200">
-          <p className="font-semibold flex items-center gap-1.5 mb-1">
-            <UI_ICONS.shieldCheck size={14} className="shrink-0 text-brand-600" />
+          <p className="font-semibold flex items-center gap-1.5 mb-1 text-brand-900 dark:text-brand-200">
+            <UI_ICONS.shieldCheck size={14} className="shrink-0 text-brand-700 dark:text-brand-300" />
             Respaldo Trato Seguro
           </p>
           <p className="text-brand-800 dark:text-brand-300">

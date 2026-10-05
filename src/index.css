@@ -47,16 +47,18 @@ html.dark {
   --color-cream-200: #232c26;
   --color-cream-300: #2e3a33;
 
-  /* Verde de marca en modo oscuro: mayor luminancia para legibilidad y contraste */
-  --color-brand-50: #172a1d;
-  --color-brand-100: #213f2b;
-  --color-brand-200: #2f593b;
-  --color-brand-300: #427b51;
-  --color-brand-400: #5da56e;
-  --color-brand-500: #7cc386;
-  --color-brand-600: #6ab374;
+  /* Verde de marca en modo oscuro: tonos de texto claros y legibles sobre fondo oscuro */
+  --color-brand-50: #0f1f14;
+  --color-brand-100: #dcf7e2;
+  --color-brand-200: #bfeec8;
+  --color-brand-300: #9de1a8;
+  --color-brand-400: #7cc386;
+  --color-brand-500: #6ab374;
+  --color-brand-600: #5da56e;
   --color-brand-700: #94d59d;
   --color-brand-800: #bfe9c6;
+  --color-brand-900: #1a3321;
+  --color-brand-950: #0e1f13;
 
   /* Neutros en modo oscuro: descansados, sin brillo cegador */
   --color-ink-900: #f2f5f2;
