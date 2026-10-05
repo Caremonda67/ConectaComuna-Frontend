@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import { UI_ICONS } from '@/components/ui/icons'
 import { Button } from '@/components/ui/Button'
@@ -127,6 +128,16 @@ export function TratoSeguroModal({
           <Button onClick={onClose} variant="secondary" fullWidth>
             Volver
           </Button>
+        </div>
+
+        <div className="pt-1 text-center">
+          <Link
+            to="/trato-seguro"
+            onClick={onClose}
+            className="text-xs font-semibold text-brand-700 hover:text-brand-900 underline underline-offset-2"
+          >
+            Conoce los 5 acuerdos del Trato Seguro Comunal →
+          </Link>
         </div>
       </motion.div>
     </div>

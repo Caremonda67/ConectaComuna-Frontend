@@ -39,6 +39,9 @@ import {
   MessageCircle,
   LogIn,
   User,
+  CheckCircle2,
+  HelpCircle,
+  FileText,
 } from 'lucide-react'
 
 /**
@@ -105,4 +108,7 @@ export const UI_ICONS = {
   whatsapp: MessageCircle,
   logIn: LogIn,
   user: User,
+  checkCircle: CheckCircle2,
+  helpCircle: HelpCircle,
+  fileText: FileText,
 } as const satisfies Record<string, LucideIcon>
