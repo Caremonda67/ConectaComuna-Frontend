@@ -57,11 +57,11 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-        className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto border border-ink-200"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/50 text-brand-800 dark:text-brand-300">
               <UI_ICONS.share size={20} />
             </div>
             <div>
@@ -88,7 +88,7 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
         </p>
 
         {/* Vista previa del volante digital */}
-        <div className="rounded-xl border border-brand-200 bg-brand-50/40 p-4 space-y-2">
+        <div className="rounded-xl border border-brand-200 dark:border-brand-900/60 bg-brand-50/40 dark:bg-brand-950/30 p-4 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-bold text-ink-900 text-base">{business.name}</h3>
             {business.verification_status === 'verified' && (
@@ -102,7 +102,7 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
             {categoryLabel(business.category)} {business.neighborhood ? `· Barrio ${business.neighborhood}` : ''}
           </p>
           {business.description && (
-            <p className="text-xs text-ink-700 line-clamp-2 italic bg-white/80 p-2 rounded-lg border border-ink-100">
+            <p className="text-xs text-ink-700 line-clamp-2 italic bg-white/80 dark:bg-cream-100/80 p-2 rounded-lg border border-ink-100">
               "{business.description}"
             </p>
           )}

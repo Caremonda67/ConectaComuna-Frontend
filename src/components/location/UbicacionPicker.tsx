@@ -118,10 +118,10 @@ export function UbicacionPicker({ value, onChange }: Props) {
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         className={cn(
-          'flex min-h-11 w-full items-center justify-between gap-2 rounded-full border px-4 text-left',
+          'flex min-h-11 w-full items-center justify-between gap-2 rounded-full border px-4 text-left transition-colors',
           abierto
-            ? 'border-brand-500 bg-brand-50 text-ink-900'
-            : 'border-ink-300 bg-white text-ink-700 hover:bg-cream-200',
+            ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-ink-900'
+            : 'border-ink-300 dark:border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-200 dark:hover:bg-cream-200',
         )}
       >
         <span className="flex items-center gap-2 truncate">
@@ -137,14 +137,14 @@ export function UbicacionPicker({ value, onChange }: Props) {
       </button>
 
       {abierto && (
-        <div className="mt-2 space-y-3 rounded-[14px] border border-ink-200 bg-white p-3">
+        <div className="mt-2 space-y-3 rounded-[14px] border border-ink-200 bg-white dark:bg-cream-50 p-3 shadow-lg">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink-900">¿Dónde buscamos?</h2>
             <button
               type="button"
               onClick={cerrar}
               aria-label="Cerrar selector de ubicación"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-500 hover:bg-cream-200"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-500 hover:bg-cream-200 cursor-pointer"
             >
               <X size={18} strokeWidth={2} aria-hidden="true" />
             </button>
@@ -156,7 +156,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
           </Button>
 
           {/* Accesos directos a barrios de la comuna en 1 toque */}
-          <div className="rounded-xl border border-ink-100 bg-cream-50 p-2.5 space-y-1.5">
+          <div className="rounded-xl border border-ink-100 dark:border-ink-200 bg-cream-50 dark:bg-cream-100 p-2.5 space-y-1.5">
             <span className="text-[11px] font-semibold text-ink-600 uppercase tracking-wider block">
               Barrios de la comuna (1 toque)
             </span>
@@ -169,7 +169,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
                     onChange({ etiqueta: b.nombre, center: b.center, origen: 'busqueda' })
                     cerrar()
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-2.5 py-1 text-xs font-medium text-ink-800 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-900 active:scale-95 transition-all cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1 text-xs font-medium text-ink-800 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-cream-200 hover:text-brand-900 active:scale-95 transition-all cursor-pointer shadow-xs"
                 >
                   <MapPin size={12} className="text-brand-600 shrink-0" />
                   {b.nombre}
@@ -206,7 +206,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
                   }
                 }}
                 placeholder="Ej. El Rodeo, Antonio Nariño…"
-                className="min-h-11 w-full rounded-full border border-ink-300 bg-white pl-9 pr-3 text-sm outline-none focus:border-brand-500"
+                className="min-h-11 w-full rounded-full border border-ink-300 dark:border-ink-200 bg-white dark:bg-cream-100 pl-9 pr-3 text-sm outline-none focus:border-brand-500 text-ink-900 placeholder:text-ink-400"
               />
             </div>
 
@@ -216,7 +216,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
               <ul
                 role="listbox"
                 aria-label="Sugerencias de ubicación"
-                className="mt-2 divide-y divide-ink-100 rounded-xl border border-ink-200"
+                className="mt-2 divide-y divide-ink-100 dark:divide-ink-200 rounded-xl border border-ink-200 bg-white dark:bg-cream-100 overflow-hidden"
               >
                 {sugerencias.map((s) => (
                   <li key={s.etiqueta}>
@@ -224,7 +224,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
                       type="button"
                       role="option"
                       onClick={() => elegirSugerencia(s)}
-                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ink-800 hover:bg-brand-50"
+                      className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ink-800 hover:bg-brand-50 dark:hover:bg-brand-950/40 cursor-pointer"
                     >
                       <MapPin aria-hidden="true" size={15} strokeWidth={1.75} className="shrink-0 text-brand-500" />
                       <span className="truncate">{s.etiqueta}</span>

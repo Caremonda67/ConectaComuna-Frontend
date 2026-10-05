@@ -36,7 +36,7 @@ export function AuthGate({ open, onClose, from, motivo }: Props) {
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-        className="relative z-10 w-full max-w-sm rounded-t-[18px] border border-ink-200 bg-white p-4 shadow-lg sm:rounded-[18px]"
+        className="relative z-10 w-full max-w-sm rounded-t-[18px] border border-ink-200 bg-white dark:bg-cream-50 p-4 shadow-lg sm:rounded-[18px]"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>

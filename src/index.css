@@ -36,6 +36,41 @@
   --color-accent-500: #6fb257;
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+html.dark {
+  color-scheme: dark;
+
+  /* Paleta nocturna cálida: tonos musgo pizarra, orgánicos y amables para la vista */
+  --color-cream-50: #1b221e;
+  --color-cream-100: #121714;
+  --color-cream-200: #232c26;
+  --color-cream-300: #2e3a33;
+
+  /* Verde de marca en modo oscuro: mayor luminancia para legibilidad y contraste */
+  --color-brand-50: #172a1d;
+  --color-brand-100: #213f2b;
+  --color-brand-200: #2f593b;
+  --color-brand-300: #427b51;
+  --color-brand-400: #5da56e;
+  --color-brand-500: #7cc386;
+  --color-brand-600: #6ab374;
+  --color-brand-700: #94d59d;
+  --color-brand-800: #bfe9c6;
+
+  /* Neutros en modo oscuro: descansados, sin brillo cegador */
+  --color-ink-900: #f2f5f2;
+  --color-ink-800: #e2e8e3;
+  --color-ink-700: #ccd5cd;
+  --color-ink-600: #adbcaf;
+  --color-ink-500: #8d9e91;
+  --color-ink-400: #6a7c6f;
+  --color-ink-200: #2a362f;
+  --color-ink-100: #1e2722;
+
+  --color-accent-500: #7cc386;
+}
+
 :root {
   color-scheme: light;
   /* Fuentes del sistema: cero descargas de tipografías en conexiones lentas. */
@@ -97,6 +132,49 @@ body {
   }
 }
 
+html.dark .card {
+  background-color: var(--color-cream-50);
+  border-color: var(--color-ink-200);
+}
+
+html.dark .card-soft {
+  background-color: var(--color-brand-50);
+  border-color: var(--color-brand-100);
+}
+
+.leaflet-container {
+  font: inherit;
+  z-index: 0;
+}
+
+/* Adaptación de mapas Leaflet al modo oscuro: contraste suave y sin destellos blancos */
+html.dark .leaflet-tile {
+  filter: brightness(0.72) invert(1) contrast(2.7) hue-rotate(185deg) saturate(0.35) brightness(0.88);
+}
+
+html.dark .leaflet-popup-content-wrapper,
+html.dark .leaflet-popup-tip {
+  background: var(--color-cream-50);
+  color: var(--color-ink-900);
+  border: 1px solid var(--color-ink-200);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+html.dark .leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-ink-500);
+}
+
+html.dark .leaflet-bar a {
+  background-color: var(--color-cream-50);
+  color: var(--color-ink-900);
+  border-bottom: 1px solid var(--color-ink-200);
+}
+
+html.dark .leaflet-bar a:hover {
+  background-color: var(--color-cream-200);
+  color: var(--color-brand-600);
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
@@ -111,11 +189,6 @@ body {
   );
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
-}
-
-.leaflet-container {
-  font: inherit;
-  z-index: 0;
 }
 
 /* Ondas de radar del mapa barrial: fluidas, aceleradas por GPU y sin tirones */

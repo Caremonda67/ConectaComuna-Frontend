@@ -52,7 +52,7 @@ const columns = [
 /** Footer presente en todas las páginas (bloque 8 del diseño). */
 export function SiteFooter() {
   return (
-    <footer className="mt-10 border-t border-ink-200 bg-white">
+    <footer className="mt-10 border-t border-ink-200 bg-white dark:bg-cream-50">
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Logo />
@@ -97,7 +97,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-white transition-all hover:bg-brand-600 hover:-translate-y-0.5 active:scale-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-white dark:bg-cream-200 dark:text-ink-900 dark:hover:bg-brand-500 dark:hover:text-white transition-all hover:bg-brand-600 hover:-translate-y-0.5 active:scale-95"
                 >
                   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d={s.path} />

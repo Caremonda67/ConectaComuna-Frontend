@@ -26,11 +26,11 @@ const NODES: ServiceNode[] = [
     label: 'Arreglos',
     slug: 'tecnologia',
     icon: Wrench,
-    color: 'text-sky-700',
-    bg: 'bg-sky-50',
-    borderColor: 'border-sky-200',
-    badgeBg: 'bg-sky-100',
-    badgeText: 'text-sky-800',
+    color: 'text-sky-700 dark:text-sky-300',
+    bg: 'bg-sky-50 dark:bg-sky-950/50',
+    borderColor: 'border-sky-200 dark:border-sky-800/60',
+    badgeBg: 'bg-sky-100 dark:bg-sky-900/60',
+    badgeText: 'text-sky-800 dark:text-sky-200',
     x: 50,
     y: 19,
     floatDuration: 4.0,
@@ -42,11 +42,11 @@ const NODES: ServiceNode[] = [
     label: 'Cerrajería',
     slug: 'cerrajeria',
     icon: KeyRound,
-    color: 'text-amber-700',
-    bg: 'bg-amber-50',
-    borderColor: 'border-amber-200',
-    badgeBg: 'bg-amber-100',
-    badgeText: 'text-amber-800',
+    color: 'text-amber-700 dark:text-amber-300',
+    bg: 'bg-amber-50 dark:bg-amber-950/50',
+    borderColor: 'border-amber-200 dark:border-amber-800/60',
+    badgeBg: 'bg-amber-100 dark:bg-amber-900/60',
+    badgeText: 'text-amber-800 dark:text-amber-200',
     x: 20,
     y: 31,
     floatDuration: 4.4,
@@ -58,11 +58,11 @@ const NODES: ServiceNode[] = [
     label: 'Belleza',
     slug: 'belleza',
     icon: Sparkles,
-    color: 'text-pink-600',
-    bg: 'bg-pink-50',
-    borderColor: 'border-pink-200',
-    badgeBg: 'bg-pink-100',
-    badgeText: 'text-pink-800',
+    color: 'text-pink-600 dark:text-pink-300',
+    bg: 'bg-pink-50 dark:bg-pink-950/50',
+    borderColor: 'border-pink-200 dark:border-pink-800/60',
+    badgeBg: 'bg-pink-100 dark:bg-pink-900/60',
+    badgeText: 'text-pink-800 dark:text-pink-200',
     x: 80,
     y: 31,
     floatDuration: 4.8,
@@ -74,11 +74,11 @@ const NODES: ServiceNode[] = [
     label: 'Costura',
     slug: 'costura',
     icon: Scissors,
-    color: 'text-indigo-600',
-    bg: 'bg-indigo-50',
-    borderColor: 'border-indigo-200',
-    badgeBg: 'bg-indigo-100',
-    badgeText: 'text-indigo-800',
+    color: 'text-indigo-600 dark:text-indigo-300',
+    bg: 'bg-indigo-50 dark:bg-indigo-950/50',
+    borderColor: 'border-indigo-200 dark:border-indigo-800/60',
+    badgeBg: 'bg-indigo-100 dark:bg-indigo-900/60',
+    badgeText: 'text-indigo-800 dark:text-indigo-200',
     x: 24,
     y: 72,
     floatDuration: 5.0,
@@ -90,11 +90,11 @@ const NODES: ServiceNode[] = [
     label: 'Comercio',
     slug: 'ambulante',
     icon: ShoppingBag,
-    color: 'text-emerald-700',
-    bg: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    badgeBg: 'bg-emerald-100',
-    badgeText: 'text-emerald-800',
+    color: 'text-emerald-700 dark:text-emerald-300',
+    bg: 'bg-emerald-50 dark:bg-emerald-950/50',
+    borderColor: 'border-emerald-200 dark:border-emerald-800/60',
+    badgeBg: 'bg-emerald-100 dark:bg-emerald-900/60',
+    badgeText: 'text-emerald-800 dark:text-emerald-200',
     x: 76,
     y: 72,
     floatDuration: 4.6,
@@ -110,7 +110,7 @@ export function HomeHeroIllustration() {
 
   return (
     <div
-      className="relative isolate z-0 h-72 sm:h-80 lg:h-84 w-full overflow-hidden rounded-2xl border border-brand-200/70 bg-gradient-to-br from-brand-50/90 via-white to-brand-100/40 shadow-xs select-none"
+      className="relative isolate z-0 h-72 sm:h-80 lg:h-84 w-full overflow-hidden rounded-2xl border border-brand-200/70 dark:border-brand-900/40 bg-gradient-to-br from-brand-50/90 via-white to-brand-100/40 dark:from-brand-950/40 dark:via-cream-50 dark:to-brand-950/20 shadow-xs select-none"
       aria-label="Mapa interactivo animado de servicios de la comuna"
     >
       {/* Patrón de cuadrícula tenue de fondo simulando mapa barrial */}
@@ -203,7 +203,7 @@ export function HomeHeroIllustration() {
           />
         )}
 
-        <span className="mt-1 rounded-full bg-white/95 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-brand-800 shadow-xs border border-brand-200 whitespace-nowrap">
+        <span className="mt-1 rounded-full bg-white/95 dark:bg-cream-50/95 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-brand-800 dark:text-brand-600 shadow-xs border border-brand-200 dark:border-brand-900/60 whitespace-nowrap">
           Tu barrio
         </span>
       </div>

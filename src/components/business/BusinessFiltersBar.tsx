@@ -85,7 +85,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           placeholder="Busca: costura, uñas, guardas…"
           value={filters.query ?? ''}
           onChange={(e) => onChange({ query: e.target.value })}
-          className="min-h-11 w-full rounded-[10px] border border-ink-200 bg-white px-4 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
+          className="min-h-11 w-full rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-4 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
         />
       </div>
 
@@ -106,7 +106,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             type="button"
             onClick={() => scrollByAmount(-220)}
             aria-label="Ver categorías anteriores"
-            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
           >
             <ChevronLeft size={16} strokeWidth={2.25} />
           </button>
@@ -164,7 +164,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             type="button"
             onClick={() => scrollByAmount(220)}
             aria-label="Ver más categorías"
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
           >
             <ChevronRight size={16} strokeWidth={2.25} />
           </button>
@@ -180,8 +180,8 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           className={cn(
             'inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium transition-colors cursor-pointer',
             filters.openNow
-              ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm'
-              : 'border-ink-200 bg-white text-ink-700 hover:bg-cream-100',
+              ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/60'
+              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
           )}
         >
           <span
@@ -198,7 +198,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           <select
             value={filters.sort ?? 'distance'}
             onChange={(e) => onChange({ sort: e.target.value as BusinessFilters['sort'] })}
-            className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white px-2 text-xs sm:text-sm text-ink-900"
+            className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-2 text-xs sm:text-sm text-ink-900"
           >
             <option value="distance" disabled={!hasLocation}>
               Más cerca
@@ -213,7 +213,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           <select
             value={String(filters.minRating ?? 0)}
             onChange={(e) => onChange({ minRating: Number(e.target.value) })}
-            className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white px-2 text-xs sm:text-sm text-ink-900"
+            className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-2 text-xs sm:text-sm text-ink-900"
           >
             <option value="0">Cualquiera</option>
             <option value="3">3★ o más</option>
@@ -228,7 +228,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             <select
               value={String(filters.radiusKm ?? 5)}
               onChange={(e) => onChange({ radiusKm: Number(e.target.value) })}
-              className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white px-2 text-xs sm:text-sm text-ink-900"
+              className="ml-1.5 min-h-9 rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-2 text-xs sm:text-sm text-ink-900"
             >
               <option value="1">1 km</option>
               <option value="3">3 km</option>
@@ -262,7 +262,7 @@ function CategoryChip({
         'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium whitespace-nowrap active:scale-95 transition-all duration-150 select-none cursor-pointer',
         active
           ? 'border-brand-500 bg-brand-500 text-white shadow-sm font-semibold'
-          : 'border-ink-200 bg-white text-ink-700 hover:border-brand-300 hover:bg-cream-50',
+          : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-300 hover:bg-cream-50 dark:hover:bg-cream-200',
       )}
     >
       <Icon aria-hidden="true" size={15} strokeWidth={1.75} />

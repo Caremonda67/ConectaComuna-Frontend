@@ -71,7 +71,7 @@ export function ReportBusinessModal({
           initial={{ opacity: 0, scale: 0.94, y: 16 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl text-center space-y-3"
+          className="w-full max-w-sm rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl text-center space-y-3 border border-ink-200"
         >
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-800">
             <UI_ICONS.alert size={24} />
@@ -139,7 +139,7 @@ export function ReportBusinessModal({
         initial={{ opacity: 0, scale: 0.94, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-        className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl space-y-4 max-h-[90vh] overflow-y-auto border border-ink-200"
       >
         {enviado ? (
           <div className="text-center py-4 space-y-3">

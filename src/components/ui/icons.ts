@@ -42,6 +42,8 @@ import {
   CheckCircle2,
   HelpCircle,
   FileText,
+  Sun,
+  Moon,
 } from 'lucide-react'
 
 /**
@@ -111,4 +113,6 @@ export const UI_ICONS = {
   checkCircle: CheckCircle2,
   helpCircle: HelpCircle,
   fileText: FileText,
+  sun: Sun,
+  moon: Moon,
 } as const satisfies Record<string, LucideIcon>
