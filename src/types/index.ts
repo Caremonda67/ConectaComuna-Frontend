@@ -83,7 +83,15 @@ export interface Business {
   wholesale_enabled?: boolean
   wholesale_min_order?: string | null
   wholesale_terms?: string | null
+  services_catalog?: ServiceCatalogItem[]
   created_at: string
+}
+
+export interface ServiceCatalogItem {
+  id: string
+  name: string
+  price: number | null
+  description?: string | null
 }
 
 export interface Producto {

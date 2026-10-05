@@ -169,6 +169,7 @@ export const businessService = {
         wholesale_enabled: input.wholesale_enabled ?? existing?.wholesale_enabled ?? false,
         wholesale_min_order: input.wholesale_min_order ?? existing?.wholesale_min_order ?? null,
         wholesale_terms: input.wholesale_terms ?? existing?.wholesale_terms ?? null,
+        services_catalog: input.services_catalog ?? existing?.services_catalog ?? [],
         created_at: existing?.created_at ?? new Date().toISOString(),
       }
       mutateDb((d) => {

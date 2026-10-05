@@ -13,7 +13,7 @@ import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
 import { DAY_NAMES } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
-import type { Business, BusinessHours, CategorySlug, Coordinates } from '@/types'
+import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
 
 const schema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -179,10 +179,30 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
   const [wholesaleEnabled, setWholesaleEnabled] = useState(managedBusiness?.wholesale_enabled ?? false)
   const [wholesaleMinOrder, setWholesaleMinOrder] = useState(managedBusiness?.wholesale_min_order ?? '')
   const [wholesaleTerms, setWholesaleTerms] = useState(managedBusiness?.wholesale_terms ?? '')
+  const [servicesCatalog, setServicesCatalog] = useState<ServiceCatalogItem[]>(
+    managedBusiness?.services_catalog ?? [],
+  )
   const [uploading, setUploading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
   const description = useWatch({ control, name: 'description' }) ?? ''
+
+  function handleAddService() {
+    setServicesCatalog((prev) => [
+      ...prev,
+      { id: `srv-${Date.now()}`, name: '', price: null, description: '' },
+    ])
+  }
+
+  function updateService(index: number, field: keyof ServiceCatalogItem, value: unknown) {
+    setServicesCatalog((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    )
+  }
+
+  function removeService(index: number) {
+    setServicesCatalog((prev) => prev.filter((_, i) => i !== index))
+  }
 
   async function onSubmit(values: Values) {
     if (!userId) return
@@ -204,6 +224,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         wholesale_enabled: wholesaleEnabled,
         wholesale_min_order: wholesaleEnabled ? wholesaleMinOrder.trim() || null : null,
         wholesale_terms: wholesaleEnabled ? wholesaleTerms.trim() || null : null,
+        services_catalog: servicesCatalog.filter((s) => s.name.trim().length > 0),
         is_active: true,
       })
       await onSaved()
@@ -406,6 +427,95 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
               placeholder="Ej: 20% de descuento sobre precio al detal. Entrega en 48 horas para dotaciones o revendedores."
               hint="Explica cómo manejas los precios o entregas para otros comerciantes de la comuna."
             />
+          </div>
+        )}
+      </section>
+
+      {/* Catálogo de servicios y precios de referencia */}
+      <section className="card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <h2 className="font-bold text-sm text-ink-900 dark:text-ink-100 flex items-center gap-2">
+              <UI_ICONS.fileText size={18} className="text-brand-500" />
+              Catálogo de servicios y tarifas de referencia
+            </h2>
+            <p className="text-xs text-ink-500">
+              Muestra a los vecinos tus servicios más pedidos y sus precios orientativos.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddService}
+            className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-950/40 cursor-pointer"
+          >
+            + Añadir servicio o tarifa
+          </button>
+        </div>
+
+        {servicesCatalog.length === 0 ? (
+          <p className="text-xs text-ink-500 italic py-2">
+            No has agregado servicios o tarifas de referencia aún. Añade los arreglos o trabajos que más te piden.
+          </p>
+        ) : (
+          <div className="space-y-3 pt-1">
+            {servicesCatalog.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-3 rounded-xl border border-ink-200 dark:border-ink-800 bg-cream-50 dark:bg-ink-900/40 space-y-2.5"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <label className="text-[11px] font-semibold text-ink-600 dark:text-ink-400 block mb-1">
+                      Servicio o producto
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Ruedo de pantalón o Copia de llave"
+                      value={item.name}
+                      onChange={(e) => updateService(idx, 'name', e.target.value)}
+                      className="w-full text-sm font-medium px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div className="w-36">
+                    <label className="text-[11px] font-semibold text-ink-600 dark:text-ink-400 block mb-1">
+                      Tarifa aprox. ($)
+                    </label>
+                    <input
+                      type="number"
+                      placeholder="Ej: 15000"
+                      value={item.price ?? ''}
+                      onChange={(e) =>
+                        updateService(
+                          idx,
+                          'price',
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+                  <div className="pt-5">
+                    <button
+                      type="button"
+                      onClick={() => removeService(idx)}
+                      className="p-1.5 text-ink-400 hover:text-red-500 transition-colors"
+                      title="Eliminar este servicio"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Descripción o detalle breve (ej: tela estándar, a mano o máquina)"
+                    value={item.description ?? ''}
+                    onChange={(e) => updateService(idx, 'description', e.target.value)}
+                    className="w-full text-xs text-ink-700 dark:text-ink-300 px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
