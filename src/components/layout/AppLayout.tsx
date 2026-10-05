@@ -5,6 +5,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
+import { usePendingOrdersCount } from '@/hooks/usePendingOrdersCount'
 import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
@@ -12,6 +13,7 @@ import { SiteFooter } from './SiteFooter'
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
   const { isDark, toggleTheme } = useTheme()
+  const { businessPendingCount, activeCount } = usePendingOrdersCount()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -193,7 +195,14 @@ export function AppLayout() {
                       {role === 'client' ? (
                         'Cliente'
                       ) : role === 'business' ? (
-                        'Negocio'
+                        <span className="inline-flex items-center gap-1">
+                          Negocio
+                          {businessPendingCount > 0 && (
+                            <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-amber-500 text-[9px] font-extrabold text-white">
+                              {businessPendingCount > 9 ? '9+' : businessPendingCount}
+                            </span>
+                          )}
+                        </span>
                       ) : (
                         <>
                           <span className="sm:hidden">Facil.</span>
@@ -210,9 +219,14 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/panel"
-                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-3 text-sm font-medium text-ink-900 sm:inline-flex hover:bg-cream-200 transition-colors"
+                  className="hidden min-h-9 items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-3 text-sm font-medium text-ink-900 sm:inline-flex hover:bg-cream-200 transition-colors"
                 >
-                  Mi cuenta
+                  <span>Mi cuenta</span>
+                  {activeCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-white shadow-2xs animate-pulse">
+                      {activeCount > 99 ? '99+' : activeCount}
+                    </span>
+                  )}
                 </NavLink>
                 <button
                   type="button"
@@ -286,12 +300,19 @@ export function AppLayout() {
                           className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-500 transition-all duration-200"
                         />
                       )}
-                      <Icon
-                        aria-hidden="true"
-                        size={20}
-                        strokeWidth={isActive ? 2.2 : 1.75}
-                        className={cn('transition-transform duration-200', isActive && 'scale-110')}
-                      />
+                      <div className="relative">
+                        <Icon
+                          aria-hidden="true"
+                          size={20}
+                          strokeWidth={isActive ? 2.2 : 1.75}
+                          className={cn('transition-transform duration-200', isActive && 'scale-110')}
+                        />
+                        {item.to === '/panel' && activeCount > 0 && (
+                          <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[9px] font-bold text-white ring-2 ring-white dark:ring-ink-900 animate-pulse">
+                            {activeCount > 9 ? '9+' : activeCount}
+                          </span>
+                        )}
+                      </div>
                       {item.label}
                     </>
                   )}
