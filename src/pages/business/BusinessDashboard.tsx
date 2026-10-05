@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 import { orderService } from '@/services/orderService'
 import { facilitadorService } from '@/services/facilitadorService'
 import { OrderCard } from '@/components/orders/OrderCard'
@@ -10,7 +11,7 @@ import { EmptyState, ErrorState } from '@/components/ui/States'
 import { RatingStars } from '@/components/ui/Rating'
 import { BadgeList } from '@/components/ui/Badges'
 import { Button } from '@/components/ui/Button'
-import { getBadges, profileCompletion } from '@/lib/utils'
+import { formatCurrency, getBadges, profileCompletion } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 
@@ -23,6 +24,9 @@ export default function BusinessDashboard() {
     () => (business ? orderService.listAsBusiness(business.id) : Promise.resolve([])),
     [business?.id],
   )
+
+  const reloadStable = useCallback(() => reload(), [reload])
+  useRealtimeOrders('business_id', business?.id, reloadStable)
 
   if (!business) {
     return (
@@ -48,6 +52,10 @@ export default function BusinessDashboard() {
     data?.filter((o) => ['accepted', 'in_progress'].includes(o.status)) ?? []
   const closed =
     data?.filter((o) => ['completed', 'cancelled'].includes(o.status)) ?? []
+  const totalGenerado =
+    data
+      ?.filter((o) => o.status === 'completed')
+      .reduce((acc, o) => acc + (o.final_price ?? o.price_estimate ?? 0), 0) ?? 0
 
   return (
     <div className="space-y-6">
@@ -74,6 +82,27 @@ export default function BusinessDashboard() {
           <Stat label="En curso" value={inProgress.length} />
           <Stat label="Finalizados" value={business.completed_orders} />
         </dl>
+
+        {totalGenerado > 0 && (
+          <div className="mt-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/40 p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold text-sm">
+                $
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                  Total generado en la comuna
+                </p>
+                <p className="text-lg font-black text-emerald-900 dark:text-emerald-100">
+                  {formatCurrency(totalGenerado)}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+              {business.completed_orders} {business.completed_orders === 1 ? 'servicio' : 'servicios'}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* Código de apadrinamiento para facilitadores */}
@@ -174,8 +203,8 @@ export default function BusinessDashboard() {
               key={o.id}
               order={o}
               perspective="business"
-              onStatusChange={async (status: OrderStatus) => {
-                await orderService.updateStatus(o.id, status)
+              onStatusChange={async (status: OrderStatus, options) => {
+                await orderService.updateStatus(o.id, status, options)
                 reload()
               }}
             />
@@ -194,8 +223,8 @@ export default function BusinessDashboard() {
                 key={o.id}
                 order={o}
                 perspective="business"
-                onStatusChange={async (status: OrderStatus) => {
-                  await orderService.updateStatus(o.id, status)
+                onStatusChange={async (status: OrderStatus, options) => {
+                  await orderService.updateStatus(o.id, status, options)
                   reload()
                 }}
               />

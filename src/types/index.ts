@@ -103,11 +103,18 @@ export interface Order {
   status: OrderStatus
   scheduled_for: string | null
   price_estimate: number | null
+  final_price?: number | null
+  advance_payment?: number | null
+  service_location_type?: 'workshop' | 'home_delivery'
+  delivery_address?: string | null
+  business_notes?: string | null
+  cancellation_reason?: string | null
+  photos?: string[]
   created_at: string
   updated_at: string
   /** Relaciones embebidas por Supabase (select con joins). */
-  business?: Pick<Business, 'id' | 'name' | 'category' | 'photos'>
-  client?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>
+  business?: Pick<Business, 'id' | 'name' | 'category' | 'photos' | 'phone'>
+  client?: Pick<Profile, 'id' | 'full_name' | 'avatar_url' | 'phone'>
   review?: Review | null
 }
 
