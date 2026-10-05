@@ -69,6 +69,15 @@ export default function BusinessDetailPage() {
     return `https://wa.me/57${clean}?text=${text}`
   }
 
+  function getWholesaleWhatsAppUrl() {
+    if (!business?.whatsapp) return ''
+    const clean = business.whatsapp.replace(/\D/g, '')
+    const text = encodeURIComponent(
+      `Hola ${business.name}, vi en Conecta Comuna que vendes al por mayor. Me interesa cotizar un lote o pedido mayorista.`,
+    )
+    return `https://wa.me/57${clean}?text=${text}`
+  }
+
   function handleWhatsApp() {
     if (!userId) {
       setPedirCuenta(true)
@@ -161,6 +170,48 @@ export default function BusinessDetailPage() {
               <span className="text-[11px] text-amber-800 dark:text-amber-300">
                 Este negocio cuenta con reportes recientes que están siendo verificados por la comunidad.
               </span>
+            </div>
+          </div>
+        )}
+
+        {business.wholesale_enabled && (
+          <div className="mt-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 text-xs text-indigo-950 dark:text-indigo-200">
+            <div className="flex items-start gap-2.5">
+              <UI_ICONS.package size={20} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <span className="font-bold text-sm text-indigo-900 dark:text-indigo-200">
+                    Venta al por mayor y distribuidores
+                  </span>
+                  {business.wholesale_min_order && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-medium text-[11px]">
+                      Pedido mín: {business.wholesale_min_order}
+                    </span>
+                  )}
+                </div>
+                {business.wholesale_terms ? (
+                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                    {business.wholesale_terms}
+                  </p>
+                ) : (
+                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                    Este emprendimiento ofrece precios especiales para tiendas, distribuidores y compras por volumen.
+                  </p>
+                )}
+                {business.whatsapp && !isOwner && (
+                  <div className="pt-1.5">
+                    <a
+                      href={getWholesaleWhatsAppUrl()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-semibold text-xs text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 hover:underline"
+                    >
+                      <UI_ICONS.whatsapp size={14} className="text-[#25D366]" />
+                      Consultar precios mayoristas por WhatsApp
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

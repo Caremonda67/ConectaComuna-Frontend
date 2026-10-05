@@ -153,6 +153,18 @@ export function getBadges(business: Business): Badge[] {
     })
   }
 
+  if (business.wholesale_enabled) {
+    badges.push({
+      id: 'wholesale',
+      label: 'Vende al por mayor',
+      description: business.wholesale_min_order
+        ? `Mayorista: ${business.wholesale_min_order}`
+        : 'Venta por mayor y precios especiales para distribuidores',
+      icon: BADGE_ICONS.package,
+      tone: 'info',
+    })
+  }
+
   return badges
 }
 

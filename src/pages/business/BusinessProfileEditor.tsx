@@ -176,6 +176,9 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
   const [hours, setHours] = useState<BusinessHours[]>(
     managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours(),
   )
+  const [wholesaleEnabled, setWholesaleEnabled] = useState(managedBusiness?.wholesale_enabled ?? false)
+  const [wholesaleMinOrder, setWholesaleMinOrder] = useState(managedBusiness?.wholesale_min_order ?? '')
+  const [wholesaleTerms, setWholesaleTerms] = useState(managedBusiness?.wholesale_terms ?? '')
   const [uploading, setUploading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
 
@@ -198,6 +201,9 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         lng: position.lng,
         photos,
         hours,
+        wholesale_enabled: wholesaleEnabled,
+        wholesale_min_order: wholesaleEnabled ? wholesaleMinOrder.trim() || null : null,
+        wholesale_terms: wholesaleEnabled ? wholesaleTerms.trim() || null : null,
         is_active: true,
       })
       await onSaved()
@@ -354,6 +360,53 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      {/* Venta al por mayor y distribuidores */}
+      <section className="card p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
+              <UI_ICONS.package size={20} />
+            </div>
+            <div>
+              <h2 className="font-bold text-sm text-ink-900 dark:text-ink-100">
+                Venta al por mayor y distribuidores
+              </h2>
+              <p className="text-xs text-ink-500">
+                ¿Vendes por lotes o atiendes a comerciantes y tiendas de barrio?
+              </p>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={wholesaleEnabled}
+              onChange={(e) => setWholesaleEnabled(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-cream-300 dark:bg-ink-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
+          </label>
+        </div>
+
+        {wholesaleEnabled && (
+          <div className="space-y-3 pt-2 border-t border-ink-100 dark:border-ink-700">
+            <TextField
+              label="Pedido mínimo al por mayor"
+              value={wholesaleMinOrder}
+              onChange={(e) => setWholesaleMinOrder(e.target.value)}
+              placeholder="Ej: A partir de media docena (6 unidades) o $100.000"
+              hint="Indica la cantidad o monto mínimo para acceder a precio mayorista."
+            />
+            <TextAreaField
+              label="Condiciones o descuentos mayoristas"
+              value={wholesaleTerms}
+              onChange={(e) => setWholesaleTerms(e.target.value)}
+              placeholder="Ej: 20% de descuento sobre precio al detal. Entrega en 48 horas para dotaciones o revendedores."
+              hint="Explica cómo manejas los precios o entregas para otros comerciantes de la comuna."
+            />
+          </div>
         )}
       </section>
 

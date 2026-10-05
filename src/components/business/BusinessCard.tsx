@@ -39,6 +39,15 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
             En revisión
           </span>
         )}
+        {business.wholesale_enabled && (
+          <span
+            title={business.wholesale_min_order ? `Mayorista: ${business.wholesale_min_order}` : 'Vende al por mayor'}
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 px-1.5 py-0.5 text-[10px] font-semibold text-brand-800 dark:text-brand-300"
+          >
+            <UI_ICONS.package size={11} className="text-brand-600 dark:text-brand-400" />
+            Por mayor
+          </span>
+        )}
       </div>
       <p className="truncate text-xs text-ink-500">{categoryLabel(business.category)}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
