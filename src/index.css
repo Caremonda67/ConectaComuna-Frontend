@@ -142,6 +142,26 @@ html.dark .card-soft {
   border-color: var(--color-brand-100);
 }
 
+/* Campos de formulario nativos: aseguran fondo oscuro, texto legible y dropdowns nativos con soporte oscuro */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+html.dark select,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+html.dark input.bg-white,
+html.dark select.bg-white,
+html.dark textarea.bg-white {
+  background-color: var(--color-cream-50);
+  color: var(--color-ink-900);
+  border-color: var(--color-ink-200);
+}
+
+html.dark option {
+  background-color: var(--color-cream-50);
+  color: var(--color-ink-900);
+}
+
 .leaflet-container {
   font: inherit;
   z-index: 0;

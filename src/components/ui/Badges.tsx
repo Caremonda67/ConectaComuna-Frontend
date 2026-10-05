@@ -6,12 +6,12 @@ import { cn } from '@/lib/utils'
  * diferencian por intensidad del verde y no por colores ajenos al sistema.
  */
 const tones: Record<Badge['tone'], string> = {
-  gold: 'bg-brand-200 text-brand-800 border-brand-300',
-  silver: 'bg-cream-200 text-ink-700 border-ink-200',
-  bronze: 'bg-cream-300 text-ink-700 border-ink-200',
-  info: 'bg-brand-50 text-brand-700 border-brand-100',
-  verified: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold',
-  danger: 'bg-amber-50 text-amber-900 border-amber-300 font-semibold',
+  gold: 'bg-brand-200 dark:bg-brand-900/40 text-brand-800 dark:text-brand-300 border-brand-300 dark:border-brand-700/60',
+  silver: 'bg-cream-200 dark:bg-cream-200/50 text-ink-700 dark:text-ink-300 border-ink-200',
+  bronze: 'bg-cream-300 dark:bg-cream-300/40 text-ink-700 dark:text-ink-300 border-ink-200',
+  info: 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border-brand-100 dark:border-brand-900/60',
+  verified: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60 font-semibold',
+  danger: 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800/60 font-semibold',
 }
 
 export function BadgePill({ badge }: { badge: Badge }) {
