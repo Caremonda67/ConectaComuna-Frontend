@@ -247,8 +247,8 @@ export default function ClientDashboard() {
               key={o.id}
               order={o}
               perspective="client"
-              onStatusChange={async (status: OrderStatus) => {
-                await orderService.updateStatus(o.id, status)
+              onStatusChange={async (status: OrderStatus, options) => {
+                await orderService.updateStatus(o.id, status, options)
                 reload()
               }}
             />

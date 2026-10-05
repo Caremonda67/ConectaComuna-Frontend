@@ -4,7 +4,7 @@ import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Order, OrderStatus, Review } from '@/types'
 
 const SELECT_WITH_RELATIONS =
-  '*, business:businesses(id, name, category, photos), client:profiles!orders_client_id_fkey(id, full_name, avatar_url)'
+  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, phone)'
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -28,10 +28,11 @@ function hydrate(order: Order): Order {
           name: business.name,
           category: business.category,
           photos: business.photos,
+          phone: business.phone,
         }
       : undefined,
     client: client
-      ? { id: client.id, full_name: client.full_name, avatar_url: client.avatar_url }
+      ? { id: client.id, full_name: client.full_name, avatar_url: client.avatar_url, phone: client.phone }
       : undefined,
     review: db.reviews.find((r) => r.order_id === order.id) ?? null,
   }
@@ -45,6 +46,15 @@ export interface CreateOrderInput {
   scheduledFor?: string | null
   priceEstimate?: number | null
   photos?: File[]
+  serviceLocationType?: 'workshop' | 'home_delivery'
+  deliveryAddress?: string | null
+}
+
+export interface UpdateOrderStatusOptions {
+  finalPrice?: number | null
+  advancePayment?: number | null
+  businessNotes?: string | null
+  cancellationReason?: string | null
 }
 
 export const orderService = {
@@ -101,6 +111,12 @@ export const orderService = {
         status: 'pending',
         scheduled_for: input.scheduledFor ?? null,
         price_estimate: input.priceEstimate ?? null,
+        final_price: null,
+        advance_payment: 0,
+        service_location_type: input.serviceLocationType ?? 'workshop',
+        delivery_address: input.deliveryAddress ?? null,
+        business_notes: null,
+        cancellation_reason: null,
         photos,
         created_at: now,
         updated_at: now,
@@ -136,6 +152,8 @@ export const orderService = {
         description: input.description,
         scheduled_for: input.scheduledFor ?? null,
         price_estimate: input.priceEstimate ?? null,
+        service_location_type: input.serviceLocationType ?? 'workshop',
+        delivery_address: input.deliveryAddress ?? null,
         photos,
         status: 'pending' satisfies OrderStatus,
       })
@@ -145,13 +163,21 @@ export const orderService = {
     return data as unknown as Order
   },
 
-  async updateStatus(orderId: string, status: OrderStatus): Promise<Order> {
+  async updateStatus(
+    orderId: string,
+    status: OrderStatus,
+    options?: UpdateOrderStatusOptions,
+  ): Promise<Order> {
     if (isDemoMode) {
       const db = mutateDb((d) => {
         const o = d.orders.find((x) => x.id === orderId)
         if (o) {
           o.status = status
           o.updated_at = new Date().toISOString()
+          if (options?.finalPrice !== undefined) o.final_price = options.finalPrice
+          if (options?.advancePayment !== undefined) o.advance_payment = options.advancePayment
+          if (options?.businessNotes !== undefined) o.business_notes = options.businessNotes
+          if (options?.cancellationReason !== undefined) o.cancellation_reason = options.cancellationReason
           if (status === 'completed') {
             const biz = d.businesses.find((b) => b.id === o.business_id)
             if (biz) biz.completed_orders += 1
@@ -160,9 +186,19 @@ export const orderService = {
       })
       return delay(hydrate(db.orders.find((o) => o.id === orderId)!))
     }
+
+    const payload: Record<string, unknown> = {
+      status,
+      updated_at: new Date().toISOString(),
+    }
+    if (options?.finalPrice !== undefined) payload.final_price = options.finalPrice
+    if (options?.advancePayment !== undefined) payload.advance_payment = options.advancePayment
+    if (options?.businessNotes !== undefined) payload.business_notes = options.businessNotes
+    if (options?.cancellationReason !== undefined) payload.cancellation_reason = options.cancellationReason
+
     const { data, error } = await requireSupabase()
       .from('orders')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq('id', orderId)
       .select(SELECT_WITH_RELATIONS)
       .single()

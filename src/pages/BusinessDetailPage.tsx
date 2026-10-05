@@ -13,12 +13,13 @@ import { TextAreaField, TextField } from '@/components/ui/Field'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { categoryLabel } from '@/data/categories'
-import { DAY_NAMES, formatDate, getBadges, shouldSkipTratoSeguro, getBusinessOpenStatus, cn } from '@/lib/utils'
+import { DAY_NAMES, formatDate, getBadges, shouldSkipTratoSeguro, getBusinessOpenStatus, cn, formatCurrency } from '@/lib/utils'
 import { AuthGate } from '@/components/auth/AuthGate'
 import { UI_ICONS } from '@/components/ui/icons'
 import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
 import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
 import { BusinessShareModal } from '@/components/business/BusinessShareModal'
+import type { Order } from '@/types'
 
 export default function BusinessDetailPage() {
   const { id = '' } = useParams()
@@ -30,6 +31,7 @@ export default function BusinessDetailPage() {
   const [tratoAction, setTratoAction] = useState<'whatsapp' | 'call'>('whatsapp')
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [solicitudExitosa, setSolicitudExitosa] = useState<Order | null>(null)
   const rutaNegocio = `/negocio/${id}`
 
   const { data: business, loading, error, reload } = useAsync(
@@ -355,10 +357,26 @@ export default function BusinessDetailPage() {
           <RequestForm
             businessId={business.id}
             clientId={userId}
-            onDone={() => navigate('/panel')}
+            onDone={(createdOrder) => {
+              setShowForm(false)
+              setSolicitudExitosa(createdOrder)
+            }}
             onCancel={() => setShowForm(false)}
           />
         </motion.div>
+      )}
+
+      {solicitudExitosa && (
+        <SolicitudEnviadaModal
+          order={solicitudExitosa}
+          businessName={business.name}
+          businessPhone={business.phone || business.whatsapp || undefined}
+          onClose={() => setSolicitudExitosa(null)}
+          onGoToPanel={() => {
+            setSolicitudExitosa(null)
+            navigate('/panel')
+          }}
+        />
       )}
 
       {business.photos.length > 0 && (
@@ -465,13 +483,15 @@ function RequestForm({
 }: {
   businessId: string
   clientId: string
-  onDone: () => void
+  onDone: (order: Order) => void
   onCancel: () => void
 }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [scheduledFor, setScheduledFor] = useState('')
   const [priceEstimate, setPriceEstimate] = useState('')
+  const [serviceLocationType, setServiceLocationType] = useState<'workshop' | 'home_delivery'>('workshop')
+  const [deliveryAddress, setDeliveryAddress] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -503,11 +523,15 @@ function RequestForm({
       setErr('Describe el servicio en pocas palabras (mínimo 4 caracteres).')
       return
     }
+    if (serviceLocationType === 'home_delivery' && deliveryAddress.trim().length < 5) {
+      setErr('Por favor indica tu dirección completa para el servicio a domicilio.')
+      return
+    }
     setSubmitting(true)
     setErr(null)
     try {
       const parsedPrice = priceEstimate ? Number(priceEstimate) : null
-      await orderService.create({
+      const created = await orderService.create({
         businessId,
         clientId,
         title: title.trim(),
@@ -515,9 +539,11 @@ function RequestForm({
         scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
         priceEstimate: parsedPrice && parsedPrice > 0 ? parsedPrice : null,
         photos: photos.length > 0 ? photos : undefined,
+        serviceLocationType,
+        deliveryAddress: serviceLocationType === 'home_delivery' ? deliveryAddress.trim() : undefined,
       })
       previews.forEach(URL.revokeObjectURL)
-      onDone()
+      onDone(created)
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : 'No pudimos enviar tu solicitud.')
     } finally {
@@ -541,6 +567,55 @@ function RequestForm({
         onChange={(e) => setDescription(e.target.value)}
         hint="Entre más detalles, mejor te puede cotizar."
       />
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-ink-900 dark:text-ink-100">
+          Modalidad del servicio
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setServiceLocationType('workshop')}
+            className={cn(
+              'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
+              serviceLocationType === 'workshop'
+                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
+                : 'border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-100/10',
+            )}
+          >
+            <UI_ICONS.tools size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
+            <span>En taller / local</span>
+            <span className="text-[10px] text-ink-500 font-normal">Llevas o recoges allí</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setServiceLocationType('home_delivery')}
+            className={cn(
+              'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
+              serviceLocationType === 'home_delivery'
+                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
+                : 'border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-100/10',
+            )}
+          >
+            <UI_ICONS.map size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
+            <span>A domicilio</span>
+            <span className="text-[10px] text-ink-500 font-normal">En tu casa o dirección</span>
+          </button>
+        </div>
+      </div>
+
+      {serviceLocationType === 'home_delivery' && (
+        <TextField
+          label="Dirección de atención o entrega"
+          value={deliveryAddress}
+          onChange={(e) => setDeliveryAddress(e.target.value)}
+          placeholder="Ej: Carrera 45 # 12-34, Apto 201 (Barrio La Floresta)"
+          required
+          hint="Indica dirección exacta y barrio para que el emprendedor calcule el desplazamiento."
+        />
+      )}
+
       <TextField
         label="¿Para cuándo? (opcional)"
         type="datetime-local"
@@ -595,6 +670,16 @@ function RequestForm({
         )}
       </div>
 
+      <div className="rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3 text-xs text-brand-900 dark:text-brand-200 flex items-start gap-2">
+        <UI_ICONS.shieldCheck size={16} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+        <div>
+          <span className="font-semibold block">Trato Seguro Comunal</span>
+          <span className="text-[11px] text-brand-800 dark:text-brand-300">
+            Al enviar esta solicitud queda registrada en el sistema. Acuerda anticipos máximos del 50% y solo liquida el total al recibir el servicio terminado.
+          </span>
+        </div>
+      </div>
+
       {err && (
         <p role="alert" className="text-sm text-rose-700">
           {err}
@@ -609,5 +694,109 @@ function RequestForm({
         </Button>
       </div>
     </form>
+  )
+}
+
+function SolicitudEnviadaModal({
+  order,
+  businessName,
+  businessPhone,
+  onClose,
+  onGoToPanel,
+}: {
+  order: Order
+  businessName: string
+  businessPhone?: string
+  onClose: () => void
+  onGoToPanel: () => void
+}) {
+  const code = order.id ? `#CC-${order.id.slice(0, 6).toUpperCase()}` : '#CC-NUEVO'
+  const cleanPhone = businessPhone ? businessPhone.replace(/\D/g, '') : ''
+  const whatsAppUrl = cleanPhone
+    ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(
+        `Hola ${businessName}, acabo de enviarte la solicitud "${order.title}" (${code}) por Conecta Comuna. ¡Quedo atento a tu respuesta!`,
+      )}`
+    : null
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-100 p-5 shadow-xl border border-ink-100 dark:border-ink-700 space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+            <UI_ICONS.shieldCheck size={28} />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-ink-900 dark:text-ink-100">
+              ¡Solicitud registrada!
+            </h2>
+            <p className="text-xs text-ink-500">
+              Código de seguimiento: <span className="font-mono font-bold text-brand-700 dark:text-brand-300">{code}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-50/5 p-3.5 space-y-2 text-sm">
+          <div className="flex justify-between items-start">
+            <span className="text-ink-500 text-xs">Servicio:</span>
+            <span className="font-semibold text-ink-900 dark:text-ink-100 text-right">{order.title}</span>
+          </div>
+
+          <div className="flex justify-between items-start">
+            <span className="text-ink-500 text-xs">Modalidad:</span>
+            <span className="text-xs font-medium text-ink-800 dark:text-ink-200">
+              {order.service_location_type === 'home_delivery'
+                ? `A domicilio (${order.delivery_address || 'Dirección acordada'})`
+                : 'En taller o local del emprendedor'}
+            </span>
+          </div>
+
+          {order.price_estimate && (
+            <div className="flex justify-between items-center pt-1 border-t border-ink-100 dark:border-ink-800">
+              <span className="text-ink-500 text-xs">Presupuesto inicial:</span>
+              <span className="font-bold text-brand-700 dark:text-brand-300">
+                {formatCurrency(order.price_estimate)}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3 text-xs text-brand-900 dark:text-brand-200">
+          <p className="font-semibold flex items-center gap-1.5 mb-1">
+            <UI_ICONS.shieldCheck size={14} className="shrink-0 text-brand-600" />
+            Respaldo Trato Seguro
+          </p>
+          <p className="text-brand-800 dark:text-brand-300">
+            El emprendedor revisará los detalles y te responderá con la cotización final. No pagues más del 50% de anticipo.
+          </p>
+        </div>
+
+        <div className="space-y-2 pt-1">
+          {whatsAppUrl && (
+            <a
+              href={whatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm hover:bg-[#20bd5a] transition-colors text-sm"
+            >
+              <UI_ICONS.whatsapp size={18} />
+              Avisar a {businessName} por WhatsApp
+            </a>
+          )}
+
+          <div className="flex gap-2">
+            <Button onClick={onGoToPanel} fullWidth className="min-h-11">
+              Ver en mis solicitudes
+            </Button>
+            <Button variant="secondary" onClick={onClose} fullWidth className="min-h-11">
+              Cerrar
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
