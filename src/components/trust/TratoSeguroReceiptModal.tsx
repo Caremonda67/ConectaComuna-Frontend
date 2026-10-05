@@ -108,22 +108,22 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
           )}
 
           {/* Desglose de dinero */}
-          <div className="rounded-xl bg-cream-50 dark:bg-cream-100/50 p-4 border border-ink-100 dark:border-ink-800 space-y-2">
+          <div className="rounded-xl bg-cream-50 dark:bg-cream-200/50 p-4 border border-ink-200 dark:border-ink-700 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-ink-600 dark:text-ink-400">Valor acordado:</span>
-              <span className="font-semibold">{formatCurrency(precio)}</span>
+              <span className="text-ink-600 dark:text-ink-300">Valor acordado:</span>
+              <span className="font-semibold text-ink-900 dark:text-ink-100">{formatCurrency(precio)}</span>
             </div>
-            <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-400">
+            <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
               <span>Anticipo entregado (máx. 50%):</span>
               <span className="font-semibold">{formatCurrency(anticipo)}</span>
             </div>
-            <div className="border-t border-ink-200 dark:border-ink-700 pt-2 flex justify-between text-base font-bold">
+            <div className="border-t border-ink-200 dark:border-ink-700 pt-2 flex justify-between text-base font-bold text-ink-900 dark:text-ink-50">
               <span>Saldo a cancelar contra entrega:</span>
-              <span className="text-brand-700 dark:text-brand-300">{formatCurrency(saldo)}</span>
+              <span className="text-brand-800 dark:text-brand-200">{formatCurrency(saldo)}</span>
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-ink-200 dark:border-ink-700 p-2.5 text-center text-[11px] text-ink-500 dark:text-ink-400">
+          <div className="rounded-lg border border-dashed border-ink-300 dark:border-ink-600 p-2.5 text-center text-xs text-ink-600 dark:text-ink-300">
             Trato Seguro: el saldo se paga cuando el trabajo esté terminado y a entera satisfacción. En caso de desacuerdo, acude a tu facilitador o comité vecinal.
           </div>
         </div>
