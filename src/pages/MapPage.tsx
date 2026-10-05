@@ -46,7 +46,7 @@ export default function MapPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as CategorySlug | 'all')}
-            className="ml-2 min-h-9 rounded-lg border border-ink-200 bg-white px-2 text-sm"
+            className="ml-2 min-h-9 rounded-lg border border-ink-200 bg-white dark:bg-cream-50 text-ink-900 px-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"
           >
             <option value="all">Todos</option>
             {CATEGORIES.map((c) => (
@@ -61,7 +61,7 @@ export default function MapPage() {
           <select
             value={String(radiusKm)}
             onChange={(e) => setRadiusKm(Number(e.target.value))}
-            className="ml-2 min-h-9 rounded-lg border border-ink-200 bg-white px-2 text-sm"
+            className="ml-2 min-h-9 rounded-lg border border-ink-200 bg-white dark:bg-cream-50 text-ink-900 px-2 text-sm [color-scheme:light] dark:[color-scheme:dark]"
           >
             <option value="1">1 km</option>
             <option value="3">3 km</option>

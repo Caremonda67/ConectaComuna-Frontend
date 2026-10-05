@@ -229,11 +229,11 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       </h1>
 
       {managedBusiness?.verification_status === 'verified' && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-3.5 text-xs text-emerald-900 flex items-start gap-2.5">
-          <UI_ICONS.shieldCheck size={20} className="text-emerald-700 shrink-0 mt-0.5" />
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
+          <UI_ICONS.shieldCheck size={20} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
           <div>
             <span className="font-semibold block text-sm">Tu negocio cuenta con el Sello de Verificación en Territorio</span>
-            <span className="text-emerald-800">
+            <span className="text-emerald-800 dark:text-emerald-300">
               {managedBusiness.verification_note || 'Validado en persona en la comuna por un facilitador o líder comunal.'}
             </span>
           </div>
@@ -396,7 +396,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                         prev.map((x, j) => (i === j ? { ...x, opens: e.target.value } : x)),
                       )
                     }
-                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500"
+                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500 [color-scheme:light] dark:[color-scheme:dark]"
                   />
                   <span className="text-ink-500">a</span>
                   <input
@@ -408,7 +408,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                         prev.map((x, j) => (i === j ? { ...x, closes: e.target.value } : x)),
                       )
                     }
-                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500"
+                    className="min-h-8 w-24 rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-1.5 text-xs text-ink-900 focus:border-brand-500 focus:ring-brand-500 [color-scheme:light] dark:[color-scheme:dark]"
                   />
                 </div>
               ) : (
@@ -450,7 +450,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         )}
       </div>
 
-      <div className="sticky bottom-20 flex flex-col sm:flex-row gap-2 bg-white/95 p-3 rounded-2xl border border-ink-200 shadow-md backdrop-blur-xs">
+      <div className="sticky bottom-20 flex flex-col sm:flex-row gap-2 bg-white/95 dark:bg-cream-50/95 p-3 rounded-2xl border border-ink-200 shadow-md backdrop-blur-xs">
         <Button type="submit" fullWidth loading={isSubmitting}>
           Guardar negocio
         </Button>

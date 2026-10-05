@@ -24,18 +24,18 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         {business.verification_status === 'verified' && (
           <span
             title="Verificado en territorio"
-            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800"
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:text-emerald-300"
           >
-            <UI_ICONS.shieldCheck size={11} className="text-emerald-700" />
+            <UI_ICONS.shieldCheck size={11} className="text-emerald-700 dark:text-emerald-400" />
             Verificado
           </span>
         )}
         {business.verification_status === 'under_review' && (
           <span
             title="Bajo observación comunitaria"
-            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800"
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:text-amber-300"
           >
-            <UI_ICONS.alert size={11} className="text-amber-700" />
+            <UI_ICONS.alert size={11} className="text-amber-700 dark:text-amber-400" />
             En revisión
           </span>
         )}
@@ -57,8 +57,8 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
             className={cn(
               'inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium px-1.5 py-0.5 rounded-md',
               openStatus.isOpen
-                ? 'text-emerald-800 bg-emerald-100/70 border border-emerald-200'
-                : 'text-ink-600 bg-cream-200/80',
+                ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60'
+                : 'text-ink-600 dark:text-ink-400 bg-cream-200/80 dark:bg-cream-200/40',
             )}
             title={openStatus.detail ?? openStatus.label}
           >

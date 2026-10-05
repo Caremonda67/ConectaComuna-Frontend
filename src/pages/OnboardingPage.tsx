@@ -154,8 +154,8 @@ export default function OnboardingPage() {
                 onClick={() => setFormData({ ...formData, accountType: type })}
                 className={`flex items-center justify-between rounded-xl border p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer select-none ${
                   formData.accountType === type
-                    ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500 shadow-xs'
-                    : 'border-ink-200 bg-white hover:bg-cream-100 hover:border-ink-300'
+                    ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 ring-1 ring-brand-500 shadow-xs'
+                    : 'border-ink-200 bg-white dark:bg-cream-50 hover:bg-cream-100 dark:hover:bg-cream-200 hover:border-ink-300'
                 }`}
               >
                 <div>

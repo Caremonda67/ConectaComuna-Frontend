@@ -155,7 +155,7 @@ export function AppLayout() {
                 'min-h-7 min-w-7 sm:min-h-8 sm:min-w-8 px-1 sm:px-1.5 rounded-full border text-[10px] sm:text-xs font-bold transition-colors cursor-pointer flex items-center justify-center',
                 largeText
                   ? 'border-brand-500 bg-brand-100 text-brand-900 shadow-sm'
-                  : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-600 dark:text-ink-700 hover:bg-cream-200 dark:hover:bg-cream-200',
+                  : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-600 dark:text-ink-300 hover:bg-cream-200 dark:hover:bg-cream-200',
               )}
             >
               {largeText ? 'A−' : 'A+'}

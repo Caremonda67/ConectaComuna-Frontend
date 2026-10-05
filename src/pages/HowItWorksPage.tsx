@@ -67,24 +67,24 @@ export default function HowItWorksPage() {
       </ol>
 
       {/* Sección destacada de Trato Seguro Comunal */}
-      <section className="card p-6 border-brand-200 bg-brand-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+      <section className="card p-6 border-brand-200 dark:border-brand-800/60 bg-brand-50/50 dark:bg-brand-950/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div className="flex items-start gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-xs">
             <UI_ICONS.shieldCheck size={26} strokeWidth={2} />
           </span>
           <div className="space-y-1">
-            <span className="inline-flex rounded-full bg-brand-200/80 px-2.5 py-0.5 text-xs font-semibold text-brand-900">
+            <span className="inline-flex rounded-full bg-brand-200/80 dark:bg-brand-900/60 px-2.5 py-0.5 text-xs font-semibold text-brand-900 dark:text-brand-200">
               Pacto de confianza local
             </span>
             <h2 className="text-xl font-bold text-ink-900">Trato Seguro Comunal</h2>
-            <p className="text-xs sm:text-sm text-ink-600 max-w-xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-ink-600 dark:text-ink-400 max-w-xl leading-relaxed">
               Pago contra entrega, precios claros por escrito y verificación presencial en el barrio.
               Conoce las 5 pautas para contratar y ofrecer servicios con total tranquilidad.
             </p>
           </div>
         </div>
         <Link to="/trato-seguro" className="shrink-0 w-full sm:w-auto">
-          <Button variant="secondary" fullWidth className="border-brand-300 hover:bg-brand-100">
+          <Button variant="secondary" fullWidth className="border-brand-300 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/40">
             Ver los 5 acuerdos
           </Button>
         </Link>

@@ -32,12 +32,12 @@ export default function TermsPage() {
       </header>
 
       {/* Aviso destacado de portal de contacto */}
-      <div className="card p-5 border-brand-200 bg-brand-50/60 space-y-2">
-        <div className="flex items-center gap-2 text-brand-900 font-bold text-sm sm:text-base">
-          <UI_ICONS.shieldCheck size={20} className="text-brand-700 shrink-0" />
+      <div className="card p-5 border-brand-200 dark:border-brand-800/60 bg-brand-50/60 dark:bg-brand-950/30 space-y-2">
+        <div className="flex items-center gap-2 text-brand-900 dark:text-brand-300 font-bold text-sm sm:text-base">
+          <UI_ICONS.shieldCheck size={20} className="text-brand-700 dark:text-brand-400 shrink-0" />
           <span>Aviso legal prioritario: Portal de Contacto Comunitario</span>
         </div>
-        <p className="text-xs sm:text-sm text-ink-700 leading-relaxed">
+        <p className="text-xs sm:text-sm text-ink-700 dark:text-ink-300 leading-relaxed">
           Conforme al <strong>Artículo 53 de la Ley 1480 de 2011 (Estatuto del Consumidor de Colombia)</strong>,
           ConectaComuna actúa de manera exclusiva como un <strong>portal digital de contacto e información comunitaria</strong>.
           La plataforma facilita el encuentro entre vecinos que ofrecen oficios y vecinos que los
