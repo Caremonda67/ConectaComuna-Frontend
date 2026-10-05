@@ -17,6 +17,9 @@ const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
+const TratoSeguroPage = lazy(() => import('@/pages/TratoSeguroPage'))
+const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
+const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -57,6 +60,30 @@ const router = createBrowserRouter([
         element: (
           <Lazy>
             <HowItWorksPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'trato-seguro',
+        element: (
+          <Lazy>
+            <TratoSeguroPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'terminos',
+        element: (
+          <Lazy>
+            <TermsPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'privacidad',
+        element: (
+          <Lazy>
+            <PrivacyPage />
           </Lazy>
         ),
       },

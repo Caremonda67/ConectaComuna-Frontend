@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 
@@ -27,6 +28,14 @@ const steps = [
 
 /** Bloque 7 del diseño: explicación del flujo en cuatro pasos. */
 export default function HowItWorksPage() {
+  const { profile } = useAuth()
+
+  const destination = profile
+    ? profile.account_type === 'client'
+      ? '/panel'
+      : '/panel/negocio'
+    : '/registro'
+
   return (
     <div className="space-y-8">
       <header className="max-w-xl">
@@ -57,6 +66,30 @@ export default function HowItWorksPage() {
         ))}
       </ol>
 
+      {/* Sección destacada de Trato Seguro Comunal */}
+      <section className="card p-6 border-brand-200 bg-brand-50/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
+        <div className="flex items-start gap-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-xs">
+            <UI_ICONS.shieldCheck size={26} strokeWidth={2} />
+          </span>
+          <div className="space-y-1">
+            <span className="inline-flex rounded-full bg-brand-200/80 px-2.5 py-0.5 text-xs font-semibold text-brand-900">
+              Pacto de confianza local
+            </span>
+            <h2 className="text-xl font-bold text-ink-900">Trato Seguro Comunal</h2>
+            <p className="text-xs sm:text-sm text-ink-600 max-w-xl leading-relaxed">
+              Pago contra entrega, precios claros por escrito y verificación presencial en el barrio.
+              Conoce las 5 pautas para contratar y ofrecer servicios con total tranquilidad.
+            </p>
+          </div>
+        </div>
+        <Link to="/trato-seguro" className="shrink-0 w-full sm:w-auto">
+          <Button variant="secondary" fullWidth className="border-brand-300 hover:bg-brand-100">
+            Ver los 5 acuerdos
+          </Button>
+        </Link>
+      </section>
+
       <section className="card-soft flex flex-wrap items-center justify-between gap-4 p-6">
         <div>
           <h2 className="text-lg font-bold">¿Ofreces un servicio?</h2>
@@ -64,7 +97,7 @@ export default function HowItWorksPage() {
             Publica tu oficio y conecta con personas de tu comuna.
           </p>
         </div>
-        <Link to="/registro">
+        <Link to={destination}>
           <Button>Publicar servicio</Button>
         </Link>
       </section>

@@ -23,6 +23,9 @@ const schema = z.object({
     .optional()
     .or(z.literal('')),
   neighborhood: z.string().optional(),
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: 'Debes aceptar los Términos y la Política de Privacidad para continuar.',
+  }),
 })
 type Values = z.infer<typeof schema>
 
@@ -182,6 +185,32 @@ export default function RegisterPage() {
             {serverError}
           </p>
         )}
+
+        <div className="space-y-1 pt-1">
+          <label className="flex items-start gap-2.5 text-xs text-ink-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              {...register('termsAccepted')}
+              className="mt-0.5 rounded border-ink-300 text-brand-600 focus:ring-brand-500 shrink-0"
+            />
+            <span>
+              Acepto los{' '}
+              <Link to="/terminos" target="_blank" className="font-semibold text-brand-700 underline">
+                Términos y Condiciones
+              </Link>{' '}
+              y autorizo el tratamiento de mis datos conforme a la{' '}
+              <Link to="/privacidad" target="_blank" className="font-semibold text-brand-700 underline">
+                Política de Privacidad
+              </Link>
+              .
+            </span>
+          </label>
+          {errors.termsAccepted && (
+            <p role="alert" className="text-xs text-rose-600 font-medium">
+              {errors.termsAccepted.message}
+            </p>
+          )}
+        </div>
 
         <Button type="submit" fullWidth loading={isSubmitting}>
           Crear cuenta

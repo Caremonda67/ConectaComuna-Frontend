@@ -29,6 +29,12 @@ export default function HomePage() {
 
   const featured = data?.slice(0, 4) ?? []
 
+  const ctaDestino = profile
+    ? profile.account_type === 'client'
+      ? '/panel'
+      : '/panel/negocio'
+    : '/registro'
+
   return (
     <div className="space-y-12">
       {/* Hero: titular a dos tonos, como en el diseño. */}
@@ -58,7 +64,7 @@ export default function HomePage() {
             <Link to="/explorar">
               <Button size="lg">Explorar servicios</Button>
             </Link>
-            <Link to={profile ? '/panel/negocio' : '/registro'}>
+            <Link to={ctaDestino}>
               <Button size="lg" variant="secondary">
                 Publicar servicio
               </Button>
@@ -129,7 +135,7 @@ export default function HomePage() {
             title="Todavía no hay negocios cerca"
             description="Sé el primero en publicar tu oficio en esta zona."
             action={
-              <Link to="/registro">
+              <Link to={ctaDestino}>
                 <Button>Crear mi negocio</Button>
               </Link>
             }
@@ -154,7 +160,7 @@ export default function HomePage() {
             Publica tu servicio y conecta con personas de tu comuna.
           </p>
         </div>
-        <Link to={profile ? '/panel/negocio' : '/registro'}>
+        <Link to={ctaDestino}>
           <Button>Publicar servicio</Button>
         </Link>
       </section>

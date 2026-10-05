@@ -182,89 +182,120 @@ export default function BusinessDetailPage() {
           </div>
         </dl>
 
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {business.whatsapp && (
-            <button
-              type="button"
-              onClick={handleWhatsApp}
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
-            >
-              <UI_ICONS.whatsapp size={18} />
-              Contactar por WhatsApp
-            </button>
-          )}
-
-          {business.phone && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleCall}
-              fullWidth
-              className="min-h-12"
-            >
-              <UI_ICONS.phone size={18} />
-              Llamar directo
-            </Button>
-          )}
-
-          {!isOwner && activeRole === 'client' && (
-            <div className="sm:col-span-2">
+        {isOwner ? (
+          <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold">
+                ✓
+              </span>
+              <p className="text-sm font-semibold text-brand-900">
+                Este es tu negocio (vista previa pública)
+              </p>
+            </div>
+            <p className="text-xs text-ink-600">
+              Así es exactamente como los vecinos y clientes ven tu ficha, portafolio y horarios en la comuna.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <Link
+                to="/panel/negocio"
+                className="flex-1 min-h-11 inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600 transition-colors text-center text-sm shadow-xs"
+              >
+                Editar información de mi negocio
+              </Link>
               <Button
-                onClick={() => {
-                  if (!userId) {
-                    setPedirCuenta(true)
-                    return
-                  }
-                  setShowForm((v) => !v)
-                }}
+                type="button"
+                variant="secondary"
+                onClick={() => setShareModalOpen(true)}
+                className="flex-1 min-h-11"
+              >
+                <UI_ICONS.share size={18} />
+                Compartir volante digital
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {business.whatsapp && (
+              <button
+                type="button"
+                onClick={handleWhatsApp}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+              >
+                <UI_ICONS.whatsapp size={18} />
+                Contactar por WhatsApp
+              </button>
+            )}
+
+            {business.phone && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCall}
                 fullWidth
                 className="min-h-12"
               >
-                {showForm ? 'Ocultar solicitud' : 'Solicitar servicio en la plataforma'}
+                <UI_ICONS.phone size={18} />
+                Llamar directo
+              </Button>
+            )}
+
+            {activeRole === 'client' && (
+              <div className="sm:col-span-2">
+                <Button
+                  onClick={() => {
+                    if (!userId) {
+                      setPedirCuenta(true)
+                      return
+                    }
+                    setShowForm((v) => !v)
+                  }}
+                  fullWidth
+                  className="min-h-12"
+                >
+                  {showForm ? 'Ocultar solicitud' : 'Solicitar servicio en la plataforma'}
+                </Button>
+              </div>
+            )}
+
+            <div className="sm:col-span-2 flex flex-col sm:flex-row gap-2 pt-1">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShareModalOpen(true)}
+                className="flex-1 min-h-11"
+              >
+                <UI_ICONS.share size={18} />
+                Compartir tarjeta del negocio
               </Button>
             </div>
-          )}
 
-          <div className="sm:col-span-2 flex flex-col sm:flex-row gap-2 pt-1">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShareModalOpen(true)}
-              className="flex-1 min-h-11"
-            >
-              <UI_ICONS.share size={18} />
-              Compartir tarjeta del negocio
-            </Button>
+            {activeRole === 'business' && (
+              <div className="sm:col-span-2">
+                <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
+                  Para contratar este servicio, cambia al rol de <strong>Cliente</strong> en el menú superior.
+                </p>
+              </div>
+            )}
 
-            {isOwner && (
-              <Link
-                to="/panel/negocio"
-                className="flex-1 min-h-11 inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600 transition-colors text-center"
-              >
-                Editar mi negocio
-              </Link>
+            {activeRole === 'facilitador' && (
+              <div className="sm:col-span-2">
+                <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
+                  Para apadrinar este negocio, pídele el código al dueño e ingrésalo en tu panel de facilitador.
+                </p>
+              </div>
             )}
           </div>
-
-          {activeRole === 'business' && !isOwner && (
-            <div className="sm:col-span-2">
-              <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
-                Para contratar este servicio, cambia al rol de <strong>Cliente</strong> en el menú superior.
-              </p>
-            </div>
-          )}
-
-          {activeRole === 'facilitador' && (
-            <div className="sm:col-span-2">
-              <p className="text-sm text-ink-500 bg-brand-50 p-2.5 rounded-xl border border-brand-100">
-                Para apadrinar este negocio, pídele el código al dueño e ingrésalo en tu panel de facilitador.
-              </p>
-            </div>
-          )}
-        </div>
+        )}
 
         {!isOwner && (
-          <div className="mt-4 pt-3 border-t border-ink-100 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-ink-100 flex flex-wrap items-center justify-between gap-2">
+            <Link
+              to="/trato-seguro"
+              className="inline-flex items-center gap-1.5 text-xs text-brand-700 hover:text-brand-900 transition-colors"
+            >
+              <UI_ICONS.shieldCheck size={14} className="shrink-0" />
+              Contacto respaldado por el Trato Seguro Comunal
+            </Link>
             <button
               type="button"
               onClick={() => {
