@@ -4,7 +4,17 @@ import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Order, OrderStatus, Review } from '@/types'
 
 const SELECT_WITH_RELATIONS =
-  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, phone)'
+  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, phone), review:reviews(id, rating, comment, created_at)'
+
+function mapDbOrder(raw: any): Order {
+  const rawReview = raw.review
+  const review = Array.isArray(rawReview) ? (rawReview[0] ?? null) : (rawReview ?? null)
+  return {
+    ...raw,
+    photos: raw.photos ?? [],
+    review,
+  }
+}
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -74,7 +84,7 @@ export const orderService = {
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
     if (error) throw error
-    return (data ?? []) as unknown as Order[]
+    return ((data ?? []) as any[]).map(mapDbOrder)
   },
 
   /** Pedidos recibidos por el negocio del usuario. */
@@ -93,7 +103,7 @@ export const orderService = {
       .eq('business_id', businessId)
       .order('created_at', { ascending: false })
     if (error) throw error
-    return (data ?? []) as unknown as Order[]
+    return ((data ?? []) as any[]).map(mapDbOrder)
   },
 
   /** Cantidad de pedidos pendientes por atender para el negocio. */
@@ -190,7 +200,7 @@ export const orderService = {
       .select(SELECT_WITH_RELATIONS)
       .single()
     if (error) throw error
-    return data as unknown as Order
+    return mapDbOrder(data)
   },
 
   async updateStatus(
@@ -233,7 +243,7 @@ export const orderService = {
       .select(SELECT_WITH_RELATIONS)
       .single()
     if (error) throw error
-    return data as unknown as Order
+    return mapDbOrder(data)
   },
 
   async createReview(input: {

@@ -298,6 +298,21 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
         )}
       </div>
 
+      {/* Reseña registrada del servicio si ya fue calificado */}
+      {order.review && (
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50/70 p-2.5 text-xs text-amber-950 dark:border-amber-800/40 dark:bg-amber-950/30 dark:text-amber-200">
+          <div className="flex items-center gap-1.5 font-semibold text-amber-800 dark:text-amber-300">
+            <Star aria-hidden="true" size={14} className="fill-amber-500 text-amber-500" />
+            <span>{perspective === 'client' ? 'Tu calificación:' : 'Calificación del cliente:'} {order.review.rating}.0 / 5.0</span>
+          </div>
+          {order.review.comment && (
+            <p className="mt-1 italic text-ink-700 dark:text-ink-300">
+              &ldquo;{order.review.comment}&rdquo;
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Calificación para clientes en trabajos completados */}
       {perspective === 'client' && order.status === 'completed' && !order.review && onReview && (
         <div className="mt-3 border-t border-ink-100 dark:border-ink-700 pt-3">
