@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const base =
-  'w-full min-h-11 rounded-[10px] border border-ink-200 bg-white px-3 py-2 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 disabled:bg-cream-200'
+  'w-full min-h-11 rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-3 py-2 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 disabled:bg-cream-200 dark:disabled:bg-cream-200/50'
 
 interface FieldProps {
   label: string

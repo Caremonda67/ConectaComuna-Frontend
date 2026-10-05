@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useTheme } from '@/hooks/useTheme'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
@@ -10,6 +11,7 @@ import { SiteFooter } from './SiteFooter'
 
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -121,6 +123,27 @@ export function AppLayout() {
           </nav>
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            {/* Alternador de modo claro / oscuro */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={isDark ? 'Modo oscuro activo (clic para cambiar a claro)' : 'Cambiar a modo oscuro'}
+              aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              aria-pressed={isDark}
+              className={cn(
+                'min-h-7 min-w-7 sm:min-h-8 sm:min-w-8 p-1 sm:p-1.5 rounded-full border text-xs transition-colors cursor-pointer flex items-center justify-center shadow-2xs',
+                isDark
+                  ? 'border-brand-500/50 bg-cream-200 text-amber-300 hover:bg-cream-300'
+                  : 'border-ink-200 bg-white text-ink-700 hover:bg-cream-200',
+              )}
+            >
+              {isDark ? (
+                <UI_ICONS.sun size={14} className="text-amber-400 shrink-0" />
+              ) : (
+                <UI_ICONS.moon size={14} className="text-ink-700 shrink-0" />
+              )}
+            </button>
+
             {/* Botón de accesibilidad: lectura cómoda para personas mayores */}
             <button
               type="button"
@@ -132,7 +155,7 @@ export function AppLayout() {
                 'min-h-7 min-w-7 sm:min-h-8 sm:min-w-8 px-1 sm:px-1.5 rounded-full border text-[10px] sm:text-xs font-bold transition-colors cursor-pointer flex items-center justify-center',
                 largeText
                   ? 'border-brand-500 bg-brand-100 text-brand-900 shadow-sm'
-                  : 'border-ink-200 bg-white text-ink-600 hover:bg-cream-200',
+                  : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-600 dark:text-ink-700 hover:bg-cream-200 dark:hover:bg-cream-200',
               )}
             >
               {largeText ? 'A−' : 'A+'}
@@ -187,7 +210,7 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/panel"
-                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white px-3 text-sm font-medium text-ink-900 sm:inline-flex"
+                  className="hidden min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-3 text-sm font-medium text-ink-900 sm:inline-flex hover:bg-cream-200 transition-colors"
                 >
                   Mi cuenta
                 </NavLink>
@@ -206,7 +229,7 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/entrar"
-                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 hover:bg-cream-200 transition-colors"
+                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 hover:bg-cream-200 transition-colors"
                 >
                   <span className="sm:hidden">Entrar</span>
                   <span className="hidden sm:inline">Iniciar sesión</span>
@@ -239,7 +262,7 @@ export function AppLayout() {
 
       <nav
         aria-label="Navegación rápida"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 backdrop-blur-xs lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 dark:bg-cream-100/95 backdrop-blur-xs lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {bottomNav.map((item) => {
