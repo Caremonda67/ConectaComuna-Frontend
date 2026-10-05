@@ -80,6 +80,9 @@ export interface Business {
   report_count?: number
   is_active: boolean
   codigo_apadrinamiento?: string | null
+  wholesale_enabled?: boolean
+  wholesale_min_order?: string | null
+  wholesale_terms?: string | null
   created_at: string
 }
 
@@ -152,6 +155,7 @@ export interface BusinessFilters {
   center?: Coordinates | null
   sort?: 'distance' | 'rating' | 'recent'
   openNow?: boolean
+  wholesaleOnly?: boolean
 }
 
 export interface BusinessWithDistance extends Business {

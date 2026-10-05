@@ -44,6 +44,7 @@ import {
   FileText,
   Sun,
   Moon,
+  Package,
 } from 'lucide-react'
 
 /**
@@ -80,6 +81,7 @@ export const BADGE_ICONS = {
   portfolio: Camera,
   verified: ShieldCheck,
   underReview: ShieldAlert,
+  package: Package,
 } as const satisfies Record<string, LucideIcon>
 
 /** Iconos de navegación e interfaz general. */
@@ -115,4 +117,5 @@ export const UI_ICONS = {
   fileText: FileText,
   sun: Sun,
   moon: Moon,
+  package: Package,
 } as const satisfies Record<string, LucideIcon>

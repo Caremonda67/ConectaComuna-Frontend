@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CATEGORIES } from '@/data/categories'
 import { cn } from '@/lib/utils'
-import type { LucideIcon } from '@/components/ui/icons'
+import { UI_ICONS, type LucideIcon } from '@/components/ui/icons'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
 interface Props {
@@ -191,6 +191,22 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             )}
           />
           Solo abiertos ahora
+        </button>
+
+        {/* Toggle rápido de venta al por mayor */}
+        <button
+          type="button"
+          onClick={() => onChange({ wholesaleOnly: !filters.wholesaleOnly })}
+          aria-pressed={Boolean(filters.wholesaleOnly)}
+          className={cn(
+            'inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium transition-colors cursor-pointer',
+            filters.wholesaleOnly
+              ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-700/60 font-semibold'
+              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
+          )}
+        >
+          <UI_ICONS.package size={15} className="shrink-0 text-brand-600 dark:text-brand-400" />
+          Venta al por mayor
         </button>
 
         <label className="text-xs sm:text-sm text-ink-700 flex items-center">

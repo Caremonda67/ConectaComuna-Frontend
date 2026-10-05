@@ -59,6 +59,9 @@ export const businessService = {
       if (filters.openNow) {
         list = list.filter((b) => getBusinessOpenStatus(b.hours).isOpen)
       }
+      if (filters.wholesaleOnly) {
+        list = list.filter((b) => b.wholesale_enabled)
+      }
       let result = withDistance(list, filters.center)
       if (filters.center && filters.radiusKm) {
         result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
@@ -77,6 +80,7 @@ export const businessService = {
       query = query.eq('category', filters.category)
     }
     if (filters.minRating) query = query.gte('rating_avg', filters.minRating)
+    if (filters.wholesaleOnly) query = query.eq('wholesale_enabled', true)
     if (filters.query?.trim()) {
       const q = filters.query.trim()
       query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`)
@@ -162,6 +166,9 @@ export const businessService = {
         verification_date: existing?.verification_date ?? null,
         report_count: existing?.report_count ?? 0,
         is_active: input.is_active ?? existing?.is_active ?? true,
+        wholesale_enabled: input.wholesale_enabled ?? existing?.wholesale_enabled ?? false,
+        wholesale_min_order: input.wholesale_min_order ?? existing?.wholesale_min_order ?? null,
+        wholesale_terms: input.wholesale_terms ?? existing?.wholesale_terms ?? null,
         created_at: existing?.created_at ?? new Date().toISOString(),
       }
       mutateDb((d) => {
