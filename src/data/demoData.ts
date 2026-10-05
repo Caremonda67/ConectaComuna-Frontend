@@ -76,6 +76,14 @@ export const demoBusinesses: Business[] = [
     completed_orders: 61,
     verification_status: 'unverified',
     is_active: true,
+    wholesale_enabled: true,
+    wholesale_min_order: '3 prendas o arreglos',
+    wholesale_terms: 'Tarifa preferencial para confección de uniformes de colegios y dotaciones.',
+    services_catalog: [
+      { id: 'srv-1', name: 'Basta / Ruedo de pantalón', price: 10000, description: 'Ajuste de largo a máquina o a mano según tela' },
+      { id: 'srv-2', name: 'Cambio de cremallera o cierre', price: 15000, description: 'Incluye cremallera estándar y costura reforzada' },
+      { id: 'srv-3', name: 'Entallado de camisa o blusa', price: 18000, description: 'Ajuste de mangas, costados y pinzas' },
+    ],
     created_at: '2024-11-02T10:00:00Z',
   },
   {
@@ -101,6 +109,11 @@ export const demoBusinesses: Business[] = [
     completed_orders: 18,
     verification_status: 'unverified',
     is_active: true,
+    services_catalog: [
+      { id: 'srv-21', name: 'Manicure tradicional', price: 15000, description: 'Limpieza, limado, exfoliación y esmaltado' },
+      { id: 'srv-22', name: 'Pedicure completo', price: 22000, description: 'Tratamiento de cutícula, durezas y esmaltado' },
+      { id: 'srv-23', name: 'Semipermanente con diseño', price: 35000, description: 'Duración garantizada hasta 21 días' },
+    ],
     created_at: '2025-02-15T10:00:00Z',
   },
   {
@@ -123,6 +136,11 @@ export const demoBusinesses: Business[] = [
     completed_orders: 9,
     verification_status: 'unverified',
     is_active: true,
+    services_catalog: [
+      { id: 'srv-31', name: 'Duplicado de llave tradicional', price: 5000, description: 'Copia inmediata en latón garantizada' },
+      { id: 'srv-32', name: 'Apertura de puerta residencial', price: 40000, description: 'Servicio a domicilio en la comuna sin romper chapa' },
+      { id: 'srv-33', name: 'Instalación de cerrojo de seguridad', price: 55000, description: 'Mano de obra para perforación y anclaje' },
+    ],
     created_at: '2025-04-01T10:00:00Z',
   },
   {
@@ -148,6 +166,13 @@ export const demoBusinesses: Business[] = [
     completed_orders: 44,
     verification_status: 'unverified',
     is_active: true,
+    wholesale_enabled: true,
+    wholesale_min_order: '12 prendas o $100.000',
+    wholesale_terms: 'Descuento del 30% a comerciantes del barrio en pacas surtidas.',
+    services_catalog: [
+      { id: 'srv-41', name: 'Lote de 12 camisetas surtidas', price: 90000, description: 'Tallas variadas para reventa' },
+      { id: 'srv-42', name: 'Prenda individual seleccionada', price: 12000, description: 'Ropa americana de primera calidad' },
+    ],
     created_at: '2024-08-20T10:00:00Z',
   },
   {

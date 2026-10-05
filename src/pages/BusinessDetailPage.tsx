@@ -19,7 +19,7 @@ import { UI_ICONS } from '@/components/ui/icons'
 import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
 import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
 import { BusinessShareModal } from '@/components/business/BusinessShareModal'
-import type { Order } from '@/types'
+import type { Order, ServiceCatalogItem } from '@/types'
 
 export default function BusinessDetailPage() {
   const { id = '' } = useParams()
@@ -32,6 +32,7 @@ export default function BusinessDetailPage() {
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [solicitudExitosa, setSolicitudExitosa] = useState<Order | null>(null)
+  const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
   const rutaNegocio = `/negocio/${id}`
 
   const { data: business, loading, error, reload } = useAsync(
@@ -57,7 +58,22 @@ export default function BusinessDetailPage() {
     )
 
   const isOwner = business.owner_id === userId
+  const canRequest = activeRole === 'client' && !isOwner
+  const isFormVisible = showForm && canRequest && Boolean(userId)
   const openStatus = getBusinessOpenStatus(business.hours)
+
+  function handleSelectService(item: ServiceCatalogItem) {
+    if (!userId) {
+      setPedirCuenta(true)
+      return
+    }
+    if (!canRequest) return
+    setSelectedService(item)
+    setShowForm(true)
+    setTimeout(() => {
+      document.getElementById('solicitud-servicio-form')?.scrollIntoView({ behavior: 'smooth' })
+    }, 100)
+  }
 
   function getWhatsAppUrl() {
     if (!business?.whatsapp) return ''
@@ -292,7 +308,7 @@ export default function BusinessDetailPage() {
               </Button>
             )}
 
-            {activeRole === 'client' && (
+            {canRequest && (
               <div className="sm:col-span-2">
                 <Button
                   onClick={() => {
@@ -305,7 +321,7 @@ export default function BusinessDetailPage() {
                   fullWidth
                   className="min-h-12"
                 >
-                  {showForm ? 'Ocultar solicitud' : 'Solicitar servicio en la plataforma'}
+                  {isFormVisible ? 'Ocultar solicitud' : 'Solicitar servicio en la plataforma'}
                 </Button>
               </div>
             )}
@@ -399,22 +415,31 @@ export default function BusinessDetailPage() {
         business={business}
       />
 
-      {showForm && userId && (
-        <motion.div
-          initial={{ opacity: 0, y: -12, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-        >
-          <RequestForm
-            businessId={business.id}
-            clientId={userId}
-            onDone={(createdOrder) => {
-              setShowForm(false)
-              setSolicitudExitosa(createdOrder)
-            }}
-            onCancel={() => setShowForm(false)}
-          />
-        </motion.div>
+      {isFormVisible && (
+        <div id="solicitud-servicio-form">
+          <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+          >
+            <RequestForm
+              key={selectedService?.id ?? 'default'}
+              businessId={business.id}
+              clientId={userId!}
+              initialTitle={selectedService?.name || ''}
+              initialPriceEstimate={selectedService?.price ?? null}
+              onDone={(createdOrder) => {
+                setShowForm(false)
+                setSelectedService(null)
+                setSolicitudExitosa(createdOrder)
+              }}
+              onCancel={() => {
+                setShowForm(false)
+                setSelectedService(null)
+              }}
+            />
+          </motion.div>
+        </div>
       )}
 
       {solicitudExitosa && (
@@ -428,6 +453,53 @@ export default function BusinessDetailPage() {
             navigate('/panel')
           }}
         />
+      )}
+
+      {business.services_catalog && business.services_catalog.length > 0 && (
+        <section aria-labelledby="catalogo-servicios">
+          <div className="mb-2.5 flex items-center justify-between">
+            <h2 id="catalogo-servicios" className="text-lg font-bold">
+              Servicios y tarifas de referencia
+            </h2>
+            <span className="text-xs text-ink-500 font-medium">Precios orientativos</span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {business.services_catalog.map((item) => (
+              <div
+                key={item.id}
+                className="card p-3.5 flex flex-col justify-between gap-3 hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-sm text-ink-900 dark:text-ink-100">
+                      {item.name}
+                    </h3>
+                    {item.price != null && (
+                      <span className="font-bold text-sm text-brand-600 dark:text-brand-400 shrink-0">
+                        {formatCurrency(item.price)}
+                      </span>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className="mt-1 text-xs text-ink-600 dark:text-ink-400">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+                {!isOwner && activeRole === 'client' && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectService(item)}
+                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:underline pt-1 cursor-pointer"
+                  >
+                    <span>Pedir este trabajo</span>
+                    <span aria-hidden="true">&rarr;</span>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {business.photos.length > 0 && (
@@ -529,18 +601,24 @@ const MAX_FILE_MB = 5
 function RequestForm({
   businessId,
   clientId,
+  initialTitle = '',
+  initialPriceEstimate = null,
   onDone,
   onCancel,
 }: {
   businessId: string
   clientId: string
+  initialTitle?: string
+  initialPriceEstimate?: number | null
   onDone: (order: Order) => void
   onCancel: () => void
 }) {
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(initialTitle)
   const [description, setDescription] = useState('')
   const [scheduledFor, setScheduledFor] = useState('')
-  const [priceEstimate, setPriceEstimate] = useState('')
+  const [priceEstimate, setPriceEstimate] = useState(
+    initialPriceEstimate != null ? String(initialPriceEstimate) : '',
+  )
   const [serviceLocationType, setServiceLocationType] = useState<'workshop' | 'home_delivery'>('workshop')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
