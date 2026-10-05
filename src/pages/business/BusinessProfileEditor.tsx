@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { businessService } from '@/services/businessService'
 import { facilitadorService } from '@/services/facilitadorService'
@@ -44,31 +44,128 @@ const emptyHours = (): BusinessHours[] =>
     closed: day === 0,
   }))
 
+interface FormProps {
+  managedBusiness: Business | null
+  userId: string
+  onSaved: () => Promise<void>
+}
+
 export default function BusinessProfileEditor() {
   const { userId, business, profile, refresh } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const requestedBusinessId = new URLSearchParams(location.search).get('id')
-  const [managedBusiness, setManagedBusiness] = useState<Business | null>(business)
-  const [loadingBusiness, setLoadingBusiness] = useState(Boolean(requestedBusinessId && !business))
+  const [targetBusiness, setTargetBusiness] = useState<Business | null>(null)
+  const [loadingBusiness, setLoadingBusiness] = useState(Boolean(requestedBusinessId))
   const [accessDenied, setAccessDenied] = useState(false)
 
+  useEffect(() => {
+    if (!requestedBusinessId || !userId) return
+
+    const safeUserId = userId
+    const safeBusinessId = requestedBusinessId
+    let alive = true
+
+    async function loadTargetBusiness(uid: string, bid: string) {
+      try {
+        setLoadingBusiness(true)
+        const target = await businessService.getById(bid)
+        if (!target) {
+          if (alive) {
+            setAccessDenied(true)
+            setTargetBusiness(null)
+          }
+          return
+        }
+
+        const isOwner = target.owner_id === uid
+        const isApprovedFacilitador =
+          profile?.account_type === 'facilitador' &&
+          (await facilitadorService.getNegociosVinculados(uid)).some(
+            ({ vinculacion, negocio }) =>
+              negocio.id === target.id && vinculacion.estado_vinculacion === 'aprobado',
+          )
+
+        if (!isOwner && !isApprovedFacilitador) {
+          if (alive) {
+            setAccessDenied(true)
+            setTargetBusiness(null)
+          }
+          return
+        }
+
+        if (alive) {
+          setTargetBusiness(target)
+          setAccessDenied(false)
+        }
+      } catch {
+        if (alive) {
+          setAccessDenied(true)
+          setTargetBusiness(null)
+        }
+      } finally {
+        if (alive) setLoadingBusiness(false)
+      }
+    }
+
+    void loadTargetBusiness(safeUserId, safeBusinessId)
+
+    return () => {
+      alive = false
+    }
+  }, [requestedBusinessId, userId, profile?.account_type])
+
+  if (loadingBusiness) {
+    return <p className="text-sm text-ink-500">Cargando negocio…</p>
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="card p-6">
+        <h1 className="text-xl font-bold">No tienes acceso a este negocio</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          Solo el dueño del negocio o un facilitador aprobado puede editar este perfil.
+        </p>
+        <Button className="mt-4" onClick={() => navigate('/panel')}>
+          Volver al panel
+        </Button>
+      </div>
+    )
+  }
+
+  const activeBusiness = requestedBusinessId ? targetBusiness : business
+
+  return (
+    <BusinessProfileEditorForm
+      key={activeBusiness?.id ?? 'nuevo'}
+      managedBusiness={activeBusiness}
+      userId={userId ?? ''}
+      onSaved={async () => {
+        await refresh()
+        navigate('/panel')
+      }}
+    />
+  )
+}
+
+function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormProps) {
+  const navigate = useNavigate()
+  const { profile } = useAuth()
   const {
     control,
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: business?.name ?? '',
-      category: business?.category ?? '',
-      description: business?.description ?? '',
-      phone: business?.phone ?? '',
-      whatsapp: business?.whatsapp ?? '',
-      address: business?.address ?? '',
-      neighborhood: business?.neighborhood ?? '',
+      name: managedBusiness?.name ?? '',
+      category: managedBusiness?.category ?? '',
+      description: managedBusiness?.description ?? '',
+      phone: managedBusiness?.phone ?? '',
+      whatsapp: managedBusiness?.whatsapp ?? '',
+      address: managedBusiness?.address ?? '',
+      neighborhood: managedBusiness?.neighborhood ?? '',
     },
   })
 
@@ -76,87 +173,11 @@ export default function BusinessProfileEditor() {
     managedBusiness ? { lat: managedBusiness.lat, lng: managedBusiness.lng } : COMUNA_CENTER,
   )
   const [photos, setPhotos] = useState<string[]>(managedBusiness?.photos ?? [])
-  const [hours, setHours] = useState<BusinessHours[]>(managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours())
+  const [hours, setHours] = useState<BusinessHours[]>(
+    managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours(),
+  )
   const [uploading, setUploading] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!managedBusiness) return
-
-    setPosition({ lat: managedBusiness.lat, lng: managedBusiness.lng })
-    setPhotos(managedBusiness.photos ?? [])
-    setHours(managedBusiness.hours?.length ? managedBusiness.hours : emptyHours())
-    reset({
-      name: managedBusiness.name ?? '',
-      category: managedBusiness.category ?? '',
-      description: managedBusiness.description ?? '',
-      phone: managedBusiness.phone ?? '',
-      whatsapp: managedBusiness.whatsapp ?? '',
-      address: managedBusiness.address ?? '',
-      neighborhood: managedBusiness.neighborhood ?? '',
-    })
-  }, [managedBusiness, reset])
-
-  useEffect(() => {
-    const targetBusinessId = requestedBusinessId
-    const currentUserId = userId
-
-    if (!targetBusinessId || !currentUserId) {
-      setManagedBusiness(business)
-      setLoadingBusiness(false)
-      setAccessDenied(false)
-      return
-    }
-
-    const safeTargetBusinessId = targetBusinessId
-    const safeCurrentUserId = currentUserId
-    let alive = true
-
-    async function loadTargetBusiness() {
-      if (!safeTargetBusinessId || !safeCurrentUserId) return
-
-      try {
-        const target = await businessService.getById(safeTargetBusinessId)
-        if (!target) {
-          setAccessDenied(true)
-          setManagedBusiness(null)
-          return
-        }
-
-        const isOwner = target.owner_id === safeCurrentUserId
-        const isApprovedFacilitador =
-          profile?.account_type === 'facilitador' &&
-          (await facilitadorService.getNegociosVinculados(safeCurrentUserId)).some(
-            ({ vinculacion, negocio }) =>
-              negocio.id === target.id && vinculacion.estado_vinculacion === 'aprobado',
-          )
-
-        if (!isOwner && !isApprovedFacilitador) {
-          setAccessDenied(true)
-          setManagedBusiness(null)
-          return
-        }
-
-        if (alive) {
-          setManagedBusiness(target)
-          setAccessDenied(false)
-        }
-      } catch {
-        if (alive) {
-          setAccessDenied(true)
-          setManagedBusiness(null)
-        }
-      } finally {
-        if (alive) setLoadingBusiness(false)
-      }
-    }
-
-    void loadTargetBusiness()
-
-    return () => {
-      alive = false
-    }
-  }, [requestedBusinessId, userId, profile?.account_type, business])
 
   const description = useWatch({ control, name: 'description' }) ?? ''
 
@@ -179,8 +200,7 @@ export default function BusinessProfileEditor() {
         hours,
         is_active: true,
       })
-      await refresh()
-      navigate('/panel')
+      await onSaved()
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos guardar tu negocio.')
     }
@@ -200,24 +220,6 @@ export default function BusinessProfileEditor() {
     } finally {
       setUploading(false)
     }
-  }
-
-  if (loadingBusiness) {
-    return <p className="text-sm text-ink-500">Cargando negocio…</p>
-  }
-
-  if (accessDenied) {
-    return (
-      <div className="card p-6">
-        <h1 className="text-xl font-bold">No tienes acceso a este negocio</h1>
-        <p className="mt-2 text-sm text-ink-600">
-          Solo el dueño del negocio o un facilitador aprobado puede editar este perfil.
-        </p>
-        <Button className="mt-4" onClick={() => navigate('/panel')}>
-          Volver al panel
-        </Button>
-      </div>
-    )
   }
 
   return (
@@ -423,9 +425,43 @@ export default function BusinessProfileEditor() {
         </p>
       )}
 
-      <div className="sticky bottom-20 flex gap-2">
+      <div className="rounded-xl border border-ink-200 bg-cream-50 p-3.5 space-y-1.5 text-xs text-ink-600">
+        <p className="flex items-center gap-1.5 font-semibold text-ink-800">
+          <UI_ICONS.shieldCheck size={16} className="text-brand-700 shrink-0" />
+          Aviso de publicación y protección de datos
+        </p>
+        <p>
+          Al guardar este negocio, autorizas que el nombre del oficio, fotos y número de WhatsApp se
+          muestren públicamente en el directorio conforme a nuestra{' '}
+          <Link to="/privacidad" target="_blank" className="text-brand-700 underline font-medium">
+            Política de Privacidad
+          </Link>{' '}
+          y los{' '}
+          <Link to="/terminos" target="_blank" className="text-brand-700 underline font-medium">
+            Términos de Uso
+          </Link>
+          . Tu dirección residencial exacta nunca se expone en mapas públicos.
+        </p>
+        {profile?.account_type === 'facilitador' && (
+          <p className="pt-1 text-ink-800 font-medium">
+            Como facilitador, declaras bajo la gravedad de juramento que cuentas con la autorización
+            expresa del titular del oficio para publicar su información en ConectaComuna.
+          </p>
+        )}
+      </div>
+
+      <div className="sticky bottom-20 flex flex-col sm:flex-row gap-2 bg-white/95 p-3 rounded-2xl border border-ink-200 shadow-md backdrop-blur-xs">
         <Button type="submit" fullWidth loading={isSubmitting}>
           Guardar negocio
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => navigate('/panel')}
+          fullWidth
+          disabled={isSubmitting}
+        >
+          Cancelar
         </Button>
       </div>
     </form>

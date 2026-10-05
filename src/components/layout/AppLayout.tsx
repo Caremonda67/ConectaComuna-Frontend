@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { motion } from 'motion/react'
 import { useAuth } from '@/hooks/useAuth'
 import { isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
@@ -9,20 +8,26 @@ import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
 
-/** Navegación principal del diseño (barra superior en escritorio). */
-const topNav = [
-  { to: '/', label: 'Inicio', end: true },
-  { to: '/explorar', label: 'Explorar servicios' },
-  { to: '/panel/negocio', label: 'Publicar servicio' },
-  { to: '/como-funciona', label: 'Cómo funciona' },
-]
-
-
-
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const topNav = [
+    { to: '/', label: 'Inicio', end: true },
+    { to: '/explorar', label: 'Explorar oficios', end: false },
+    { to: '/mapa', label: 'Mapa comunal', end: false },
+    {
+      to: profile
+        ? profile.account_type === 'client'
+          ? '/panel'
+          : '/panel/negocio'
+        : '/registro',
+      label: 'Publicar servicio',
+      end: false,
+    },
+    { to: '/como-funciona', label: 'Cómo funciona', end: false },
+  ]
 
   const bottomNav = profile
     ? [
@@ -79,7 +84,7 @@ export function AppLayout() {
         Saltar al contenido
       </a>
 
-      <header className="sticky top-0 z-20 border-b border-ink-200 bg-cream-100/95 backdrop-blur overflow-x-clip">
+      <header className="sticky top-0 z-40 border-b border-ink-200 bg-cream-100/95 backdrop-blur overflow-x-clip">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3">
           <NavLink to="/" aria-label="ConectaComuna, ir al inicio" className="shrink-0 min-w-0">
             <Logo />
@@ -129,8 +134,17 @@ export function AppLayout() {
               <div
                 role="group"
                 aria-label="Cambiar de rol"
-                className="relative flex rounded-full border border-ink-200 bg-cream-100 p-0.5 text-[10px] sm:text-xs shrink-0 shadow-2xs"
+                className="relative grid grid-cols-2 rounded-full border border-ink-200 bg-cream-100 p-0.5 text-[10px] sm:text-xs shrink-0 shadow-2xs overflow-hidden"
               >
+                {/* Indicador deslizante seguro 100% contenido en el switch, sin bugs de salto fuera de pantalla */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute top-0.5 bottom-0.5 w-[calc(50%-2px)] rounded-full bg-brand-500 shadow-xs transition-all duration-200 ease-out pointer-events-none',
+                    activeRole === 'client' ? 'left-0.5' : 'left-[calc(50%+1px)]',
+                  )}
+                />
+
                 {(['client', profile.account_type] as const).map((role) => {
                   const isSelected = activeRole === role
                   return (
@@ -140,29 +154,20 @@ export function AppLayout() {
                       aria-pressed={isSelected}
                       onClick={() => setActiveRole(role as ActiveRole)}
                       className={cn(
-                        'relative min-h-6 sm:min-h-7 rounded-full px-2 sm:px-3 font-semibold transition-colors capitalize z-10 cursor-pointer select-none flex items-center justify-center',
+                        'relative z-10 min-h-6 sm:min-h-7 rounded-full px-2 sm:px-3 font-semibold transition-colors capitalize cursor-pointer select-none flex items-center justify-center text-center',
                         isSelected ? 'text-white' : 'text-ink-600 hover:text-ink-900',
                       )}
                     >
-                      {isSelected && (
-                        <motion.span
-                          layoutId="activeRoleIndicator"
-                          className="absolute inset-0 rounded-full bg-brand-500 shadow-xs"
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                        />
+                      {role === 'client' ? (
+                        'Cliente'
+                      ) : role === 'business' ? (
+                        'Negocio'
+                      ) : (
+                        <>
+                          <span className="sm:hidden">Facil.</span>
+                          <span className="hidden sm:inline">Facilitador</span>
+                        </>
                       )}
-                      <span className="relative z-10">
-                        {role === 'client' ? (
-                          'Cliente'
-                        ) : role === 'business' ? (
-                          'Negocio'
-                        ) : (
-                          <>
-                            <span className="sm:hidden">Facil.</span>
-                            <span className="hidden sm:inline">Facilitador</span>
-                          </>
-                        )}
-                      </span>
                     </button>
                   )
                 })}
@@ -225,7 +230,7 @@ export function AppLayout() {
 
       <nav
         aria-label="Navegación rápida"
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-ink-200 bg-white/95 backdrop-blur-xs lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-ink-200 bg-white/95 backdrop-blur-xs lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {bottomNav.map((item) => {
@@ -245,10 +250,8 @@ export function AppLayout() {
                   {({ isActive }) => (
                     <>
                       {isActive && (
-                        <motion.span
-                          layoutId="bottomNavActiveBar"
-                          className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-500"
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        <span
+                          className="absolute top-0 h-0.5 w-8 rounded-full bg-brand-500 transition-all duration-200"
                         />
                       )}
                       <Icon
