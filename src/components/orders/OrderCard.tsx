@@ -49,7 +49,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="truncate font-semibold">{order.title}</h3>
-          <p className="flex items-center gap-1.5 text-xs text-ink-500">
+          <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
             {perspective === 'client' ? (
               <>
                 <CategoryGlyph
@@ -82,10 +82,26 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
       </div>
 
       {order.description && (
-        <p className="mt-2 text-sm text-ink-700">{order.description}</p>
+        <p className="mt-2 text-sm text-ink-700 dark:text-ink-300">{order.description}</p>
       )}
 
-      <dl className="mt-2 flex flex-wrap gap-x-4 text-xs text-ink-500">
+      {order.photos && order.photos.length > 0 && (
+        <ul className="mt-2 flex gap-2 flex-wrap">
+          {order.photos.map((src, i) => (
+            <li key={src}>
+              <img
+                src={src}
+                alt={`Foto ${i + 1} del pedido`}
+                loading="lazy"
+                decoding="async"
+                className="h-16 w-16 rounded-lg object-cover border border-ink-200 dark:border-ink-600"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <dl className="mt-2 flex flex-wrap gap-x-4 text-xs text-ink-500 dark:text-ink-400">
         <div className="flex gap-1">
           <dt>Solicitado:</dt>
           <dd>{formatDate(order.created_at)}</dd>
@@ -122,7 +138,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
       )}
 
       {perspective === 'client' && order.status === 'completed' && !order.review && onReview && (
-        <div className="mt-3 border-t border-ink-100 pt-3">
+        <div className="mt-3 border-t border-ink-100 dark:border-ink-700 pt-3">
           {!reviewing ? (
             <Button size="sm" variant="secondary" onClick={() => setReviewing(true)}>
               <Star aria-hidden="true" size={15} strokeWidth={1.75} />

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
@@ -13,6 +13,7 @@ import { profileService } from '@/services/profileService'
 import { ORDER_STATUS_LABEL, formatDate } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 
 /** Panel del cliente: historial y seguimiento de sus solicitudes. */
 export default function ClientDashboard() {
@@ -22,6 +23,9 @@ export default function ClientDashboard() {
     () => (userId ? orderService.listAsClient(userId) : Promise.resolve([])),
     [userId],
   )
+
+  const reloadStable = useCallback(() => reload(), [reload])
+  useRealtimeOrders('client_id', userId, reloadStable)
 
   const [activandoNegocio, setActivandoNegocio] = useState(false)
   const [errorActivacion, setErrorActivacion] = useState<string | null>(null)

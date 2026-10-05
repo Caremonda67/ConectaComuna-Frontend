@@ -6,12 +6,22 @@ import type { Order, OrderStatus, Review } from '@/types'
 const SELECT_WITH_RELATIONS =
   '*, business:businesses(id, name, category, photos), client:profiles!orders_client_id_fkey(id, full_name, avatar_url)'
 
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 function hydrate(order: Order): Order {
   const db = readDb()
   const business = db.businesses.find((b) => b.id === order.business_id)
   const client = db.profiles.find((p) => p.id === order.client_id)
   return {
     ...order,
+    photos: order.photos ?? [],
     business: business
       ? {
           id: business.id,
@@ -34,6 +44,7 @@ export interface CreateOrderInput {
   description: string
   scheduledFor?: string | null
   priceEstimate?: number | null
+  photos?: File[]
 }
 
 export const orderService = {
@@ -78,6 +89,9 @@ export const orderService = {
   async create(input: CreateOrderInput): Promise<Order> {
     if (isDemoMode) {
       const now = new Date().toISOString()
+      const photos = input.photos?.length
+        ? await Promise.all(input.photos.slice(0, 3).map(fileToDataUrl))
+        : []
       const order: Order = {
         id: uid('ord'),
         business_id: input.businessId,
@@ -87,6 +101,7 @@ export const orderService = {
         status: 'pending',
         scheduled_for: input.scheduledFor ?? null,
         price_estimate: input.priceEstimate ?? null,
+        photos,
         created_at: now,
         updated_at: now,
       }
@@ -94,7 +109,25 @@ export const orderService = {
       return delay(hydrate(order))
     }
     // RLS: insert permitido solo si `auth.uid() = client_id`.
-    const { data, error } = await requireSupabase()
+    const supabase = requireSupabase()
+    const folder = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : uid('ord')
+
+    const photos: string[] = []
+    if (input.photos?.length) {
+      for (const file of input.photos.slice(0, 3)) {
+        const path = `${input.clientId}/${folder}/${uid('img')}-${file.name}`
+        const { error: uploadError } = await supabase.storage
+          .from('order-photos')
+          .upload(path, file)
+        if (uploadError) throw uploadError
+        const { data: urlData } = supabase.storage
+          .from('order-photos')
+          .getPublicUrl(path)
+        photos.push(urlData.publicUrl)
+      }
+    }
+
+    const { data, error } = await supabase
       .from('orders')
       .insert({
         business_id: input.businessId,
@@ -103,6 +136,7 @@ export const orderService = {
         description: input.description,
         scheduled_for: input.scheduledFor ?? null,
         price_estimate: input.priceEstimate ?? null,
+        photos,
         status: 'pending' satisfies OrderStatus,
       })
       .select(SELECT_WITH_RELATIONS)

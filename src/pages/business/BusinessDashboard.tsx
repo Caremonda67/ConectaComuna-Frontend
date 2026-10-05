@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 import { orderService } from '@/services/orderService'
 import { facilitadorService } from '@/services/facilitadorService'
 import { OrderCard } from '@/components/orders/OrderCard'
@@ -23,6 +24,9 @@ export default function BusinessDashboard() {
     () => (business ? orderService.listAsBusiness(business.id) : Promise.resolve([])),
     [business?.id],
   )
+
+  const reloadStable = useCallback(() => reload(), [reload])
+  useRealtimeOrders('business_id', business?.id, reloadStable)
 
   if (!business) {
     return (

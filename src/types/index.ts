@@ -103,6 +103,7 @@ export interface Order {
   status: OrderStatus
   scheduled_for: string | null
   price_estimate: number | null
+  photos?: string[]
   created_at: string
   updated_at: string
   /** Relaciones embebidas por Supabase (select con joins). */

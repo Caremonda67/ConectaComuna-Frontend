@@ -454,6 +454,9 @@ export default function BusinessDetailPage() {
   )
 }
 
+const MAX_PHOTOS = 3
+const MAX_FILE_MB = 5
+
 function RequestForm({
   businessId,
   clientId,
@@ -468,8 +471,31 @@ function RequestForm({
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [scheduledFor, setScheduledFor] = useState('')
+  const [priceEstimate, setPriceEstimate] = useState('')
+  const [photos, setPhotos] = useState<File[]>([])
+  const [previews, setPreviews] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+
+  function handlePhotos(e: React.ChangeEvent<HTMLInputElement>) {
+    const incoming = Array.from(e.target.files ?? [])
+    const valid = incoming.filter((f) => {
+      if (!f.type.startsWith('image/')) return false
+      if (f.size > MAX_FILE_MB * 1024 * 1024) return false
+      return true
+    })
+    const merged = [...photos, ...valid].slice(0, MAX_PHOTOS)
+    setPhotos(merged)
+    setPreviews(merged.map((f) => URL.createObjectURL(f)))
+    e.target.value = ''
+  }
+
+  function removePhoto(index: number) {
+    URL.revokeObjectURL(previews[index])
+    const next = photos.filter((_, i) => i !== index)
+    setPhotos(next)
+    setPreviews(next.map((f) => URL.createObjectURL(f)))
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -480,13 +506,17 @@ function RequestForm({
     setSubmitting(true)
     setErr(null)
     try {
+      const parsedPrice = priceEstimate ? Number(priceEstimate) : null
       await orderService.create({
         businessId,
         clientId,
         title: title.trim(),
         description: description.trim(),
         scheduledFor: scheduledFor ? new Date(scheduledFor).toISOString() : null,
+        priceEstimate: parsedPrice && parsedPrice > 0 ? parsedPrice : null,
+        photos: photos.length > 0 ? photos : undefined,
       })
+      previews.forEach(URL.revokeObjectURL)
       onDone()
     } catch (e2) {
       setErr(e2 instanceof Error ? e2.message : 'No pudimos enviar tu solicitud.')
@@ -517,6 +547,54 @@ function RequestForm({
         value={scheduledFor}
         onChange={(e) => setScheduledFor(e.target.value)}
       />
+      <TextField
+        label="Presupuesto estimado (opcional)"
+        type="number"
+        min="0"
+        step="500"
+        value={priceEstimate}
+        onChange={(e) => setPriceEstimate(e.target.value)}
+        placeholder="Ej: 25000"
+        hint="En pesos colombianos. Te sirve para acordar un rango con el emprendedor."
+      />
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-ink-900">
+          Fotos de referencia (opcional, máx. {MAX_PHOTOS})
+        </label>
+        {previews.length > 0 && (
+          <ul className="mb-2 flex gap-2 flex-wrap">
+            {previews.map((src, i) => (
+              <li key={src} className="relative">
+                <img
+                  src={src}
+                  alt={`Foto ${i + 1}`}
+                  className="h-20 w-20 rounded-lg object-cover border border-ink-200 dark:border-ink-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePhoto(i)}
+                  aria-label={`Quitar foto ${i + 1}`}
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white text-xs leading-none shadow-sm hover:bg-rose-700 transition-colors cursor-pointer"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {photos.length < MAX_PHOTOS && (
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handlePhotos}
+            aria-label="Subir fotos de referencia"
+            className="block w-full text-sm text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100 file:cursor-pointer dark:file:bg-brand-900/30 dark:file:text-brand-300"
+          />
+        )}
+      </div>
+
       {err && (
         <p role="alert" className="text-sm text-rose-700">
           {err}
