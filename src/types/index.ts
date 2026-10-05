@@ -202,11 +202,19 @@ export type MotivoReporte =
   | 'suplantacion'
   | 'otro'
 
+export type EstadoReporte = 'pendiente' | 'revisado' | 'descartado'
+
 export interface ReporteComunitario {
   id: string
   negocio_id: string
   reportado_por_id: string
   motivo: MotivoReporte
   descripcion?: string | null
+  estado?: EstadoReporte
+  moderado_por_id?: string | null
+  notas_moderacion?: string | null
   creado_en: string
+  actualizado_en?: string
+  negocio?: Pick<Business, 'id' | 'name' | 'category' | 'phone' | 'verification_status'> | null
+  reportado_por?: Pick<Profile, 'id' | 'full_name' | 'phone'> | null
 }

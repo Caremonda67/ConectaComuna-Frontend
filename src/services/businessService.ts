@@ -2,7 +2,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
 import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
-import type { Business, BusinessFilters, BusinessWithDistance, ReporteComunitario, Review } from '@/types'
+import type { Business, BusinessFilters, BusinessWithDistance, EstadoReporte, ReporteComunitario, Review } from '@/types'
 
 function withDistance(
   list: Business[],
@@ -351,7 +351,10 @@ export const businessService = {
 
     if (isDemoMode) {
       mutateDb((d) => {
-        d.reportes.push(nuevo)
+        d.reportes.push({
+          ...nuevo,
+          estado: 'pendiente',
+        })
         const b = d.businesses.find((x) => x.id === reporte.negocio_id)
         if (b) {
           b.report_count = (b.report_count ?? 0) + 1
@@ -371,6 +374,7 @@ export const businessService = {
           reportado_por_id: reporte.reportado_por_id,
           motivo: reporte.motivo,
           descripcion: reporte.descripcion,
+          estado: 'pendiente',
         })
     } catch {}
   },
@@ -391,13 +395,39 @@ export const businessService = {
       if (negocioId) {
         list = list.filter((r) => r.negocio_id === negocioId)
       }
-      return delay(list.sort((a, b) => b.creado_en.localeCompare(a.creado_en)), 200)
+      const hydrated = list.map((r) => {
+        const b = db.businesses.find((x) => x.id === r.negocio_id)
+        const p = db.profiles.find((x) => x.id === r.reportado_por_id)
+        return {
+          ...r,
+          estado: r.estado ?? 'pendiente',
+          negocio: b
+            ? {
+                id: b.id,
+                name: b.name,
+                category: b.category,
+                phone: b.phone,
+                verification_status: b.verification_status,
+              }
+            : null,
+          reportado_por: p
+            ? {
+                id: p.id,
+                full_name: p.full_name,
+                phone: p.phone,
+              }
+            : null,
+        }
+      })
+      return delay(hydrated.sort((a, b) => b.creado_en.localeCompare(a.creado_en)), 200)
     }
 
     try {
       let query = requireSupabase()
         .from('reportes_comunitarios')
-        .select('*')
+        .select(
+          '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone)',
+        )
         .order('creado_en', { ascending: false })
         .limit(50)
 
@@ -416,5 +446,93 @@ export const businessService = {
     } catch {}
 
     return localList.filter((r) => !negocioId || r.negocio_id === negocioId)
+  },
+
+  /**
+   * Actualiza el estado de resolución de un reporte comunitario.
+   */
+  async actualizarEstadoReporte(
+    reporteId: string,
+    estado: EstadoReporte,
+    moderadoPorId?: string,
+    notas?: string,
+  ): Promise<void> {
+    if (isDemoMode) {
+      mutateDb((d) => {
+        const rep = d.reportes.find((r) => r.id === reporteId)
+        if (rep) {
+          rep.estado = estado
+          rep.moderado_por_id = moderadoPorId ?? null
+          rep.notas_moderacion = notas ?? null
+          rep.actualizado_en = new Date().toISOString()
+        }
+      })
+      try {
+        const raw = localStorage.getItem('cc_reportes_local')
+        if (raw) {
+          const parsed: ReporteComunitario[] = JSON.parse(raw)
+          const idx = parsed.findIndex((r) => r.id === reporteId)
+          if (idx >= 0) {
+            parsed[idx].estado = estado
+            parsed[idx].notas_moderacion = notas ?? null
+            localStorage.setItem('cc_reportes_local', JSON.stringify(parsed))
+          }
+        }
+      } catch {}
+      return delay(undefined, 200)
+    }
+
+    const { error } = await requireSupabase()
+      .from('reportes_comunitarios')
+      .update({
+        estado,
+        moderado_por_id: moderadoPorId ?? null,
+        notas_moderacion: notas ?? null,
+        actualizado_en: new Date().toISOString(),
+      })
+      .eq('id', reporteId)
+    if (error) throw error
+  },
+
+  /**
+   * Cambia el estado de verificación u observación de un negocio ante reportes.
+   */
+  async cambiarEstadoObservacionNegocio(
+    negocioId: string,
+    nuevoEstado: 'under_review' | 'verified' | 'unverified',
+    nota?: string,
+  ): Promise<void> {
+    if (isDemoMode) {
+      mutateDb((d) => {
+        const b = d.businesses.find((x) => x.id === negocioId)
+        if (b) {
+          b.verification_status = nuevoEstado
+          b.verification_note = nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null)
+          b.verification_date = new Date().toISOString()
+        }
+      })
+      try {
+        localStorage.setItem(
+          `cc_verif_${negocioId}`,
+          JSON.stringify({
+            status: nuevoEstado,
+            by: 'Moderación Comunitaria',
+            note: nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null),
+            date: new Date().toISOString(),
+          }),
+        )
+      } catch {}
+      return delay(undefined, 200)
+    }
+
+    const { error } = await requireSupabase()
+      .from('businesses')
+      .update({
+        verification_status: nuevoEstado,
+        verification_note: nota ?? null,
+        verification_date: new Date().toISOString(),
+      })
+      .eq('id', negocioId)
+    if (error) throw error
   },
 }
