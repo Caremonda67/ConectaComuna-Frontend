@@ -37,6 +37,7 @@ export default function ExplorePage() {
       center: ubicacion?.center ?? COMUNA_CENTER,
       sort: (params.get('orden') as BusinessFilters['sort']) ?? 'distance',
       openNow: params.get('abierto') === '1',
+      wholesaleOnly: params.get('mayor') === '1',
     }),
     [params, ubicacion],
   )
@@ -66,6 +67,10 @@ export default function ExplorePage() {
       if (patch.openNow !== undefined) {
         if (patch.openNow) next.set('abierto', '1')
         else next.delete('abierto')
+      }
+      if (patch.wholesaleOnly !== undefined) {
+        if (patch.wholesaleOnly) next.set('mayor', '1')
+        else next.delete('mayor')
       }
       setParams(next, { replace: true })
     },

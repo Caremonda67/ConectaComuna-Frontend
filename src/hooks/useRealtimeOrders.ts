@@ -17,8 +17,9 @@ export function useRealtimeOrders(
     const client = supabase
     if (isDemoMode || !client || !value) return
 
+    const channelId = `orders:${column}:${value}:${Math.random().toString(36).slice(2, 7)}`
     const channel = client
-      .channel(`orders:${column}:${value}`)
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
@@ -32,7 +33,7 @@ export function useRealtimeOrders(
       .subscribe()
 
     return () => {
-      client.removeChannel(channel)
+      void client.removeChannel(channel)
     }
   }, [column, value, onUpdate])
 }
