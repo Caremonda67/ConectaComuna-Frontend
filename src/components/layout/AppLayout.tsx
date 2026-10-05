@@ -64,6 +64,15 @@ export function AppLayout() {
     }
   }, [largeText])
 
+  // Al cambiar de ruta, restablecemos el scroll al inicio de la página para que la
+  // nueva pantalla se aprecie completa desde arriba y no conserve la posición previa.
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+  }, [location.pathname, location.hash])
+
   useEffect(() => {
     if (!loading && profile) {
       if (!profile.onboarding_completado) {

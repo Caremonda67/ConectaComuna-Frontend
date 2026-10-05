@@ -2,36 +2,38 @@ interface LogoProps {
   className?: string
   /** Si es true, solo dibuja el isotipo sin el texto */
   iconOnly?: boolean
+  /** Usar versión blanca (para fondos oscuros) */
+  variant?: 'green' | 'white'
 }
 
 /**
- * Isotipo y logotipo oficial de ConectaComuna — Dirección 1 (El Pin de Confianza).
+ * Isotipo y logotipo oficial de ConectaComuna (El Pin de Confianza).
  *
- * Silueta idéntica y precisa a la lámina de identidad visual aprobada:
- * contorno exterior de pin de mapa, lazo continuo 'C' interior y pliegue de unión.
- *
- * Vectorial matemático liviano (<2KB), escalable y con accesibilidad.
+ * Utiliza los activos oficiales de marca provistos para máxima nitidez y fidelidad.
  */
-export function Logo({ className = '', iconOnly = false }: LogoProps) {
+export function Logo({ className = '', iconOnly = false, variant = 'green' }: LogoProps) {
+  const isWhite = variant === 'white'
+  const iconSrc = isWhite ? '/brand/logo-pin-white.png' : '/brand/logo-pin.png'
+
   return (
     <span className={`inline-flex items-center gap-2 sm:gap-2.5 ${className}`}>
-      <svg
-        aria-hidden="true"
-        width="26"
-        height="31"
-        viewBox="0 0 90 106"
-        fill="currentColor"
-        className="text-brand-700 shrink-0 sm:w-[30px] sm:h-[35px]"
-      >
-        <path
-          d="M 41.0 20.0 C 42.5 19.8, 46.8 19.3, 50.0 20.0 C 53.2 20.7, 57.2 22.2, 60.0 24.0 C 62.8 25.8, 65.2 28.0, 67.0 31.0 C 68.8 34.0, 70.3 38.8, 71.0 42.0 C 71.7 45.2, 71.7 47.0, 71.0 50.0 C 70.3 53.0, 69.8 55.7, 67.0 60.0 C 64.2 64.3, 57.0 71.8, 54.0 76.0 C 51.0 80.2, 50.3 83.0, 49.0 85.0 C 47.7 87.0, 47.0 87.7, 46.0 88.0 C 45.0 88.3, 45.7 90.5, 43.0 87.0 C 40.3 83.5, 33.2 71.3, 30.0 67.0 C 26.8 62.7, 25.7 63.5, 24.0 61.0 C 22.3 58.5, 20.7 55.5, 20.0 52.0 C 19.3 48.5, 19.5 43.3, 20.0 40.0 C 20.5 36.7, 21.2 34.7, 23.0 32.0 C 24.8 29.3, 28.0 25.8, 31.0 24.0 C 34.0 22.2, 39.3 21.7, 41.0 21.0 C 42.7 20.3, 39.5 20.2, 41.0 20.0 Z M 41.0 26.0 C 39.7 26.5, 36.5 26.7, 34.0 29.0 C 31.5 31.3, 27.2 35.8, 26.0 40.0 C 24.8 44.2, 25.7 50.2, 27.0 54.0 C 28.3 57.8, 31.3 61.5, 34.0 63.0 C 36.7 64.5, 39.7 65.3, 43.0 63.0 C 46.3 60.7, 52.2 52.5, 54.0 49.0 C 55.8 45.5, 54.7 44.0, 54.0 42.0 C 53.3 40.0, 51.7 38.0, 50.0 37.0 C 48.3 36.0, 45.8 35.8, 44.0 36.0 C 42.2 36.2, 40.3 36.8, 39.0 38.0 C 37.7 39.2, 36.5 41.3, 36.0 43.0 C 35.5 44.7, 34.7 45.2, 36.0 48.0 C 37.3 50.8, 43.7 57.7, 44.0 60.0 C 44.3 62.3, 40.0 63.0, 38.0 62.0 C 36.0 61.0, 33.3 56.3, 32.0 54.0 C 30.7 51.7, 30.2 50.3, 30.0 48.0 C 29.8 45.7, 30.0 42.5, 31.0 40.0 C 32.0 37.5, 34.5 34.5, 36.0 33.0 C 37.5 31.5, 37.5 31.3, 40.0 31.0 C 42.5 30.7, 47.8 29.8, 51.0 31.0 C 54.2 32.2, 57.5 36.3, 59.0 38.0 C 60.5 39.7, 60.0 38.5, 60.0 41.0 C 60.0 43.5, 60.5 49.2, 59.0 53.0 C 57.5 56.8, 53.7 61.3, 51.0 64.0 C 48.3 66.7, 45.7 68.2, 43.0 69.0 C 40.3 69.8, 36.2 68.7, 35.0 69.0 C 33.8 69.3, 35.3 70.7, 36.0 71.0 C 36.7 71.3, 37.5 69.7, 39.0 71.0 C 40.5 72.3, 42.8 79.0, 45.0 79.0 C 47.2 79.0, 51.3 73.0, 52.0 71.0 C 52.7 69.0, 48.8 68.3, 49.0 67.0 C 49.2 65.7, 51.7 63.7, 53.0 63.0 C 54.3 62.3, 55.5 64.0, 57.0 63.0 C 58.5 62.0, 60.7 59.3, 62.0 57.0 C 63.3 54.7, 64.5 51.5, 65.0 49.0 C 65.5 46.5, 65.3 44.2, 65.0 42.0 C 64.7 39.8, 64.2 38.0, 63.0 36.0 C 61.8 34.0, 60.2 31.7, 58.0 30.0 C 55.8 28.3, 52.7 26.7, 50.0 26.0 C 47.3 25.3, 43.5 26.0, 42.0 26.0 C 40.5 26.0, 42.3 25.5, 41.0 26.0 Z"
-          fillRule="evenodd"
-        />
-      </svg>
+      <img
+        src={iconSrc}
+        alt="ConectaComuna"
+        width={26}
+        height={34}
+        className="h-7 w-auto sm:h-8 shrink-0 select-none object-contain"
+        loading="eager"
+        decoding="sync"
+      />
 
       {!iconOnly && (
-        <span className="text-base sm:text-xl font-bold tracking-tight text-ink-900 whitespace-nowrap">
-          Conecta<span className="text-brand-700">Comuna</span>
+        <span
+          className={`text-base sm:text-xl font-bold tracking-tight whitespace-nowrap ${
+            isWhite ? 'text-white' : 'text-ink-900'
+          }`}
+        >
+          Conecta<span className={isWhite ? 'text-brand-300' : 'text-brand-700'}>Comuna</span>
         </span>
       )}
     </span>
