@@ -37,7 +37,7 @@ export default function TermsPage() {
           <UI_ICONS.shieldCheck size={20} className="text-brand-700 dark:text-brand-400 shrink-0" />
           <span>Aviso legal prioritario: Portal de Contacto Comunitario</span>
         </div>
-        <p className="text-xs sm:text-sm text-ink-700 dark:text-ink-300 leading-relaxed">
+        <p className="text-xs sm:text-sm text-ink-700 leading-relaxed">
           Conforme al <strong>Artículo 53 de la Ley 1480 de 2011 (Estatuto del Consumidor de Colombia)</strong>,
           ConectaComuna actúa de manera exclusiva como un <strong>portal digital de contacto e información comunitaria</strong>.
           La plataforma facilita el encuentro entre vecinos que ofrecen oficios y vecinos que los

@@ -467,15 +467,15 @@ export default function BusinessDetailPage() {
             {business.services_catalog.map((item) => (
               <div
                 key={item.id}
-                className="card p-3.5 flex flex-col justify-between gap-3 hover:border-brand-300 dark:hover:border-brand-700 transition-colors"
+                className="card p-3.5 flex flex-col justify-between gap-3 hover:border-brand-300 dark:hover:border-brand-600 transition-colors"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-sm text-ink-900 dark:text-ink-100">
+                    <h3 className="font-semibold text-sm text-ink-900">
                       {item.name}
                     </h3>
                     {item.price != null && (
-                      <span className="font-bold text-sm text-brand-600 dark:text-brand-400 shrink-0">
+                      <span className="font-bold text-sm text-brand-700 dark:text-brand-300 shrink-0">
                         {formatCurrency(item.price)}
                       </span>
                     )}
@@ -490,7 +490,7 @@ export default function BusinessDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectService(item)}
-                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 hover:underline pt-1 cursor-pointer"
+                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 hover:text-brand-800 dark:hover:text-brand-200 hover:underline pt-1 cursor-pointer"
                   >
                     <span>Pedir este trabajo</span>
                     <span aria-hidden="true">&rarr;</span>
@@ -698,7 +698,7 @@ function RequestForm({
       />
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-ink-900 dark:text-ink-100">
+        <label className="mb-1.5 block text-sm font-medium text-ink-900">
           Modalidad del servicio
         </label>
         <div className="grid grid-cols-2 gap-2">
@@ -709,7 +709,7 @@ function RequestForm({
               'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
               serviceLocationType === 'workshop'
                 ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
-                : 'border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-100/10',
+                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
             <UI_ICONS.tools size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
@@ -724,7 +724,7 @@ function RequestForm({
               'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
               serviceLocationType === 'home_delivery'
                 ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
-                : 'border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-100/10',
+                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
             <UI_ICONS.map size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
@@ -773,7 +773,7 @@ function RequestForm({
                 <img
                   src={src}
                   alt={`Foto ${i + 1}`}
-                  className="h-20 w-20 rounded-lg object-cover border border-ink-200 dark:border-ink-600"
+                  className="h-20 w-20 rounded-lg object-cover border border-ink-200"
                 />
                 <button
                   type="button"
@@ -853,33 +853,33 @@ function SolicitudEnviadaModal({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-100 p-5 shadow-xl border border-ink-100 dark:border-ink-700 space-y-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl border border-ink-200 space-y-4">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
             <UI_ICONS.shieldCheck size={28} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-ink-900 dark:text-ink-100">
+            <h2 className="text-lg font-bold text-ink-900">
               ¡Solicitud registrada!
             </h2>
-            <p className="text-xs text-ink-600 dark:text-ink-300 mt-0.5">
+            <p className="text-xs text-ink-600 mt-0.5">
               Código de seguimiento:{' '}
-              <span className="font-mono font-bold text-brand-800 dark:text-brand-200 bg-brand-100/70 dark:bg-brand-900/60 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-700">
+              <span className="font-mono font-bold text-brand-800 dark:text-brand-800 bg-brand-100 dark:bg-brand-100 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-200">
                 {code}
               </span>
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
+        <div className="rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Servicio:</span>
-            <span className="font-semibold text-ink-900 dark:text-ink-100 text-right">{order.title}</span>
+            <span className="text-ink-600 text-xs font-medium">Servicio:</span>
+            <span className="font-semibold text-ink-900 text-right">{order.title}</span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Modalidad:</span>
-            <span className="text-xs font-medium text-ink-800 dark:text-ink-200">
+            <span className="text-ink-600 text-xs font-medium">Modalidad:</span>
+            <span className="text-xs font-medium text-ink-800">
               {order.service_location_type === 'home_delivery'
                 ? `A domicilio (${order.delivery_address || 'Dirección acordada'})`
                 : 'En taller o local del emprendedor'}
@@ -887,9 +887,9 @@ function SolicitudEnviadaModal({
           </div>
 
           {order.price_estimate && (
-            <div className="flex justify-between items-center pt-2 border-t border-ink-200 dark:border-ink-700">
-              <span className="text-ink-600 dark:text-ink-300 text-xs font-medium">Presupuesto inicial:</span>
-              <span className="font-bold text-brand-800 dark:text-brand-300">
+            <div className="flex justify-between items-center pt-2 border-t border-ink-200">
+              <span className="text-ink-600 text-xs font-medium">Presupuesto inicial:</span>
+              <span className="font-bold text-brand-700 dark:text-brand-300">
                 {formatCurrency(order.price_estimate)}
               </span>
             </div>

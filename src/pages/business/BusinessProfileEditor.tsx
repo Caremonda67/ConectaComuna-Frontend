@@ -392,7 +392,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
               <UI_ICONS.package size={20} />
             </div>
             <div>
-              <h2 className="font-bold text-sm text-ink-900 dark:text-ink-100">
+              <h2 className="font-bold text-sm text-ink-900">
                 Venta al por mayor y distribuidores
               </h2>
               <p className="text-xs text-ink-500">
@@ -407,12 +407,12 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
               onChange={(e) => setWholesaleEnabled(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-cream-300 dark:bg-ink-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
+            <div className="w-11 h-6 bg-cream-300 dark:bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
           </label>
         </div>
 
         {wholesaleEnabled && (
-          <div className="space-y-3 pt-2 border-t border-ink-100 dark:border-ink-700">
+          <div className="space-y-3 pt-2 border-t border-ink-100">
             <TextField
               label="Pedido mínimo al por mayor"
               value={wholesaleMinOrder}
@@ -435,7 +435,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       <section className="card p-4 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <h2 className="font-bold text-sm text-ink-900 dark:text-ink-100 flex items-center gap-2">
+            <h2 className="font-bold text-sm text-ink-900 flex items-center gap-2">
               <UI_ICONS.fileText size={18} className="text-brand-500" />
               Catálogo de servicios y tarifas de referencia
             </h2>
@@ -461,11 +461,11 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             {servicesCatalog.map((item, idx) => (
               <div
                 key={item.id || idx}
-                className="p-3 rounded-xl border border-ink-200 dark:border-ink-800 bg-cream-50 dark:bg-ink-900/40 space-y-2.5"
+                className="p-3 rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 space-y-2.5"
               >
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
-                    <label className="text-[11px] font-semibold text-ink-600 dark:text-ink-400 block mb-1">
+                    <label className="text-[11px] font-semibold text-ink-600 block mb-1">
                       Servicio o producto
                     </label>
                     <input
@@ -473,11 +473,11 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                       placeholder="Ej: Ruedo de pantalón o Copia de llave"
                       value={item.name}
                       onChange={(e) => updateService(idx, 'name', e.target.value)}
-                      className="w-full text-sm font-medium px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      className="w-full text-sm font-medium px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                   <div className="w-36">
-                    <label className="text-[11px] font-semibold text-ink-600 dark:text-ink-400 block mb-1">
+                    <label className="text-[11px] font-semibold text-ink-600 block mb-1">
                       Tarifa aprox. ($)
                     </label>
                     <input
@@ -491,7 +491,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                           e.target.value ? Number(e.target.value) : null
                         )
                       }
-                      className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
                   <div className="pt-5">
@@ -511,7 +511,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                     placeholder="Descripción o detalle breve (ej: tela estándar, a mano o máquina)"
                     value={item.description ?? ''}
                     onChange={(e) => updateService(idx, 'description', e.target.value)}
-                    className="w-full text-xs text-ink-700 dark:text-ink-300 px-3 py-1.5 rounded-lg border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="w-full text-xs text-ink-700 px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                   />
                 </div>
               </div>
