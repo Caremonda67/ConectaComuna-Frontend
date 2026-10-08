@@ -463,8 +463,8 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                 key={item.id || idx}
                 className="p-3 rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 space-y-2.5"
               >
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] items-start gap-2">
+                  <div className="min-w-0">
                     <label className="text-[11px] font-semibold text-ink-600 block mb-1">
                       Servicio o producto
                     </label>
@@ -476,33 +476,35 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                       className="w-full text-sm font-medium px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
                     />
                   </div>
-                  <div className="w-36">
-                    <label className="text-[11px] font-semibold text-ink-600 block mb-1">
-                      Tarifa aprox. ($)
-                    </label>
-                    <input
-                      type="number"
-                      placeholder="Ej: 15000"
-                      value={item.price ?? ''}
-                      onChange={(e) =>
-                        updateService(
-                          idx,
-                          'price',
-                          e.target.value ? Number(e.target.value) : null
-                        )
-                      }
-                      className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                    />
-                  </div>
-                  <div className="pt-5">
-                    <button
-                      type="button"
-                      onClick={() => removeService(idx)}
-                      className="p-1.5 text-ink-400 hover:text-red-500 transition-colors"
-                      title="Eliminar este servicio"
-                    >
-                      ✕
-                    </button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 sm:w-36">
+                      <label className="text-[11px] font-semibold text-ink-600 block mb-1">
+                        Tarifa aprox. ($)
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ej: 15000"
+                        value={item.price ?? ''}
+                        onChange={(e) =>
+                          updateService(
+                            idx,
+                            'price',
+                            e.target.value ? Number(e.target.value) : null
+                          )
+                        }
+                        className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      />
+                    </div>
+                    <div className="pt-5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => removeService(idx)}
+                        className="p-1.5 text-ink-400 hover:text-red-500 transition-colors"
+                        title="Eliminar este servicio"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div>

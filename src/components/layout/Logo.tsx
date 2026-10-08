@@ -29,7 +29,7 @@ export function Logo({ className = '', iconOnly = false, variant = 'green' }: Lo
 
       {!iconOnly && (
         <span
-          className={`text-base sm:text-xl font-bold tracking-tight whitespace-nowrap ${
+          className={`hidden min-[440px]:inline text-base sm:text-xl font-bold tracking-tight whitespace-nowrap ${
             isWhite ? 'text-white' : 'text-ink-900'
           }`}
         >

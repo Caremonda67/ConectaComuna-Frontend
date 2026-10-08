@@ -190,6 +190,29 @@ export const facilitadorService = {
     if (!negocios || negocios.length === 0) throw new Error('Código no válido. Verifica con el dueño del negocio.')
 
     const negocioId = negocios[0].id
+
+    // Si ya existe registro previo, actualizarlo a aprobado o notificar
+    const { data: existente } = await requireSupabase()
+      .from('facilitadores_negocio')
+      .select('id, estado_vinculacion')
+      .eq('facilitador_id', facilitadorId)
+      .eq('negocio_id', negocioId)
+      .maybeSingle()
+
+    if (existente) {
+      if (existente.estado_vinculacion === 'aprobado') {
+        throw new Error('Ya tienes una vinculación activa con este negocio.')
+      }
+      const { data, error } = await requireSupabase()
+        .from('facilitadores_negocio')
+        .update({ estado_vinculacion: 'aprobado' })
+        .eq('id', existente.id)
+        .select()
+        .single()
+      if (error) throw error
+      return data as FacilitadorNegocio
+    }
+
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
       .insert({

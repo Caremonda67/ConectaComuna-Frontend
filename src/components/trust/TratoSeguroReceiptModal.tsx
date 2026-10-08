@@ -47,9 +47,9 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
       aria-labelledby="receipt-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in print:p-0 print:bg-white"
     >
-      <div className="card w-full max-w-lg overflow-hidden shadow-2xl print:shadow-none print:border-none print:m-0">
+      <div className="card w-full max-w-lg max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl print:max-h-none print:shadow-none print:border-none print:m-0">
         {/* Cabecera del comprobante */}
-        <div className="bg-brand-600 px-6 py-4 text-white print:bg-white print:text-black print:border-b">
+        <div className="bg-brand-600 px-6 py-4 text-white shrink-0 print:bg-white print:text-black print:border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl" aria-hidden="true">🤝</span>
@@ -65,7 +65,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
         </div>
 
         {/* Cuerpo del comprobante */}
-        <div className="p-6 space-y-4 text-ink-900">
+        <div className="p-6 space-y-4 text-ink-900 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-3 text-sm pb-3 border-b border-ink-200">
             <div>
               <p className="text-xs text-ink-500">Emprendedor</p>
@@ -129,7 +129,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
         </div>
 
         {/* Acciones */}
-        <div className="p-4 bg-cream-50 dark:bg-cream-100 border-t border-ink-100 dark:border-ink-800 flex flex-wrap gap-2 justify-end print:hidden">
+        <div className="p-4 bg-cream-50 dark:bg-cream-100 border-t border-ink-100 dark:border-ink-800 flex flex-wrap gap-2 justify-end shrink-0 print:hidden">
           <Button
             type="button"
             variant="secondary"
