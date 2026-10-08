@@ -300,7 +300,7 @@ export default function TratoSeguroPage() {
           </h2>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3 text-xs text-ink-700 dark:text-ink-300">
+        <div className="grid gap-4 sm:grid-cols-3 text-xs text-ink-700">
           <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">1. Conversar con calma</strong>
             <p className="text-ink-600 dark:text-ink-400">

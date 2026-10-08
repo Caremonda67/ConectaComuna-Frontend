@@ -6,12 +6,12 @@ import { cn } from '@/lib/utils'
  * diferencian por intensidad del verde y no por colores ajenos al sistema.
  */
 const tones: Record<Badge['tone'], string> = {
-  gold: 'bg-brand-200 dark:bg-brand-900/40 text-brand-800 dark:text-brand-300 border-brand-300 dark:border-brand-700/60',
-  silver: 'bg-cream-200 dark:bg-cream-200/50 text-ink-700 dark:text-ink-300 border-ink-200',
-  bronze: 'bg-cream-300 dark:bg-cream-300/40 text-ink-700 dark:text-ink-300 border-ink-200',
-  info: 'bg-brand-50 dark:bg-brand-950/40 text-brand-700 dark:text-brand-300 border-brand-100 dark:border-brand-900/60',
-  verified: 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800/60 font-semibold',
-  danger: 'bg-amber-50 dark:bg-amber-950/50 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800/60 font-semibold',
+  gold: 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700/60 font-semibold',
+  silver: 'bg-slate-100 dark:bg-slate-800/60 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-700/60 font-medium',
+  bronze: 'bg-orange-50 dark:bg-orange-950/50 text-orange-900 dark:text-orange-200 border-orange-200 dark:border-orange-800/60 font-medium',
+  info: 'bg-brand-100 dark:bg-brand-100 text-brand-800 dark:text-brand-800 border-brand-200 dark:border-brand-200 font-medium',
+  verified: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700/60 font-semibold',
+  danger: 'bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200 border-rose-300 dark:border-rose-700/60 font-semibold',
 }
 
 export function BadgePill({ badge }: { badge: Badge }) {

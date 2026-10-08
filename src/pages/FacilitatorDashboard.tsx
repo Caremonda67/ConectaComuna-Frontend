@@ -333,7 +333,7 @@ export default function FacilitatorDashboard() {
                             Bajo observación
                           </span>
                         ) : (
-                          <span className="rounded-full bg-ink-200 dark:bg-ink-100 text-ink-700 dark:text-ink-300 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-cream-200 text-ink-700 px-2 py-0.5 font-medium text-[11px]">
                             Sin verificar
                           </span>
                         )}
@@ -466,7 +466,7 @@ export default function FacilitatorDashboard() {
           <div className="flex items-center gap-2">
             <UI_ICONS.shieldAlert size={20} className="text-amber-700 shrink-0" />
             <div>
-              <h2 id="reportes-comuna" className="font-bold text-ink-900 dark:text-ink-100">
+              <h2 id="reportes-comuna" className="font-bold text-ink-900">
                 Moderación de alertas y reportes comunitarios
               </h2>
               <p className="text-xs text-ink-500">
@@ -474,7 +474,7 @@ export default function FacilitatorDashboard() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-1 bg-cream-100 dark:bg-ink-800 p-1 rounded-lg text-xs">
+          <div className="flex items-center gap-1 bg-cream-200 p-1 rounded-lg text-xs">
             {(['todos', 'pendiente', 'revisado', 'descartado'] as const).map((tab) => (
               <button
                 key={tab}
@@ -483,7 +483,7 @@ export default function FacilitatorDashboard() {
                 className={cn(
                   'px-2.5 py-1 rounded-md font-medium transition-colors capitalize cursor-pointer',
                   filtroEstado === tab
-                    ? 'bg-white dark:bg-ink-700 text-brand-700 dark:text-brand-300 shadow-2xs font-semibold'
+                    ? 'bg-white dark:bg-cream-50 text-brand-700 dark:text-brand-300 shadow-2xs font-semibold'
                     : 'text-ink-600 hover:text-ink-900',
                 )}
               >
@@ -502,12 +502,12 @@ export default function FacilitatorDashboard() {
             {reportesFiltrados.map((rep) => (
               <div
                 key={rep.id}
-                className="p-3.5 rounded-xl border border-ink-200 dark:border-ink-800 bg-cream-50/50 dark:bg-ink-900/40 space-y-2.5"
+                className="p-3.5 rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 space-y-2.5"
               >
                 <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-ink-900 dark:text-ink-100">
+                      <span className="font-bold text-sm text-ink-900">
                         {rep.negocio?.name ? (
                           <Link
                             to={`/negocio/${rep.negocio_id}`}
@@ -536,7 +536,7 @@ export default function FacilitatorDashboard() {
                         rep.estado === 'revisado'
                           ? 'bg-emerald-100 text-emerald-800'
                           : rep.estado === 'descartado'
-                            ? 'bg-ink-100 text-ink-600'
+                            ? 'bg-cream-200 text-ink-600'
                             : 'bg-amber-100 text-amber-900',
                       )}
                     >
@@ -551,12 +551,12 @@ export default function FacilitatorDashboard() {
                 </div>
 
                 {rep.descripcion && (
-                  <p className="text-xs text-ink-700 dark:text-ink-300 bg-white dark:bg-ink-800/80 p-2.5 rounded-lg border border-ink-100 dark:border-ink-700">
+                  <p className="text-xs text-ink-700 bg-cream-50 dark:bg-cream-200/50 p-2.5 rounded-lg border border-ink-200">
                     "{rep.descripcion}"
                   </p>
                 )}
 
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-ink-100 dark:border-ink-800 flex-wrap">
+                <div className="flex items-center justify-between gap-2 pt-1 border-t border-ink-200 flex-wrap">
                   <span className="text-[11px] text-ink-500">
                     Reportado por: <strong>{rep.reportado_por?.full_name || 'Vecino'}</strong>
                     {rep.reportado_por?.phone ? ` (Tel: ${rep.reportado_por.phone})` : ''}

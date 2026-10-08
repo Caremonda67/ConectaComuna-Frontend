@@ -24,14 +24,21 @@
   --color-brand-600: #5a9a45;
   --color-brand-700: #467a36;
   --color-brand-800: #365c2a;
+  --color-brand-900: #25401c;
+  --color-brand-950: #14240f;
 
   /* Neutros cálidos derivados del negro de la paleta */
+  --color-ink-950: #0f0f0f;
   --color-ink-900: #1a1a1a;
+  --color-ink-800: #282826;
   --color-ink-700: #3d3d3a;
+  --color-ink-600: #52524d;
   --color-ink-500: #6b6b65;
   --color-ink-400: #8f8f88;
+  --color-ink-300: #b8b6a8;
   --color-ink-200: #d9d7cc;
   --color-ink-100: #e9e7dd;
+  --color-ink-50: #f5f4ed;
 
   --color-accent-500: #6fb257;
 }
@@ -47,28 +54,31 @@ html.dark {
   --color-cream-200: #232c26;
   --color-cream-300: #2e3a33;
 
-  /* Verde de marca en modo oscuro: tonos de texto claros y legibles sobre fondo oscuro */
-  --color-brand-50: #0f1f14;
-  --color-brand-100: #dcf7e2;
-  --color-brand-200: #bfeec8;
-  --color-brand-300: #9de1a8;
+  /* Verde de marca en modo oscuro: fondos oscuros profundos y textos claros legibles */
+  --color-brand-50: #142319;
+  --color-brand-100: #1a2d20;
+  --color-brand-200: #223c2a;
+  --color-brand-300: #2d4f37;
   --color-brand-400: #7cc386;
   --color-brand-500: #6ab374;
   --color-brand-600: #5da56e;
-  --color-brand-700: #94d59d;
+  --color-brand-700: #8fd89b;
   --color-brand-800: #bfe9c6;
-  --color-brand-900: #1a3321;
-  --color-brand-950: #0e1f13;
+  --color-brand-900: #dcf7e2;
+  --color-brand-950: #f2fcf4;
 
   /* Neutros en modo oscuro: descansados, sin brillo cegador */
+  --color-ink-950: #ffffff;
   --color-ink-900: #f2f5f2;
   --color-ink-800: #e2e8e3;
   --color-ink-700: #ccd5cd;
   --color-ink-600: #adbcaf;
   --color-ink-500: #8d9e91;
   --color-ink-400: #6a7c6f;
+  --color-ink-300: #4a594e;
   --color-ink-200: #2a362f;
   --color-ink-100: #1e2722;
+  --color-ink-50: #151c17;
 
   --color-accent-500: #7cc386;
 }

@@ -59,7 +59,7 @@ export const ORDER_STATUS_STYLE: Record<OrderStatus, string> = {
   accepted: 'bg-brand-50 text-brand-700 border border-brand-100',
   in_progress: 'bg-brand-100 text-brand-800 border border-brand-200',
   completed: 'bg-brand-500 text-white border border-brand-600',
-  cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
+  cancelled: 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-800/60',
 }
 
 /** Transiciones válidas de estado; la UI solo muestra acciones permitidas. */

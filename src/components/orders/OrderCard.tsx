@@ -131,8 +131,8 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
     <article className="card p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="truncate font-semibold text-ink-900 dark:text-ink-100">{order.title}</h3>
-          <p className="flex items-center gap-1.5 text-xs text-ink-500 dark:text-ink-400">
+          <h3 className="truncate font-semibold text-ink-900">{order.title}</h3>
+          <p className="flex items-center gap-1.5 text-xs text-ink-500">
             {perspective === 'client' ? (
               <>
                 <CategoryGlyph
@@ -165,16 +165,16 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
       </div>
 
       {order.description && (
-        <p className="mt-2 text-sm text-ink-700 dark:text-ink-300">{order.description}</p>
+        <p className="mt-2 text-sm text-ink-700">{order.description}</p>
       )}
 
       {/* Modalidad y dirección */}
       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-        <span className="rounded-md bg-cream-100 dark:bg-cream-200 px-2 py-0.5 font-medium text-ink-700 dark:text-ink-300">
+        <span className="rounded-md bg-cream-200 px-2 py-0.5 font-medium text-ink-700">
           {order.service_location_type === 'home_delivery' ? '🛵 A domicilio' : '🏠 En taller / local'}
         </span>
         {order.delivery_address && (
-          <span className="text-ink-500 dark:text-ink-400 truncate max-w-xs">
+          <span className="text-ink-500 truncate max-w-xs">
             {order.delivery_address}
           </span>
         )}
@@ -190,7 +190,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
                 alt={`Foto ${i + 1} del pedido`}
                 loading="lazy"
                 decoding="async"
-                className="h-16 w-16 rounded-lg object-cover border border-ink-200 dark:border-ink-600 shadow-2xs"
+                className="h-16 w-16 rounded-lg object-cover border border-ink-200 shadow-2xs"
               />
             </li>
           ))}
@@ -215,20 +215,20 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
       )}
 
       {/* Desglose financiero */}
-      <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500 dark:text-ink-400 border-t border-ink-100 dark:border-ink-800 pt-2.5">
+      <dl className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-500 border-t border-ink-200 pt-2.5">
         <div className="flex gap-1">
           <dt>Solicitado:</dt>
-          <dd className="font-medium text-ink-700 dark:text-ink-300">{formatDate(order.created_at)}</dd>
+          <dd className="font-medium text-ink-700">{formatDate(order.created_at)}</dd>
         </div>
         {order.scheduled_for && (
           <div className="flex gap-1">
             <dt>Para:</dt>
-            <dd className="font-medium text-ink-700 dark:text-ink-300">{formatDate(order.scheduled_for)}</dd>
+            <dd className="font-medium text-ink-700">{formatDate(order.scheduled_for)}</dd>
           </div>
         )}
         <div className="flex gap-1">
           <dt>{order.final_price ? 'Valor acordado:' : 'Presupuesto:'}</dt>
-          <dd className="font-semibold text-ink-900 dark:text-ink-100">{formatCurrency(precioFinal)}</dd>
+          <dd className="font-semibold text-ink-900">{formatCurrency(precioFinal)}</dd>
         </div>
         {anticipo > 0 && (
           <>
@@ -306,7 +306,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
             <span>{perspective === 'client' ? 'Tu calificación:' : 'Calificación del cliente:'} {order.review.rating}.0 / 5.0</span>
           </div>
           {order.review.comment && (
-            <p className="mt-1 italic text-ink-700 dark:text-ink-300">
+            <p className="mt-1 italic text-ink-700">
               &ldquo;{order.review.comment}&rdquo;
             </p>
           )}
@@ -315,7 +315,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
 
       {/* Calificación para clientes en trabajos completados */}
       {perspective === 'client' && order.status === 'completed' && !order.review && onReview && (
-        <div className="mt-3 border-t border-ink-100 dark:border-ink-700 pt-3">
+        <div className="mt-3 border-t border-ink-100 pt-3">
           {!reviewing ? (
             <Button size="sm" variant="secondary" onClick={() => setReviewing(true)}>
               <Star aria-hidden="true" size={15} strokeWidth={1.75} />
@@ -368,10 +368,10 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
         >
           <div className="card w-full max-w-sm p-5 space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-ink-900 dark:text-ink-100">
+            <h3 className="font-bold text-base text-ink-900">
               Aceptar pedido y confirmar cotización
             </h3>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               El cliente propuso un estimado de <strong>{formatCurrency(order.price_estimate)}</strong>. Puedes confirmarlo o ajustarlo antes de empezar.
             </p>
             <form onSubmit={confirmAccept} className="space-y-3">
@@ -432,18 +432,18 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
             <h3 className="font-bold text-base text-rose-700 dark:text-rose-400">
               ¿Deseas cancelar esta solicitud?
             </h3>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Indica un motivo para que la otra parte comprenda lo ocurrido y se mantenga la confianza en la comuna.
             </p>
             <form onSubmit={confirmCancel} className="space-y-3">
               <div>
-                <label className="block text-xs font-semibold text-ink-700 dark:text-ink-300 mb-1">
+                <label className="block text-xs font-semibold text-ink-700 mb-1">
                   Motivo de cancelación
                 </label>
                 <select
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full rounded-xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 p-2 text-xs text-ink-900 dark:text-ink-100"
+                  className="w-full rounded-xl border border-ink-200 bg-white dark:bg-cream-50 p-2 text-xs text-ink-900"
                   required
                 >
                   <option value="">Selecciona un motivo...</option>
@@ -490,10 +490,10 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
         >
           <div className="card w-full max-w-sm p-5 space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-ink-900 dark:text-ink-100">
+            <h3 className="font-bold text-base text-ink-900">
               Añadir nota de avance del trabajo
             </h3>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Esta nota la verá el cliente en su panel (ej: "Prenda lista para prueba", "Material comprado").
             </p>
             <form onSubmit={confirmNote} className="space-y-3">
