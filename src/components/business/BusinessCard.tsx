@@ -19,8 +19,8 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
 
   const meta = (
     <>
-      <div className="flex items-center gap-1.5 min-w-0">
-        <h3 className="truncate font-semibold text-ink-900 min-w-0 flex-1">{business.name}</h3>
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
+        <h3 className="font-semibold text-ink-900 min-w-0 line-clamp-1">{business.name}</h3>
         {business.verification_status === 'verified' && (
           <span
             title="Verificado en territorio"

@@ -20,6 +20,8 @@ export default function BusinessDashboard() {
   const { business } = useAuth()
   const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
   const [generandoCodigo, setGenerandoCodigo] = useState(false)
+  const [errorCodigo, setErrorCodigo] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState(false)
   const { data, loading, error, reload } = useAsync(
     () => (business ? orderService.listAsBusiness(business.id) : Promise.resolve([])),
     [business?.id],
@@ -107,48 +109,82 @@ export default function BusinessDashboard() {
 
       {/* Código de apadrinamiento para facilitadores */}
       <section className="card p-4">
-        <h2 className="font-bold text-ink-900 mb-2">Código de apadrinamiento</h2>
-        <p className="text-sm text-ink-500 mb-3">
-          Si alguien de tu confianza te va a ayudar a manejar tu negocio, genera un código y compártelo. Solo con este código podrá vincularse.
-        </p>
-        {(codigoApadrinamiento || business.codigo_apadrinamiento) ? (
-          <div className="flex items-center gap-3">
-            <span className="text-2xl font-mono font-bold tracking-widest text-brand-700 bg-brand-50 px-4 py-2 rounded-lg">
-              {codigoApadrinamiento || business.codigo_apadrinamiento}
-            </span>
+        <div>
+          <h2 className="font-bold text-ink-900 mb-1">Código de apadrinamiento</h2>
+          <p className="text-xs sm:text-sm text-ink-500 max-w-xl">
+            Comparte este código con tu facilitador comunitario de confianza (un familiar o vecino). Le permitirá vincularse a tu negocio y ayudarte a subir fotos, actualizar precios y gestionar tu catálogo.
+          </p>
+        </div>
+
+        <div className="mt-3">
+          {(codigoApadrinamiento || business.codigo_apadrinamiento) ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-2xl font-mono font-bold tracking-widest text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 px-4 py-2 rounded-lg">
+                {codigoApadrinamiento || business.codigo_apadrinamiento}
+              </span>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  const code = codigoApadrinamiento || business.codigo_apadrinamiento || ''
+                  if (code) {
+                    navigator.clipboard.writeText(code)
+                    setCopiado(true)
+                    setTimeout(() => setCopiado(false), 2500)
+                  }
+                }}
+              >
+                {copiado ? '✓ Copiado' : 'Copiar código'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                loading={generandoCodigo}
+                onClick={async () => {
+                  setGenerandoCodigo(true)
+                  setErrorCodigo(null)
+                  try {
+                    const nuevo = await facilitadorService.generarCodigo(business.id)
+                    setCodigoApadrinamiento(nuevo)
+                  } catch (e) {
+                    setErrorCodigo(e instanceof Error ? e.message : 'No se pudo regenerar el código.')
+                  } finally {
+                    setGenerandoCodigo(false)
+                  }
+                }}
+              >
+                Regenerar
+              </Button>
+            </div>
+          ) : (
             <Button
-              size="sm"
-              variant="secondary"
               loading={generandoCodigo}
               onClick={async () => {
                 setGenerandoCodigo(true)
+                setErrorCodigo(null)
                 try {
                   const nuevo = await facilitadorService.generarCodigo(business.id)
                   setCodigoApadrinamiento(nuevo)
+                } catch (e) {
+                  setErrorCodigo(e instanceof Error ? e.message : 'No se pudo generar el código.')
                 } finally {
                   setGenerandoCodigo(false)
                 }
               }}
             >
-              Regenerar
+              Generar código de apadrinamiento
             </Button>
-          </div>
-        ) : (
-          <Button
-            loading={generandoCodigo}
-            onClick={async () => {
-              setGenerandoCodigo(true)
-              try {
-                const nuevo = await facilitadorService.generarCodigo(business.id)
-                setCodigoApadrinamiento(nuevo)
-              } finally {
-                setGenerandoCodigo(false)
-              }
-            }}
-          >
-            Generar código
-          </Button>
-        )}
+          )}
+
+          {errorCodigo && (
+            <p className="mt-2 text-xs text-rose-700 dark:text-rose-400 font-medium">{errorCodigo}</p>
+          )}
+          {copiado && (
+            <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+              ¡Código copiado al portapapeles! Envíalo a tu facilitador por WhatsApp o mensaje.
+            </p>
+          )}
+        </div>
       </section>
 
       {/* Gestión asistida: le decimos exactamente qué le falta y por qué importa. */}

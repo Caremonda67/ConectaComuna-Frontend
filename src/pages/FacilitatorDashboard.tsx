@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { facilitadorService } from '@/services/facilitadorService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
-import { cn, formatDate } from '@/lib/utils'
-import type { Business, FacilitadorNegocio, ReporteComunitario } from '@/types'
-
-const MOTIVO_LABELS: Record<string, string> = {
-  direccion_falsa: 'Dirección o ubicación falsa',
-  anticipo_incumplido: 'Incumplimiento de anticipo',
-  precios_enganosos: 'Precios engañosos',
-  suplantacion: 'Suplantación de identidad',
-  otro: 'Otro motivo comunitario',
-}
+import type { Business, FacilitadorNegocio } from '@/types'
 
 export default function FacilitatorDashboard() {
   const { userId, profile, email, refresh } = useAuth()
@@ -34,13 +25,10 @@ export default function FacilitatorDashboard() {
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null)
   const [exitoCodigo, setExitoCodigo] = useState(false)
 
-  // Verificación en territorio y reportes
+  // Verificación en territorio
   const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
   const [notaVerificacion, setNotaVerificacion] = useState('')
   const [guardandoVerif, setGuardandoVerif] = useState(false)
-  const [reportes, setReportes] = useState<ReporteComunitario[]>([])
-  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'pendiente' | 'revisado' | 'descartado'>('todos')
-  const [procesandoReporteId, setProcesandoReporteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (userId) {
@@ -49,11 +37,6 @@ export default function FacilitatorDashboard() {
         .then((data) => setVinculaciones(data))
         .catch((e) => console.warn('Error cargando vinculados:', e))
         .finally(() => setLoading(false))
-
-      businessService
-        .listarReportes()
-        .then((reps) => setReportes(reps))
-        .catch(() => {})
     }
   }, [userId])
 
@@ -119,40 +102,7 @@ export default function FacilitatorDashboard() {
     }
   }
 
-  async function handleCambiarEstadoReporte(reporteId: string, nuevoEstado: 'revisado' | 'descartado') {
-    setProcesandoReporteId(reporteId)
-    try {
-      await businessService.actualizarEstadoReporte(reporteId, nuevoEstado, userId ?? undefined)
-      const data = await businessService.listarReportes()
-      setReportes(data)
-    } finally {
-      setProcesandoReporteId(null)
-    }
-  }
 
-  async function handleCambiarObservacionNegocio(
-    negocioId: string,
-    nuevoEstado: 'under_review' | 'verified' | 'unverified',
-  ) {
-    try {
-      await businessService.cambiarEstadoObservacionNegocio(
-        negocioId,
-        nuevoEstado,
-        nuevoEstado === 'under_review' ? 'Bajo observación comunitaria tras revisión de facilitador' : undefined,
-      )
-      const data = await businessService.listarReportes()
-      setReportes(data)
-      if (userId) {
-        const vincs = await facilitadorService.getNegociosVinculados(userId)
-        setVinculaciones(vincs)
-      }
-    } catch {}
-  }
-
-  const reportesFiltrados = reportes.filter((r) => {
-    if (filtroEstado === 'todos') return true
-    return (r.estado ?? 'pendiente') === filtroEstado
-  })
 
   if (loading) {
     return <div className="p-4 text-center text-ink-500">Cargando tus negocios apadrinados...</div>
@@ -461,153 +411,7 @@ export default function FacilitatorDashboard() {
         )}
       </section>
 
-      <section aria-labelledby="reportes-comuna" className="card p-4 space-y-4">
-        <div className="flex items-center justify-between border-b border-ink-100 pb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <UI_ICONS.shieldAlert size={20} className="text-amber-700 shrink-0" />
-            <div>
-              <h2 id="reportes-comuna" className="font-bold text-ink-900">
-                Moderación de alertas y reportes comunitarios
-              </h2>
-              <p className="text-xs text-ink-500">
-                Verifica denuncias de vecinos sobre posibles irregularidades o fraudes en la comuna.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1 bg-cream-200 p-1 rounded-lg text-xs">
-            {(['todos', 'pendiente', 'revisado', 'descartado'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setFiltroEstado(tab)}
-                className={cn(
-                  'px-2.5 py-1 rounded-md font-medium transition-colors capitalize cursor-pointer',
-                  filtroEstado === tab
-                    ? 'bg-white dark:bg-cream-50 text-brand-700 dark:text-brand-300 shadow-2xs font-semibold'
-                    : 'text-ink-600 hover:text-ink-900',
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {reportesFiltrados.length === 0 ? (
-          <p className="text-xs text-ink-500 italic py-3 text-center">
-            No hay reportes comunitarios {filtroEstado === 'todos' ? 'registrados' : `con estado "${filtroEstado}"`}.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {reportesFiltrados.map((rep) => (
-              <div
-                key={rep.id}
-                className="p-3.5 rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 space-y-2.5"
-              >
-                <div className="flex items-start justify-between gap-2 flex-wrap">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-ink-900">
-                        {rep.negocio?.name ? (
-                          <Link
-                            to={`/negocio/${rep.negocio_id}`}
-                            className="hover:text-brand-600 underline"
-                          >
-                            {rep.negocio.name}
-                          </Link>
-                        ) : (
-                          'Negocio reportado'
-                        )}
-                      </span>
-                      {rep.negocio?.verification_status === 'under_review' && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
-                          Bajo observación
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-rose-700 dark:text-rose-400 font-semibold block mt-0.5">
-                      {MOTIVO_LABELS[rep.motivo] || rep.motivo}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        'text-[11px] font-semibold px-2 py-0.5 rounded-full',
-                        rep.estado === 'revisado'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : rep.estado === 'descartado'
-                            ? 'bg-cream-200 text-ink-600'
-                            : 'bg-amber-100 text-amber-900',
-                      )}
-                    >
-                      {rep.estado === 'revisado'
-                        ? 'Atendido / Revisado'
-                        : rep.estado === 'descartado'
-                          ? 'Descartado'
-                          : 'Pendiente de mediación'}
-                    </span>
-                    <span className="text-ink-400 text-[11px]">{formatDate(rep.creado_en)}</span>
-                  </div>
-                </div>
-
-                {rep.descripcion && (
-                  <p className="text-xs text-ink-700 bg-cream-50 dark:bg-cream-200/50 p-2.5 rounded-lg border border-ink-200">
-                    "{rep.descripcion}"
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between gap-2 pt-1 border-t border-ink-200 flex-wrap">
-                  <span className="text-[11px] text-ink-500">
-                    Reportado por: <strong>{rep.reportado_por?.full_name || 'Vecino'}</strong>
-                    {rep.reportado_por?.phone ? ` (Tel: ${rep.reportado_por.phone})` : ''}
-                  </span>
-
-                  <div className="flex items-center gap-2">
-                    {rep.estado === 'pendiente' && (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          loading={procesandoReporteId === rep.id}
-                          onClick={() => handleCambiarEstadoReporte(rep.id, 'revisado')}
-                        >
-                          Marcar atendido
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          loading={procesandoReporteId === rep.id}
-                          onClick={() => handleCambiarEstadoReporte(rep.id, 'descartado')}
-                        >
-                          Descartar
-                        </Button>
-                      </>
-                    )}
-
-                    {rep.negocio?.verification_status !== 'under_review' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleCambiarObservacionNegocio(rep.negocio_id, 'under_review')}
-                        className="text-[11px] font-semibold text-amber-800 hover:text-amber-900 dark:text-amber-300 hover:underline cursor-pointer"
-                      >
-                        Poner bajo observación
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleCambiarObservacionNegocio(rep.negocio_id, 'verified')}
-                        className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 dark:text-emerald-400 hover:underline cursor-pointer"
-                      >
-                        Retirar observación
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
 
       <section className="card p-4 bg-brand-50 border-brand-100">
         <h3 className="font-bold text-brand-900 mb-2">¿Cómo apadrinar a un emprendedor?</h3>

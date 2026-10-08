@@ -128,9 +128,9 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
   const saldo = precioFinal ? Math.max(0, precioFinal - anticipo) : null
 
   return (
-    <article className="card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+    <article className="card p-4 min-w-0">
+      <div className="flex items-start justify-between gap-3 min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className="truncate font-semibold text-ink-900">{order.title}</h3>
           <p className="flex items-center gap-1.5 text-xs text-ink-500">
             {perspective === 'client' ? (
@@ -367,7 +367,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
         >
-          <div className="card w-full max-w-sm p-5 space-y-4 shadow-xl">
+          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-ink-900">
               Aceptar pedido y confirmar cotización
             </h3>
@@ -428,7 +428,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
         >
-          <div className="card w-full max-w-sm p-5 space-y-4 shadow-xl">
+          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-rose-700 dark:text-rose-400">
               ¿Deseas cancelar esta solicitud?
             </h3>
@@ -489,7 +489,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
         >
-          <div className="card w-full max-w-sm p-5 space-y-4 shadow-xl">
+          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-ink-900">
               Añadir nota de avance del trabajo
             </h3>
