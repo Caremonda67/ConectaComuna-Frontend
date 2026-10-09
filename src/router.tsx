@@ -105,9 +105,11 @@ const router = createBrowserRouter([
       {
         path: 'onboarding',
         element: (
-          <Lazy>
-            <OnboardingPage />
-          </Lazy>
+          <ProtectedRoute allowIncompleteProfile>
+            <Lazy>
+              <OnboardingPage />
+            </Lazy>
+          </ProtectedRoute>
         ),
       },
       {

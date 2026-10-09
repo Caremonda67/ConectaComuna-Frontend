@@ -96,7 +96,9 @@ export default function ExplorePage() {
       />
 
       <p aria-live="polite" className="text-sm text-ink-500">
-        {loading ? 'Buscando…' : `${data?.length ?? 0} resultados`}
+        {loading
+          ? 'Buscando…'
+          : `${data?.length ?? 0} ${(data?.length ?? 0) === 1 ? 'resultado' : 'resultados'}`}
       </p>
 
       {loading && <CardSkeletonList count={4} />}
@@ -137,7 +139,7 @@ export default function ExplorePage() {
         />
       )}
       {!loading && !error && data && data.length > 0 && (
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-3 animate-fade-in">
           {data.map((b) => (
             <BusinessCard key={b.id} business={b} />
           ))}

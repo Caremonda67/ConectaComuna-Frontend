@@ -203,7 +203,7 @@ export function HomeHeroIllustration() {
           />
         )}
 
-        <span className="mt-1 rounded-full bg-white/95 dark:bg-cream-50/95 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-brand-800 dark:text-brand-600 shadow-xs border border-brand-200 dark:border-brand-900/60 whitespace-nowrap">
+        <span className="mt-1 rounded-full bg-white/95 dark:bg-cream-50/95 px-2.5 py-0.5 text-xs font-bold text-brand-800 dark:text-brand-600 shadow-xs border border-brand-200 dark:border-brand-900/60 whitespace-nowrap">
           Tu barrio
         </span>
       </div>
@@ -270,7 +270,7 @@ export function HomeHeroIllustration() {
                   y: isHovered ? -2 : 0,
                   scale: isHovered ? 1.04 : 1,
                 }}
-                className={`mt-1.5 rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold tracking-tight shadow-2xs border ${node.borderColor} ${node.badgeBg} ${node.badgeText} transition-colors whitespace-nowrap`}
+                className={`mt-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-tight shadow-2xs border ${node.borderColor} ${node.badgeBg} ${node.badgeText} transition-colors whitespace-nowrap`}
               >
                 {node.label}
               </motion.span>
@@ -281,7 +281,7 @@ export function HomeHeroIllustration() {
 
       {/* Sugerencia discreta para interactuar */}
       <div className="absolute bottom-2 left-3 z-0 pointer-events-none hidden sm:block">
-        <span className="text-[10px] font-medium text-ink-400">
+        <span className="text-xs font-medium text-ink-400">
           ✦ Toca cualquier servicio para explorar
         </span>
       </div>

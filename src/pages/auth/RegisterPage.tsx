@@ -197,6 +197,7 @@ export default function RegisterPage() {
           <label className="flex items-start gap-2.5 text-xs text-ink-700 cursor-pointer select-none">
             <input
               type="checkbox"
+              aria-invalid={errors.termsAccepted ? 'true' : undefined}
               {...register('termsAccepted')}
               className="mt-0.5 rounded border-ink-300 text-brand-600 focus:ring-brand-500 shrink-0"
             />

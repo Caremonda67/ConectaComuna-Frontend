@@ -1,5 +1,6 @@
 import { requireSupabase } from '@/lib/supabase'
-import { isDemoMode } from '@/lib/env'
+import { isDemoMode, env } from '@/lib/env'
+import { apiFetch } from '@/lib/apiClient'
 import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Business, BusinessFilters, BusinessWithDistance, EstadoReporte, ReporteComunitario, Review } from '@/types'
@@ -43,18 +44,23 @@ export function overlayLocalTrust<T extends Business>(b: T): T {
 export const businessService = {
   async search(filters: BusinessFilters): Promise<BusinessWithDistance[]> {
     if (isDemoMode) {
-      const q = filters.query?.trim().toLowerCase()
       let list = readDb().businesses.filter((b) => b.is_active)
       if (filters.category && filters.category !== 'all') {
         list = list.filter((b) => b.category === filters.category)
       }
-      if (q) {
-        list = list.filter(
-          (b) =>
-            b.name.toLowerCase().includes(q) ||
-            b.description.toLowerCase().includes(q) ||
-            b.neighborhood?.toLowerCase().includes(q),
-        )
+      if (filters.query?.trim()) {
+        const tokens = filters.query
+          .toLowerCase()
+          .replace(/[,()%"'\\]/g, ' ')
+          .split(/\s+/)
+          .filter((t) => t.length > 0)
+
+        if (tokens.length > 0) {
+          list = list.filter((b) => {
+            const text = `${b.name} ${b.description} ${b.neighborhood ?? ''}`.toLowerCase()
+            return tokens.some((t) => text.includes(t))
+          })
+        }
       }
       if (filters.minRating) list = list.filter((b) => b.rating_avg >= filters.minRating!)
       if (filters.openNow) {
@@ -83,8 +89,20 @@ export const businessService = {
     if (filters.minRating) query = query.gte('rating_avg', filters.minRating)
     if (filters.wholesaleOnly) query = query.eq('wholesale_enabled', true)
     if (filters.query?.trim()) {
-      const q = filters.query.trim()
-      query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`)
+      const tokens = filters.query
+        .replace(/[,()%"'\\]/g, ' ')
+        .split(/\s+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+
+      if (tokens.length > 0) {
+        // En PostgREST, la coma separa condiciones en .or(). Los tokens sanitizados
+        // evitan que comas o signos partan la sintaxis o provoquen un 400.
+        const orConditions = tokens
+          .flatMap((t) => [`name.ilike.%${t}%`, `description.ilike.%${t}%`, `neighborhood.ilike.%${t}%`])
+          .join(',')
+        query = query.or(orConditions)
+      }
     }
     // Prefiltro por caja envolvente antes de calcular distancia exacta en cliente.
     if (filters.center && filters.radiusKm) {
@@ -111,17 +129,34 @@ export const businessService = {
   },
 
   async getById(id: string): Promise<Business | null> {
+    if (!id || typeof id !== 'string') return null
     if (isDemoMode) {
       const found = readDb().businesses.find((b) => b.id === id) ?? null
       return delay(found ? overlayLocalTrust(found) : null, 200)
     }
-    const { data, error } = await requireSupabase()
-      .from('businesses')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle()
-    if (error) throw error
-    return data ? overlayLocalTrust(data as Business) : null
+
+    // Un UUID no válido (enlace roto en WhatsApp) arroja error 22P02 en Postgres.
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    if (!isUuid) return null
+
+    try {
+      const { data, error } = await requireSupabase()
+        .from('businesses')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle()
+      if (error) {
+        if (error.code === '22P02') return null
+        throw error
+      }
+      return data ? overlayLocalTrust(data as Business) : null
+    } catch (err: unknown) {
+      const errObj = err as { code?: string; message?: string }
+      if (errObj?.code === '22P02' || errObj?.message?.includes('invalid input syntax for type uuid')) {
+        return null
+      }
+      throw err
+    }
   },
 
   async getByOwner(ownerId: string): Promise<Business | null> {
@@ -365,6 +400,22 @@ export const businessService = {
         }
       })
       return delay(undefined, 300)
+    }
+
+    if (env.apiUrl) {
+      try {
+        await apiFetch('/api/reports', {
+          method: 'POST',
+          body: JSON.stringify({
+            negocio_id: reporte.negocio_id,
+            motivo: reporte.motivo,
+            descripcion: reporte.descripcion ?? null,
+          }),
+        })
+        return
+      } catch (err) {
+        console.warn('API Express no disponible, usando PostgREST directo:', err)
+      }
     }
 
     try {

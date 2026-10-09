@@ -1,5 +1,6 @@
 import { requireSupabase } from '@/lib/supabase'
-import { isDemoMode } from '@/lib/env'
+import { isDemoMode, env } from '@/lib/env'
+import { apiFetch } from '@/lib/apiClient'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Order, OrderStatus, Review } from '@/types'
 
@@ -209,20 +210,37 @@ export const orderService = {
       }
     }
 
+    const payload = {
+      business_id: input.businessId,
+      client_id: input.clientId,
+      title: input.title,
+      description: input.description,
+      scheduled_for: input.scheduledFor ?? null,
+      price_estimate: input.priceEstimate ?? null,
+      service_location_type: input.serviceLocationType ?? 'workshop',
+      delivery_address: input.deliveryAddress ?? null,
+      photos,
+      status: 'pending' satisfies OrderStatus,
+    }
+
+    if (env.apiUrl) {
+      try {
+        const fromApi = await apiFetch<any>('/api/orders', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        })
+        if (fromApi?.id) {
+          return mapDbOrder(fromApi)
+        }
+      } catch (apiErr) {
+        // Fallback transparente a Supabase si el servidor Express no está levantado
+        console.warn('API Express no disponible, usando PostgREST directo:', apiErr)
+      }
+    }
+
     const { data, error } = await supabase
       .from('orders')
-      .insert({
-        business_id: input.businessId,
-        client_id: input.clientId,
-        title: input.title,
-        description: input.description,
-        scheduled_for: input.scheduledFor ?? null,
-        price_estimate: input.priceEstimate ?? null,
-        service_location_type: input.serviceLocationType ?? 'workshop',
-        delivery_address: input.deliveryAddress ?? null,
-        photos,
-        status: 'pending' satisfies OrderStatus,
-      })
+      .insert(payload)
       .select(SELECT_WITH_RELATIONS)
       .single()
     if (error) throw error
