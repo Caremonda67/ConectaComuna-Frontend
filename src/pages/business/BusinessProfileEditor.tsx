@@ -388,7 +388,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       <section className="card p-4 space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
               <UI_ICONS.package size={20} />
             </div>
             <div>
@@ -446,7 +446,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           <button
             type="button"
             onClick={handleAddService}
-            className="text-xs font-semibold text-brand-600 hover:text-brand-700 dark:text-brand-400 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 dark:border-brand-800 bg-brand-50/50 dark:bg-brand-950/40 cursor-pointer"
+            className="text-xs font-semibold text-brand-700 hover:text-brand-800 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 bg-brand-50 cursor-pointer"
           >
             + Añadir servicio o tarifa
           </button>

@@ -486,13 +486,13 @@ export default function BusinessDetailPage() {
                       {item.name}
                     </h3>
                     {item.price != null && (
-                      <span className="font-bold text-sm text-brand-700 dark:text-brand-300 shrink-0">
+                      <span className="font-bold text-sm text-brand-700 shrink-0">
                         {formatCurrency(item.price)}
                       </span>
                     )}
                   </div>
                   {item.description && (
-                    <p className="mt-1 text-xs text-ink-600 dark:text-ink-400">
+                    <p className="mt-1 text-xs text-ink-600">
                       {item.description}
                     </p>
                   )}
@@ -501,7 +501,7 @@ export default function BusinessDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectService(item)}
-                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 hover:text-brand-800 dark:hover:text-brand-200 hover:underline pt-1 cursor-pointer"
+                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline pt-1 cursor-pointer"
                   >
                     <span>Pedir este trabajo</span>
                     <span aria-hidden="true">&rarr;</span>
@@ -719,11 +719,11 @@ function RequestForm({
             className={cn(
               'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
               serviceLocationType === 'workshop'
-                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
+                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold'
                 : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
-            <UI_ICONS.tools size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
+            <UI_ICONS.tools size={18} className="mb-1 text-brand-600" />
             <span>En taller / local</span>
             <span className="text-[10px] text-ink-500 font-normal">Llevas o recoges allí</span>
           </button>
@@ -734,11 +734,11 @@ function RequestForm({
             className={cn(
               'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
               serviceLocationType === 'home_delivery'
-                ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-brand-900 dark:text-brand-200 font-semibold'
+                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold'
                 : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
-            <UI_ICONS.map size={18} className="mb-1 text-brand-600 dark:text-brand-400" />
+            <UI_ICONS.map size={18} className="mb-1 text-brand-600" />
             <span>A domicilio</span>
             <span className="text-[10px] text-ink-500 font-normal">En tu casa o dirección</span>
           </button>
@@ -810,11 +810,11 @@ function RequestForm({
         )}
       </div>
 
-      <div className="rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3 text-xs text-brand-900 dark:text-brand-200 flex items-start gap-2">
-        <UI_ICONS.shieldCheck size={16} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+      <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-xs text-brand-800 flex items-start gap-2">
+        <UI_ICONS.shieldCheck size={16} className="text-brand-600 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold block">Trato Seguro Comunal</span>
-          <span className="text-[11px] text-brand-800 dark:text-brand-300">
+          <span className="font-semibold block text-brand-900">Trato Seguro Comunal</span>
+          <span className="text-[11px] text-brand-700">
             Al enviar esta solicitud queda registrada en el sistema. Acuerda anticipos máximos del 50% y solo liquida el total al recibir el servicio terminado.
           </span>
         </div>
@@ -864,35 +864,35 @@ function SolicitudEnviadaModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-100 p-5 shadow-xl border border-ink-200 dark:border-ink-800 space-y-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl border border-ink-200 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300">
             <UI_ICONS.shieldCheck size={28} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-ink-900">
               ¡Solicitud registrada!
             </h2>
-            <p className="text-xs text-ink-600 dark:text-ink-400 mt-0.5">
+            <p className="text-xs text-ink-600 mt-0.5">
               Código de seguimiento:{' '}
-              <span className="font-mono font-bold text-brand-800 dark:text-brand-200 bg-brand-100 dark:bg-brand-950/80 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-800/60">
+              <span className="font-mono font-bold text-brand-800 bg-brand-100 px-2 py-0.5 rounded border border-brand-200">
                 {code}
               </span>
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-ink-200 dark:border-ink-800 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
+        <div className="rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-100/60 p-4 space-y-2.5 text-sm">
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Servicio:</span>
+            <span className="text-ink-500 text-xs font-medium">Servicio:</span>
             <span className="font-semibold text-ink-900 text-right">{order.title}</span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Modalidad:</span>
-            <span className="text-xs font-medium text-ink-800 dark:text-ink-200">
+            <span className="text-ink-500 text-xs font-medium">Modalidad:</span>
+            <span className="text-xs font-medium text-ink-800">
               {order.service_location_type === 'home_delivery'
                 ? `A domicilio (${order.delivery_address || 'Dirección acordada'})`
                 : 'En taller o local del emprendedor'}
@@ -900,21 +900,21 @@ function SolicitudEnviadaModal({
           </div>
 
           {order.price_estimate && (
-            <div className="flex justify-between items-center pt-2 border-t border-ink-200 dark:border-ink-800">
-              <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Presupuesto inicial:</span>
-              <span className="font-bold text-brand-700 dark:text-brand-300">
+            <div className="flex justify-between items-center pt-2 border-t border-ink-200">
+              <span className="text-ink-500 text-xs font-medium">Presupuesto inicial:</span>
+              <span className="font-bold text-brand-700">
                 {formatCurrency(order.price_estimate)}
               </span>
             </div>
           )}
         </div>
 
-        <div className="rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3 text-xs text-brand-900 dark:text-brand-200">
-          <p className="font-semibold flex items-center gap-1.5 mb-1 text-brand-900 dark:text-brand-200">
-            <UI_ICONS.shieldCheck size={14} className="shrink-0 text-brand-700 dark:text-brand-300" />
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-xs text-brand-800">
+          <p className="font-semibold flex items-center gap-1.5 mb-1 text-brand-900">
+            <UI_ICONS.shieldCheck size={14} className="shrink-0 text-brand-700" />
             Respaldo Trato Seguro
           </p>
-          <p className="text-brand-800 dark:text-brand-300">
+          <p className="text-brand-800">
             El emprendedor revisará los detalles y te responderá con la cotización final. No pagues más del 50% de anticipo.
           </p>
         </div>
@@ -937,7 +937,7 @@ function SolicitudEnviadaModal({
             variant="secondary"
             onClick={onVerComprobante}
             fullWidth
-            className="min-h-11 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-800/60"
+            className="min-h-11 text-brand-700 border-brand-200"
           >
             <span aria-hidden="true">🤝</span>
             Ver ficha de solicitud

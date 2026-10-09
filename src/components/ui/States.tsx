@@ -15,7 +15,7 @@ export function EmptyState({ icon: Icon = Search, title, description, action }: 
     <div className="rounded-[14px] border border-dashed border-ink-200 bg-white dark:bg-cream-50 p-8 text-center">
       <span
         aria-hidden="true"
-        className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950/40 dark:text-brand-400"
+        className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-brand-800"
       >
         <Icon size={26} strokeWidth={1.75} />
       </span>

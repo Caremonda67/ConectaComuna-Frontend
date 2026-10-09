@@ -58,7 +58,7 @@ export const ORDER_STATUS_STYLE: Record<OrderStatus, string> = {
   pending: 'bg-cream-200 text-ink-700 border border-ink-200',
   accepted: 'bg-brand-50 text-brand-700 border border-brand-100',
   in_progress: 'bg-brand-100 text-brand-800 border border-brand-200',
-  completed: 'bg-brand-500 text-white border border-brand-600',
+  completed: 'bg-emerald-600 text-white border border-emerald-700 dark:bg-emerald-800 dark:border-emerald-700',
   cancelled: 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-200 dark:border-rose-800/60',
 }
 

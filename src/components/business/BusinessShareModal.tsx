@@ -61,7 +61,7 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/50 text-brand-800 dark:text-brand-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
               <UI_ICONS.share size={20} />
             </div>
             <div>
@@ -88,7 +88,7 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
         </p>
 
         {/* Vista previa del volante digital */}
-        <div className="rounded-xl border border-brand-200 dark:border-brand-900/60 bg-brand-50/40 dark:bg-brand-950/30 p-4 space-y-2">
+        <div className="rounded-xl border border-brand-200 bg-brand-50 p-4 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-bold text-ink-900 text-base">{business.name}</h3>
             {business.verification_status === 'verified' && (
@@ -98,15 +98,15 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
               </span>
             )}
           </div>
-          <p className="text-xs text-brand-800 dark:text-brand-300 font-medium">
+          <p className="text-xs text-brand-800 font-medium">
             {categoryLabel(business.category)} {business.neighborhood ? `· Barrio ${business.neighborhood}` : ''}
           </p>
           {business.description && (
-            <p className="text-xs text-ink-700 dark:text-ink-300 line-clamp-2 italic bg-white/80 dark:bg-cream-100/80 p-2 rounded-lg border border-ink-100 dark:border-ink-200">
+            <p className="text-xs text-ink-700 line-clamp-2 italic bg-white/80 dark:bg-cream-100/80 p-2 rounded-lg border border-ink-200">
               "{business.description}"
             </p>
           )}
-          <div className="flex items-center justify-between text-[11px] text-ink-500 pt-1 border-t border-brand-100 dark:border-brand-900/60">
+          <div className="flex items-center justify-between text-[11px] text-ink-500 pt-1 border-t border-brand-200">
             <span>ConectaComuna</span>
             <span>📱 {business.whatsapp || business.phone || 'Disponible en el barrio'}</span>
           </div>

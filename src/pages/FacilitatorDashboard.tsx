@@ -248,10 +248,10 @@ export default function FacilitatorDashboard() {
                     <div className="mt-2">
                       <span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
                         vinculacion.estado_vinculacion === 'aprobado'
-                          ? 'bg-green-100 dark:bg-emerald-950/60 text-green-800 dark:text-emerald-300'
+                          ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700'
                           : vinculacion.estado_vinculacion === 'pendiente'
-                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300'
-                            : 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300'
+                            ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700'
+                            : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-700'
                       }`}>
                         {vinculacion.estado_vinculacion === 'aprobado'
                           ? 'Acceso concedido'
@@ -275,11 +275,11 @@ export default function FacilitatorDashboard() {
                           Sello de verificación en territorio
                         </span>
                         {negocio.verification_status === 'verified' ? (
-                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 font-medium text-[11px]">
                             Verificado
                           </span>
                         ) : negocio.verification_status === 'under_review' ? (
-                          <span className="rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 px-2 py-0.5 font-medium text-[11px]">
+                          <span className="rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 px-2 py-0.5 font-medium text-[11px]">
                             Bajo observación
                           </span>
                         ) : (

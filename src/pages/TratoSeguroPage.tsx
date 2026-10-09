@@ -108,8 +108,8 @@ export default function TratoSeguroPage() {
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
-            <UI_ICONS.shieldCheck size={14} className="text-brand-700 dark:text-brand-300" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200">
+            <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
             Pacto vecinal de confianza
           </span>
           <span className="text-xs text-ink-500">Uso ético y protección local</span>
@@ -166,10 +166,10 @@ export default function TratoSeguroPage() {
                   <h3 className="text-base font-bold text-ink-900 leading-snug">
                     {acuerdo.titulo}
                   </h3>
-                  <p className="text-xs font-medium text-brand-800 dark:text-brand-300 bg-brand-50/70 dark:bg-brand-950/40 p-2 rounded-lg border border-brand-100 dark:border-brand-900/60">
+                  <p className="text-xs font-medium text-brand-800 bg-brand-50 p-2 rounded-lg border border-brand-200">
                     {acuerdo.resumen}
                   </p>
-                  <p className="text-xs text-ink-600 dark:text-ink-400 leading-relaxed">{acuerdo.detalle}</p>
+                  <p className="text-xs text-ink-600 leading-relaxed">{acuerdo.detalle}</p>
                 </div>
               </article>
             )
@@ -228,7 +228,7 @@ export default function TratoSeguroPage() {
             <ul className="space-y-3">
               {CONSEJOS_CLIENTE.map((consejo, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-ink-700">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold mt-0.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold mt-0.5 border border-brand-200">
                     ✓
                   </span>
                   <span>{consejo}</span>
@@ -239,7 +239,7 @@ export default function TratoSeguroPage() {
             <ul className="space-y-3">
               {CONSEJOS_EMPRENDEDOR.map((consejo, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-ink-700">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold mt-0.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold mt-0.5 border border-brand-200">
                     ✓
                   </span>
                   <span>{consejo}</span>
@@ -261,7 +261,7 @@ export default function TratoSeguroPage() {
               <UI_ICONS.shieldCheck size={18} />
               <span>Verificado en territorio</span>
             </div>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Un facilitador comprobó presencialmente que el taller o negocio existe físicamente en
               la comuna.
             </p>
@@ -272,7 +272,7 @@ export default function TratoSeguroPage() {
               <UI_ICONS.star size={18} />
               <span>Reseñas de la comunidad</span>
             </div>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Calificaciones de vecinos que ya contrataron el servicio. Reflejan cumplimiento y
               trato recibido.
             </p>
@@ -283,7 +283,7 @@ export default function TratoSeguroPage() {
               <UI_ICONS.person size={18} />
               <span>Acompañamiento facilitador</span>
             </div>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Apoyo a personas mayores o artesanos que requieren ayuda para coordinar su catálogo
               digital.
             </p>
@@ -303,7 +303,7 @@ export default function TratoSeguroPage() {
         <div className="grid gap-4 sm:grid-cols-3 text-xs text-ink-700">
           <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">1. Conversar con calma</strong>
-            <p className="text-ink-600 dark:text-ink-400">
+            <p className="text-ink-600">
               Revisa lo hablado en el chat inicial. Casi siempre los desacuerdos se deben a una
               confusión de horarios o especificaciones.
             </p>
@@ -311,7 +311,7 @@ export default function TratoSeguroPage() {
 
           <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">2. Pedir la garantía</strong>
-            <p className="text-ink-600 dark:text-ink-400">
+            <p className="text-ink-600">
               Pide amablemente la corrección del trabajo en un plazo prudente. Un buen oficio
               responde siempre por su labor.
             </p>
@@ -319,7 +319,7 @@ export default function TratoSeguroPage() {
 
           <div className="rounded-xl bg-white dark:bg-cream-100 p-3.5 border border-ink-100 dark:border-ink-200 space-y-1">
             <strong className="block text-ink-900 font-semibold">3. Reportar en la app</strong>
-            <p className="text-ink-600 dark:text-ink-400">
+            <p className="text-ink-600">
               Si detectas engaño o negativa injustificada, usa el botón "Reportar negocio" o
               escríbenos a la línea comunitaria de WhatsApp.
             </p>

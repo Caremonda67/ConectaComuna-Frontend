@@ -119,7 +119,7 @@ export default function BusinessDashboard() {
         <div className="mt-3">
           {(codigoApadrinamiento || business.codigo_apadrinamiento) ? (
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-2xl font-mono font-bold tracking-widest text-brand-700 dark:text-brand-300 bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 px-4 py-2 rounded-lg">
+              <span className="text-2xl font-mono font-bold tracking-widest text-brand-800 bg-brand-100 border border-brand-200 px-4 py-2 rounded-lg">
                 {codigoApadrinamiento || business.codigo_apadrinamiento}
               </span>
               <Button
@@ -189,8 +189,8 @@ export default function BusinessDashboard() {
 
       {/* Gestión asistida: le decimos exactamente qué le falta y por qué importa. */}
       {completion.percent < 100 && (
-        <section className="rounded-2xl border border-brand-100 dark:border-brand-900/60 bg-brand-50 dark:bg-brand-950/40 p-4">
-          <h2 className="font-bold text-brand-700 dark:text-brand-300">
+        <section className="rounded-2xl border border-brand-200 bg-brand-50 p-4">
+          <h2 className="font-bold text-brand-800">
             Tu perfil está {completion.percent}% completo
           </h2>
           <div
@@ -206,7 +206,7 @@ export default function BusinessDashboard() {
               style={{ width: `${completion.percent}%` }}
             />
           </div>
-          <ul className="mt-3 space-y-1 text-sm text-brand-700 dark:text-brand-300">
+          <ul className="mt-3 space-y-1 text-sm text-brand-800">
             {completion.missing.map((m) => (
               <li key={m}>• {m}</li>
             ))}
@@ -365,7 +365,7 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
             {pendientes.map((s) => (
               <li
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/60 p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 border border-brand-200 p-3"
               >
                 <div>
                   <p className="font-semibold">{s.facilitador?.full_name ?? 'Vecino'}</p>
