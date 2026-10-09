@@ -76,7 +76,7 @@ export function BusinessShareModal({ open, onClose, business }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1 text-ink-400 hover:text-ink-700 cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-400 hover:text-ink-700 hover:bg-cream-200 hover:rotate-90 active:scale-90 transition-all duration-200 cursor-pointer"
             aria-label="Cerrar modal"
           >
             ✕

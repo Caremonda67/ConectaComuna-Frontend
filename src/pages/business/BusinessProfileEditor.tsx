@@ -380,7 +380,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                 <button
                   type="button"
                   onClick={() => setPhotos((p) => p.filter((x) => x !== src))}
-                  className="absolute right-1 top-1 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white"
+                  className="absolute right-1 top-1 rounded-full bg-black/60 hover:bg-rose-600 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
                 >
                   Quitar<span className="sr-only"> foto</span>
                 </button>
@@ -452,7 +452,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           <button
             type="button"
             onClick={handleAddService}
-            className="text-xs font-semibold text-brand-700 hover:text-brand-800 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 bg-brand-50 cursor-pointer"
+            className="text-xs font-semibold text-brand-700 hover:text-brand-800 hover:bg-brand-100 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 bg-brand-50 cursor-pointer transition-all duration-150"
           >
             + Añadir servicio o tarifa
           </button>
@@ -505,7 +505,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
                       <button
                         type="button"
                         onClick={() => removeService(idx)}
-                        className="p-1.5 text-ink-400 hover:text-red-500 transition-colors"
+                        className="p-1.5 text-ink-400 hover:text-rose-600 hover:scale-115 active:scale-90 transition-all duration-150 cursor-pointer"
                         title="Eliminar este servicio"
                       >
                         ✕

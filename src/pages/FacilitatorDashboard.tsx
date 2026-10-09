@@ -310,7 +310,7 @@ export default function FacilitatorDashboard() {
                             <button
                               type="button"
                               onClick={() => handleRevocarVerificacion(negocio.id)}
-                              className="text-rose-700 hover:underline text-[11px] cursor-pointer"
+                              className="text-rose-700 hover:text-rose-900 hover:underline text-[11px] cursor-pointer active:scale-95 transition-transform"
                             >
                               Retirar verificación
                             </button>

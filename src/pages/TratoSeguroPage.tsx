@@ -205,10 +205,10 @@ export default function TratoSeguroPage() {
               aria-selected={rolPestana === 'cliente'}
               onClick={() => setRolPestana('cliente')}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'cliente'
                   ? 'bg-brand-600 text-white shadow-2xs'
-                  : 'text-ink-700 hover:text-ink-900',
+                  : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
               Soy cliente
@@ -218,10 +218,10 @@ export default function TratoSeguroPage() {
               aria-selected={rolPestana === 'emprendedor'}
               onClick={() => setRolPestana('emprendedor')}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'emprendedor'
                   ? 'bg-brand-600 text-white shadow-2xs'
-                  : 'text-ink-700 hover:text-ink-900',
+                  : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
               Ofrezco un servicio

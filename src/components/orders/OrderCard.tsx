@@ -294,9 +294,9 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-pointer transition-colors"
+            className="group inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 cursor-pointer transition-all duration-200"
           >
-            <UI_ICONS.whatsapp size={14} className="shrink-0" />
+            <UI_ICONS.whatsapp size={14} className="shrink-0 transition-transform duration-200 group-hover:scale-115 group-hover:-rotate-6" />
             WhatsApp
           </a>
         )}

@@ -106,7 +106,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             type="button"
             onClick={() => scrollByAmount(-220)}
             aria-label="Ver categorías anteriores"
-            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
+            className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 hover:scale-110 hover:shadow-lg active:scale-90 transition-all duration-200 cursor-pointer"
           >
             <ChevronLeft size={16} strokeWidth={2.25} />
           </button>
@@ -164,7 +164,7 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
             type="button"
             onClick={() => scrollByAmount(220)}
             aria-label="Ver más categorías"
-            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 active:scale-90 transition-all cursor-pointer"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 z-20 flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/95 dark:bg-cream-50/95 border border-ink-200 shadow-md text-ink-700 hover:text-brand-700 hover:border-brand-400 hover:scale-110 hover:shadow-lg active:scale-90 transition-all duration-200 cursor-pointer"
           >
             <ChevronRight size={16} strokeWidth={2.25} />
           </button>
@@ -178,15 +178,16 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           onClick={() => onChange({ openNow: !filters.openNow })}
           aria-pressed={Boolean(filters.openNow)}
           className={cn(
-            'inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium transition-colors cursor-pointer',
+            'group inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium select-none cursor-pointer',
+            'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95',
             filters.openNow
-              ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-sm dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/60'
-              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
+              ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-xs dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700/60'
+              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200',
           )}
         >
           <span
             className={cn(
-              'h-2 w-2 rounded-full shrink-0',
+              'h-2 w-2 rounded-full shrink-0 transition-transform duration-200 group-hover:scale-125',
               filters.openNow ? 'bg-emerald-500 animate-pulse' : 'bg-ink-400',
             )}
           />
@@ -199,13 +200,14 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           onClick={() => onChange({ wholesaleOnly: !filters.wholesaleOnly })}
           aria-pressed={Boolean(filters.wholesaleOnly)}
           className={cn(
-            'inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium transition-colors cursor-pointer',
+            'group inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium select-none cursor-pointer',
+            'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95',
             filters.wholesaleOnly
-              ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm font-semibold'
-              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
+              ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-xs font-semibold'
+              : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200',
           )}
         >
-          <UI_ICONS.package size={15} className="shrink-0 text-brand-600" />
+          <UI_ICONS.package size={15} className="shrink-0 text-brand-600 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6" />
           Venta al por mayor
         </button>
 
@@ -275,13 +277,19 @@ function CategoryChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium whitespace-nowrap active:scale-95 transition-all duration-150 select-none cursor-pointer',
+        'group inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium whitespace-nowrap select-none cursor-pointer',
+        'transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95',
         active
-          ? 'border-brand-500 bg-brand-500 text-white shadow-sm font-semibold'
-          : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-300 hover:bg-cream-50 dark:hover:bg-cream-200',
+          ? 'border-brand-500 bg-brand-500 text-white shadow-xs font-semibold ring-1 ring-brand-400/50'
+          : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200 hover:text-brand-900 dark:hover:text-brand-300 hover:shadow-xs',
       )}
     >
-      <Icon aria-hidden="true" size={15} strokeWidth={1.75} />
+      <Icon
+        aria-hidden="true"
+        size={15}
+        strokeWidth={1.75}
+        className="transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6"
+      />
       {label}
     </button>
   )

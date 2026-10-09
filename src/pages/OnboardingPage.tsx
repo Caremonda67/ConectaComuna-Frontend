@@ -117,13 +117,13 @@ export default function OnboardingPage() {
             type="button"
             onClick={handleGetLocation}
             disabled={loadingLocation}
-            className="flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+            className="group inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
           >
             {loadingLocation ? (
               <span className="mr-2 animate-pulse">⏳ Obteniendo ubicación...</span>
             ) : (
               <>
-                <UI_ICONS.map size={16} className="mr-1" />
+                <UI_ICONS.map size={16} className="mr-1.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-6" />
                 Usar mi ubicación actual
               </>
             )}
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
                     setFormData((prev) => ({ ...prev, neighborhood: b.nombre }))
                     setError(null)
                   }}
-                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 active:scale-95 transition-transform"
+                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 transition-all duration-150 cursor-pointer"
                 >
                   📍 {b.nombre}
                 </button>

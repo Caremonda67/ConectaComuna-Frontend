@@ -45,6 +45,12 @@ import {
   Sun,
   Moon,
   Package,
+  ZoomIn,
+  ZoomOut,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
 } from 'lucide-react'
 
 /**
@@ -118,4 +124,10 @@ export const UI_ICONS = {
   sun: Sun,
   moon: Moon,
   package: Package,
+  zoomIn: ZoomIn,
+  zoomOut: ZoomOut,
+  close: X,
+  chevronLeft: ChevronLeft,
+  chevronRight: ChevronRight,
+  maximize: Maximize2,
 } as const satisfies Record<string, LucideIcon>

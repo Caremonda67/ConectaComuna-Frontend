@@ -133,10 +133,10 @@ export default function ClientDashboard() {
                   type="button"
                   onClick={detectarBarrio}
                   disabled={detectando}
-                  className="flex items-center text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 disabled:opacity-50"
+                  className="group inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 disabled:opacity-50 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
                 >
                   {detectando ? '⏳ Detectando...' : (
-                    <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
+                    <><UI_ICONS.map size={14} className="mr-1 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-6" /> Usar GPS</>
                   )}
                 </button>
               </div>
