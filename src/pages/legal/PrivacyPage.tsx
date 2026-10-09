@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function PrivacyPage() {
+  usePageMeta({
+    title: 'Política de Privacidad · ConectaComuna',
+    description:
+      'Política de privacidad y protección de datos personales de ConectaComuna conforme a la Ley 1581 de 2012 de Habeas Data.',
+  })
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 py-2 sm:py-4">
       {/* Cabecera */}
@@ -92,7 +99,7 @@ export default function PrivacyPage() {
             Datos que recolectamos y finalidades específicas
           </h2>
           <p>Recopilamos únicamente los datos necesarios para el funcionamiento del directorio:</p>
-          <div className="grid gap-3 sm:grid-cols-2 pt-1">
+          <div className="grid gap-3 sm:grid-cols-3 pt-1">
             <div className="rounded-xl border border-ink-100 bg-cream-50 p-3.5 space-y-1.5">
               <strong className="block text-ink-900 font-semibold">Datos para crear tu cuenta</strong>
               <p className="text-xs text-ink-600">
@@ -110,6 +117,15 @@ export default function PrivacyPage() {
               </p>
               <span className="block text-[11px] text-brand-800 font-medium">
                 Finalidad: publicación en el directorio web para que vecinos te contacten.
+              </span>
+            </div>
+            <div className="rounded-xl border border-ink-100 bg-cream-50 p-3.5 space-y-1.5">
+              <strong className="block text-ink-900 font-semibold">Ubicación y proximidad comunal</strong>
+              <p className="text-xs text-ink-600">
+                Coordenadas GPS aproximadas (con tu permiso en el navegador) o barrio seleccionado manualmente.
+              </p>
+              <span className="block text-[11px] text-brand-800 font-medium">
+                Finalidad: ordenar los oficios más cercanos a tu casa. Sin rastreo en segundo plano ni historiales de ruta.
               </span>
             </div>
           </div>
@@ -216,6 +232,39 @@ export default function PrivacyPage() {
               únicamente datos técnicos necesarios para tu experiencia de usuario (el rol activo en
               el que estás navegando y si activaste el botón A+ de lectura cómoda). No utilizamos
               cookies de rastreo publicitario entre sitios web.
+            </li>
+          </ul>
+        </section>
+
+        {/* 7 */}
+        <section className="card p-6 space-y-3">
+          <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
+              7
+            </span>
+            Infraestructura tecnológica de terceros y transferencia internacional
+          </h2>
+          <p>
+            Para garantizar la disponibilidad y funcionamiento cartográfico del directorio, ConectaComuna
+            utiliza servicios de infraestructura técnica especializados:
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-ink-600">
+            <li>
+              <strong>Bases de datos y autenticación (Supabase / AWS):</strong> El almacenamiento cifrado
+              de perfiles, contraseñas y solicitudes se gestiona mediante infraestructura en la nube con
+              certificaciones SOC 2 e ISO 27001, empleando cifrado en tránsito (TLS/HTTPS) y en reposo (AES-256),
+              en cumplimiento del Artículo 26 de la Ley 1581 de 2012 y el Decreto 1377 de 2013.
+            </li>
+            <li>
+              <strong>Cartografía y geocodificación abierta (OpenStreetMap / Nominatim):</strong> Las búsquedas
+              por nombre de barrio envían consultas acotadas al perímetro geográfico de Cali (viewbox local)
+              para ubicar las coordenadas de referencia del mapa, identificando las peticiones conforme a la
+              política de uso de la fundación OpenStreetMap.
+            </li>
+            <li>
+              <strong>Visualización de mapas (CartoDB Voyager):</strong> Las teselas visuales del mapa se sirven
+              a través de redes de distribución de contenido (CDN) seguras de alto rendimiento sin recolectar
+              datos de identidad personal.
             </li>
           </ul>
         </section>

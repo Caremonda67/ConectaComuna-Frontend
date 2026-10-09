@@ -63,7 +63,7 @@ export function AuthGate({ open, onClose, from, motivo }: Props) {
             className="block"
           >
             <Button type="button" fullWidth>
-              Iniciar sesión
+              Ingresar
             </Button>
           </Link>
           <Link

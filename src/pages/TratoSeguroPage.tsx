@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
+import { usePageMeta } from '@/hooks/usePageMeta'
 
 const ACUERDOS = [
   {
@@ -40,7 +41,7 @@ const ACUERDOS = [
     detalle:
       'El compromiso del trabajador es entregar a tiempo y con calidad. Pero los imprevistos pasan en cualquier taller: si surge una demora, avisar al cliente con anticipación demuestra seriedad y respeto por el tiempo del vecino.',
     icon: UI_ICONS.calendar,
-    badgeColor: 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800/60',
+    badgeColor: 'bg-brand-100 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 border-brand-300 dark:border-brand-800/60',
   },
   {
     numero: 5,
@@ -89,6 +90,11 @@ const FAQS = [
 export default function TratoSeguroPage() {
   const { profile } = useAuth()
   const [rolPestana, setRolPestana] = useState<'cliente' | 'emprendedor'>('cliente')
+
+  usePageMeta({
+    title: 'Trato Seguro Comunal',
+    description: 'Pautas de confianza vecinal: anticipos con tope del 50%, precios claros y acuerdos respetados.',
+  })
 
   const destination = profile
     ? profile.account_type === 'client'
@@ -199,10 +205,10 @@ export default function TratoSeguroPage() {
               aria-selected={rolPestana === 'cliente'}
               onClick={() => setRolPestana('cliente')}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'cliente'
                   ? 'bg-brand-600 text-white shadow-2xs'
-                  : 'text-ink-700 hover:text-ink-900',
+                  : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
               Soy cliente
@@ -212,10 +218,10 @@ export default function TratoSeguroPage() {
               aria-selected={rolPestana === 'emprendedor'}
               onClick={() => setRolPestana('emprendedor')}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer',
+                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'emprendedor'
                   ? 'bg-brand-600 text-white shadow-2xs'
-                  : 'text-ink-700 hover:text-ink-900',
+                  : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
               Ofrezco un servicio

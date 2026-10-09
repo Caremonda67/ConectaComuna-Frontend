@@ -139,6 +139,31 @@ interface Props {
   onPick?: (c: Coordinates) => void
 }
 
+const FALLBACK_TILE_SVG =
+  'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="256" height="256" fill="%23f7f5f0"%3E%3Crect width="256" height="256" fill="%23f7f5f0"/%3E%3Cpath d="M0 128h256M128 0v256" stroke="%23e9e5dc" stroke-width="1" stroke-dasharray="3 3"/%3E%3C/svg%3E'
+
+function TileRetryHandler() {
+  const map = useMap()
+  useEffect(() => {
+    const handleTileError = (e: L.TileErrorEvent) => {
+      const tile = e.tile as HTMLImageElement
+      const retries = Number(tile.dataset.retries || '0')
+      if (retries < 2) {
+        tile.dataset.retries = String(retries + 1)
+        setTimeout(() => {
+          const sep = tile.src.includes('?') ? '&' : '?'
+          tile.src = `${tile.src}${sep}_retry=${Date.now()}`
+        }, 500 * (retries + 1))
+      }
+    }
+    map.on('tileerror', handleTileError)
+    return () => {
+      map.off('tileerror', handleTileError)
+    }
+  }, [map])
+  return null
+}
+
 export default function BusinessMap({
   businesses = [],
   center,
@@ -188,10 +213,12 @@ export default function BusinessMap({
         preferCanvas
       >
         <TileLayer
-          attribution='&copy; colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> colaboradores'
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           maxZoom={19}
+          errorTileUrl={FALLBACK_TILE_SVG}
         />
+        <TileRetryHandler />
         <Recenter lat={center.lat} lng={center.lng} />
         <ResizeHandler />
         {showUser && <Marker position={[center.lat, center.lng]} icon={userIcon} />}

@@ -149,23 +149,35 @@ export async function geocodificar(texto: string): Promise<UbicacionGeocodificad
     return delay(ranked.slice(0, 5))
   }
 
-  // Geocoder abierto de OpenStreetMap, sin API key. Acotado a Cali con `viewbox`
-  // para no traer resultados de otro país con el mismo nombre.
+  // Geocoder abierto de OpenStreetMap, acotado a Cali con `viewbox`.
+  // Incluimos email identificador requerido por la política de uso de Nominatim para clientes web.
   const viewbox = '-76.75,3.30,-76.40,3.55'
   const url =
     'https://nominatim.openstreetmap.org/search' +
-    `?format=json&limit=5&countrycodes=co&viewbox=${viewbox}&bounded=1&q=${encodeURIComponent(q)}`
-  const res = await fetch(url, { headers: { Accept: 'application/json' } })
-  if (!res.ok) {
-    throw new Error('No pudimos geolocalizar esa dirección. Prueba con el nombre de un barrio.')
+    `?format=json&limit=5&countrycodes=co&viewbox=${viewbox}&bounded=1&email=contacto@conectacomuna.co&q=${encodeURIComponent(q)}`
+
+  try {
+    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    if (res.ok) {
+      const data = (await res.json()) as Array<{
+        display_name: string
+        lat: string
+        lon: string
+      }>
+      if (Array.isArray(data) && data.length > 0) {
+        return data.map((r) => ({
+          etiqueta: r.display_name,
+          center: { lat: Number(r.lat), lng: Number(r.lon) },
+        }))
+      }
+    }
+  } catch (err) {
+    // Si la red externa de OSM falla o está bloqueada, hacemos fallback a los barrios locales de Cali
+    console.warn('Geocodificación externa no disponible, usando índice de barrios local:', err)
   }
-  const data = (await res.json()) as Array<{
-    display_name: string
-    lat: string
-    lon: string
-  }>
-  return data.map((r) => ({
-    etiqueta: r.display_name,
-    center: { lat: Number(r.lat), lng: Number(r.lon) },
-  }))
+
+  // Fallback local con barrios de la comuna
+  const low = q.toLowerCase()
+  const fallbackHits = LUGARES_DEMO.filter((l) => l.etiqueta.toLowerCase().includes(low))
+  return fallbackHits.slice(0, 5)
 }

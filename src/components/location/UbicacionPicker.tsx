@@ -118,33 +118,34 @@ export function UbicacionPicker({ value, onChange }: Props) {
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         className={cn(
-          'flex min-h-11 w-full items-center justify-between gap-2 rounded-full border px-4 text-left transition-colors',
+          'group flex min-h-11 w-full items-center justify-between gap-2 rounded-full border px-4 text-left select-none cursor-pointer',
+          'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-[0.99]',
           abierto
-            ? 'border-brand-500 bg-brand-50 text-ink-900'
-            : 'border-ink-300 dark:border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-200 dark:hover:bg-cream-200',
+            ? 'border-brand-500 bg-brand-50 text-ink-900 shadow-xs'
+            : 'border-ink-300 dark:border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200',
         )}
       >
         <span className="flex items-center gap-2 truncate">
-          <MapPin aria-hidden="true" size={17} strokeWidth={1.75} className="shrink-0 text-brand-600" />
+          <MapPin aria-hidden="true" size={17} strokeWidth={1.75} className="shrink-0 text-brand-600 transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-6" />
           <span className="truncate">{value ? value.etiqueta : 'Dónde buscar…'}</span>
         </span>
         <ChevronDown
           aria-hidden="true"
           size={16}
           strokeWidth={2}
-          className={cn('shrink-0 text-ink-400 transition-transform', abierto && 'rotate-180')}
+          className={cn('shrink-0 text-ink-400 transition-transform duration-200', abierto && 'rotate-180')}
         />
       </button>
 
       {abierto && (
-        <div className="mt-2 space-y-3 rounded-[14px] border border-ink-200 bg-white dark:bg-cream-50 p-3 shadow-lg">
+        <div className="mt-2 space-y-3 rounded-[14px] border border-ink-200 bg-white dark:bg-cream-50 p-3 shadow-lg animate-fade-in">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-ink-900">¿Dónde buscamos?</h2>
             <button
               type="button"
               onClick={cerrar}
               aria-label="Cerrar selector de ubicación"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-500 hover:bg-cream-200 cursor-pointer"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-ink-500 hover:text-ink-900 hover:bg-cream-200 hover:rotate-90 active:scale-90 transition-all duration-200 cursor-pointer"
             >
               <X size={18} strokeWidth={2} aria-hidden="true" />
             </button>
@@ -169,9 +170,9 @@ export function UbicacionPicker({ value, onChange }: Props) {
                     onChange({ etiqueta: b.nombre, center: b.center, origen: 'busqueda' })
                     cerrar()
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1 text-xs font-medium text-ink-800 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-cream-200 hover:text-brand-900 active:scale-95 transition-all cursor-pointer shadow-xs"
+                  className="group inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1 text-xs font-medium text-ink-800 hover:border-brand-500 hover:bg-brand-50 dark:hover:bg-cream-200 hover:text-brand-900 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 transition-all duration-150 cursor-pointer shadow-2xs"
                 >
-                  <MapPin size={12} className="text-brand-600 shrink-0" />
+                  <MapPin size={12} className="text-brand-600 shrink-0 transition-transform duration-150 group-hover:scale-115 group-hover:-rotate-12" />
                   {b.nombre}
                 </button>
               ))}

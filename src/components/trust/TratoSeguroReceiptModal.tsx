@@ -1,3 +1,4 @@
+import { motion } from 'motion/react'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -58,7 +59,12 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
       aria-labelledby="receipt-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in print:p-0 print:bg-white"
     >
-      <div className="card w-full max-w-lg max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl print:max-h-none print:shadow-none print:border-none print:m-0">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="card w-full max-w-lg max-h-[90dvh] flex flex-col overflow-hidden shadow-2xl print:max-h-none print:shadow-none print:border-none print:m-0"
+      >
         {/* Cabecera del comprobante */}
         <div className="bg-brand-700 dark:bg-brand-100 px-6 py-4 text-white shrink-0 border-b border-brand-800 dark:border-brand-200 print:bg-white print:text-black print:border-b">
           <div className="flex items-center justify-between">
@@ -162,7 +168,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
             Cerrar
           </Button>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }

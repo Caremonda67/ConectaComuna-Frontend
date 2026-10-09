@@ -31,10 +31,18 @@ export type CategorySlug =
   | 'construccion'
   | 'otros'
 
+export interface CategoryStyle {
+  iconBg: string
+  hoverBorder: string
+  hoverBg: string
+  hoverText: string
+}
+
 export interface Category {
   slug: CategorySlug
   name: string
   icon: LucideIcon
+  style?: CategoryStyle
 }
 
 export interface Profile {

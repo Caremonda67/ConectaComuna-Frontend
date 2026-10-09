@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
@@ -22,6 +23,11 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function LoginPage() {
+  usePageMeta({
+    title: 'Ingresar a mi cuenta · ConectaComuna',
+    description: 'Ingresa a tu cuenta para pedir servicios o administrar tu negocio en la comuna.',
+  })
+
   const { signIn, userId, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -52,11 +58,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm space-y-4">
-      <h1 className="text-2xl font-extrabold">Entrar</h1>
+    <div className="mx-auto max-w-sm space-y-4 animate-fade-in">
+      <h1 className="text-2xl font-extrabold">Ingresar</h1>
       <p className="text-sm text-ink-500">
         Ingresa para pedir servicios o administrar tu negocio.
       </p>
+
+      {fromState && (
+        <div className="card-soft flex items-center gap-2.5 p-3 text-xs font-medium text-ink-800 bg-brand-50/80 border-brand-200 animate-fade-in">
+          <span className="text-base" aria-hidden="true">🔐</span>
+          <p>
+            {fromState.startsWith('/panel')
+              ? 'Para acceder a tu panel y revisar tus pedidos, ingresa con tu cuenta.'
+              : fromState.startsWith('/onboarding')
+                ? 'Para completar tu perfil comunal, primero ingresa con tu cuenta.'
+                : 'Ingresa con tu cuenta para continuar hacia la sección solicitada.'}
+          </p>
+        </div>
+      )}
 
       {isDemoMode && (
         <div className="card-soft p-3 text-sm text-brand-800">
@@ -93,7 +112,7 @@ export default function LoginPage() {
           </p>
         )}
         <Button type="submit" fullWidth loading={isSubmitting}>
-          Entrar
+          Ingresar
         </Button>
       </form>
 

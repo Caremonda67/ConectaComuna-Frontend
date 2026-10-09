@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function TermsPage() {
+  usePageMeta({
+    title: 'Términos y Condiciones · ConectaComuna',
+    description:
+      'Términos y condiciones de uso de la plataforma ConectaComuna para vecinos y emprendedores en Colombia.',
+  })
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 py-2 sm:py-4">
       {/* Cabecera */}

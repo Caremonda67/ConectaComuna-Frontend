@@ -7,9 +7,11 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 export function ProtectedRoute({
   children,
   requireBusiness = false,
+  allowIncompleteProfile = false,
 }: {
   children: ReactNode
   requireBusiness?: boolean
+  allowIncompleteProfile?: boolean
 }) {
   const { loading, userId, profile } = useAuth()
   const location = useLocation()
@@ -19,7 +21,7 @@ export function ProtectedRoute({
 
   // Guardia de Onboarding: Si el usuario no tiene un perfil completo (especialmente el rol),
   // lo redirigimos a completar sus datos antes de entrar al panel.
-  if (!profile || !profile.full_name || !profile.account_type) {
+  if (!allowIncompleteProfile && (!profile || !profile.full_name || !profile.account_type)) {
     return <Navigate to="/onboarding" replace />
   }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { MapPin, KeyRound, Wrench, Scissors, Sparkles, ShoppingBag } from 'lucide-react'
@@ -106,7 +106,17 @@ const NODES: ServiceNode[] = [
 export function HomeHeroIllustration() {
   const prefersReduced = useReducedMotion()
   const [hoveredId, setHoveredId] = useState<string | null>(null)
-  const [burstPing, setBurstPing] = useState(0)
+  const [ripples, setRipples] = useState<Array<{ id: number }>>([])
+  const nextRippleId = useRef(1)
+
+  const handlePinClick = () => {
+    if (prefersReduced) return
+    const id = nextRippleId.current++
+    setRipples((prev) => [...prev.slice(-7), { id }])
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id))
+    }, 2400)
+  }
 
   return (
     <div
@@ -143,31 +153,31 @@ export function HomeHeroIllustration() {
         ))}
       </svg>
 
-      {/* Ondas expansivas de radar continuas, sincronizadas y fluidas */}
+      {/* Ondas expansivas de radar continuas y ondas interactivas del pin */}
       {!prefersReduced && (
         <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
           <div className="animate-radar-wave-1 absolute left-1/2 top-1/2 h-16 w-16 rounded-full border-2 border-brand-400/80 shadow-[0_0_12px_rgba(111,178,87,0.25)]" />
           <div className="animate-radar-wave-2 absolute left-1/2 top-1/2 h-16 w-16 rounded-full border-2 border-brand-400/70 shadow-[0_0_10px_rgba(111,178,87,0.2)]" />
           <div className="animate-radar-wave-3 absolute left-1/2 top-1/2 h-16 w-16 rounded-full border border-brand-400/60 shadow-[0_0_8px_rgba(111,178,87,0.15)]" />
+
+          {/* Ondas expansivas generadas al pulsar el pin: nacen del centro exacto del pin y cubren todo el mapa */}
+          {ripples.map((ripple) => (
+            <span
+              key={ripple.id}
+              className="animate-pulse-ripple absolute left-1/2 top-1/2 h-16 w-16 rounded-full border-2 border-brand-400 dark:border-brand-300 shadow-[0_0_24px_rgba(111,178,87,0.5)]"
+            />
+          ))}
         </div>
       )}
 
-      {/* NODO CENTRAL: Tu ubicación / El centro de la comuna */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center">
-        {/* Onda expansiva de respuesta al tocar el botón central */}
-        {burstPing > 0 && (
-          <span
-            key={burstPing}
-            className="pointer-events-none absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand-500 animate-ping opacity-75"
-            style={{ animationDuration: '0.8s', animationIterationCount: 1 }}
-          />
-        )}
+      {/* NODO CENTRAL: Tu ubicación / El centro de la comuna con alineación perfecta */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
 
         <motion.button
           type="button"
-          onClick={() => setBurstPing((v) => v + 1)}
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.94 }}
+          onClick={handlePinClick}
+          whileHover={{ scale: 1.1, boxShadow: '0 0 24px rgba(111,178,87,0.55)' }}
+          whileTap={{ scale: 0.88, rotate: [0, -5, 5, 0] }}
           animate={
             prefersReduced
               ? {}
@@ -180,32 +190,35 @@ export function HomeHeroIllustration() {
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-brand-500 text-white shadow-md shadow-brand-600/30 border-2 border-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 cursor-pointer"
-          title="Toca para emitir señal de búsqueda en tu comuna"
+          className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-brand-500 text-white shadow-md shadow-brand-600/30 border-2 border-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 cursor-pointer active:scale-90 transition-all duration-150"
+          title="¡Toca para emitir ondas de búsqueda en tu comuna!"
+          aria-label="Toca para emitir ondas de búsqueda en la comuna"
         >
           <MapPin size={28} strokeWidth={2.2} className="drop-shadow-xs" />
-          <span className="sr-only">Tu ubicación en la comuna</span>
+          <span className="sr-only">Tu ubicación en la comuna (toca para generar ondas)</span>
         </motion.button>
 
-        {/* Sombra de apoyo que respira en sincronía */}
-        {!prefersReduced && (
-          <motion.span
-            animate={{
-              scale: [1, 0.8, 1],
-              opacity: [0.3, 0.15, 0.3],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="mt-1 h-1.5 w-7 rounded-full bg-ink-900/30 blur-[1px]"
-          />
-        )}
+        {/* Etiqueta flotante y sombra de apoyo posicionadas debajo del pin sin desplazar su centro */}
+        <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-1 flex flex-col items-center">
+          {!prefersReduced && (
+            <motion.span
+              animate={{
+                scale: [1, 0.8, 1],
+                opacity: [0.3, 0.15, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+              className="mb-1 h-1.5 w-7 rounded-full bg-ink-900/30 blur-[1px]"
+            />
+          )}
 
-        <span className="mt-1 rounded-full bg-white/95 dark:bg-cream-50/95 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-brand-800 dark:text-brand-600 shadow-xs border border-brand-200 dark:border-brand-900/60 whitespace-nowrap">
-          Tu barrio
-        </span>
+          <span className="pointer-events-auto rounded-full bg-white/95 dark:bg-cream-50/95 px-2.5 py-0.5 text-xs font-bold text-brand-800 dark:text-brand-600 shadow-xs border border-brand-200 dark:border-brand-900/60 whitespace-nowrap transition-transform duration-200 hover:scale-105">
+            Tu barrio
+          </span>
+        </div>
       </div>
 
       {/* NODOS DE SERVICIOS ORBITANDO CON ANIMACIÓN */}
@@ -270,7 +283,7 @@ export function HomeHeroIllustration() {
                   y: isHovered ? -2 : 0,
                   scale: isHovered ? 1.04 : 1,
                 }}
-                className={`mt-1.5 rounded-full px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold tracking-tight shadow-2xs border ${node.borderColor} ${node.badgeBg} ${node.badgeText} transition-colors whitespace-nowrap`}
+                className={`mt-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-tight shadow-2xs border ${node.borderColor} ${node.badgeBg} ${node.badgeText} transition-colors whitespace-nowrap`}
               >
                 {node.label}
               </motion.span>
@@ -281,7 +294,7 @@ export function HomeHeroIllustration() {
 
       {/* Sugerencia discreta para interactuar */}
       <div className="absolute bottom-2 left-3 z-0 pointer-events-none hidden sm:block">
-        <span className="text-[10px] font-medium text-ink-400">
+        <span className="text-xs font-medium text-ink-400">
           ✦ Toca cualquier servicio para explorar
         </span>
       </div>

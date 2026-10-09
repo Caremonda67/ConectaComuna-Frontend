@@ -4,6 +4,8 @@ import { MapPin } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
 import { useGeolocation } from '@/hooks/useGeolocation'
+import { usePageMeta } from '@/hooks/usePageMeta'
+import { cn } from '@/lib/utils'
 import { businessService } from '@/services/businessService'
 import { CATEGORIES } from '@/data/categories'
 import { BusinessCard } from '@/components/business/BusinessCard'
@@ -14,6 +16,12 @@ import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
 import { DEFAULT_RADIUS_KM } from '@/lib/env'
 
 export default function HomePage() {
+  usePageMeta({
+    title: 'ConectaComuna · Oficios y servicios de tu comuna en Cali',
+    description:
+      'Directorio comunitario de micro-emprendedores, talleres y servicios locales en Cali. Conecta de vecino a vecino de forma rápida y segura.',
+  })
+
   const { profile } = useAuth()
   const { position, status, request } = useGeolocation()
 
@@ -103,15 +111,29 @@ export default function HomePage() {
             <li key={c.slug}>
               <Link
                 to={`/explorar?categoria=${c.slug}`}
-                className="group card flex min-h-28 flex-col items-center justify-center gap-2 p-3 text-center transition-all duration-200 hover:border-brand-300 hover:bg-brand-50 hover:-translate-y-0.5 hover:shadow-xs active:scale-95"
+                className={cn(
+                  'group card flex min-h-28 flex-col items-center justify-center gap-2 p-3 text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs active:scale-95',
+                  c.style?.hoverBorder ?? 'hover:border-brand-300',
+                  c.style?.hoverBg ?? 'hover:bg-brand-50',
+                )}
               >
                 <span
                   aria-hidden="true"
-                  className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-100 text-brand-700 transition-all duration-200 group-hover:scale-115 group-hover:bg-brand-500 group-hover:text-white group-hover:rotate-6"
+                  className={cn(
+                    'flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200 group-hover:scale-115 group-hover:rotate-6',
+                    c.style?.iconBg ?? 'bg-brand-100 text-brand-700 group-hover:bg-brand-500 group-hover:text-white',
+                  )}
                 >
                   <c.icon size={20} strokeWidth={1.8} />
                 </span>
-                <span className="text-xs font-semibold text-ink-700 group-hover:text-brand-900">{c.name}</span>
+                <span
+                  className={cn(
+                    'text-xs font-semibold text-ink-700 transition-colors',
+                    c.style?.hoverText ?? 'group-hover:text-brand-900',
+                  )}
+                >
+                  {c.name}
+                </span>
               </Link>
             </li>
           ))}

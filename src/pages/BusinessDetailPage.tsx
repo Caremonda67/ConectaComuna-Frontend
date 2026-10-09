@@ -20,6 +20,8 @@ import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
 import { BusinessShareModal } from '@/components/business/BusinessShareModal'
+import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import type { Order, ServiceCatalogItem } from '@/types'
 
 export default function BusinessDetailPage() {
@@ -35,13 +37,22 @@ export default function BusinessDetailPage() {
   const [solicitudExitosa, setSolicitudExitosa] = useState<Order | null>(null)
   const [comprobanteModalOrder, setComprobanteModalOrder] = useState<Order | null>(null)
   const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const rutaNegocio = `/negocio/${id}`
 
   const { data: business, loading, error, reload } = useAsync(
     () => businessService.getById(id),
     [id],
   )
-  const motivoContacto = `Para contactar a ${business?.name ?? 'este emprendedor'}, necesitas iniciar sesión.`
+
+  usePageMeta({
+    title: business ? `${business.name} · ${categoryLabel(business.category)} en ${business.neighborhood || 'Cali'}` : 'Detalle de oficio',
+    description: business?.description || 'Consulta los servicios, tarifas y contacto de este emprendedor en ConectaComuna.',
+    image: business?.photos?.[0],
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  })
+
+  const motivoContacto = `Para contactar a ${business?.name ?? 'este emprendedor'}, necesitas ingresar a tu cuenta.`
   const { data: reviews } = useAsync(() => businessService.listReviews(id), [id])
 
   if (loading) return <CardSkeletonList count={2} />
@@ -193,36 +204,36 @@ export default function BusinessDetailPage() {
         )}
 
         {business.wholesale_enabled && (
-          <div className="mt-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 text-xs text-indigo-950 dark:text-indigo-200">
+          <div className="mt-3.5 rounded-xl border border-brand-200 dark:border-brand-400/35 bg-brand-50/80 dark:bg-[#18281d] p-3.5 text-xs text-brand-950 dark:text-ink-100 shadow-2xs">
             <div className="flex items-start gap-2.5">
-              <UI_ICONS.package size={20} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
-              <div className="space-y-1 flex-1">
+              <UI_ICONS.package size={20} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
+              <div className="space-y-1.5 flex-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-indigo-900 dark:text-indigo-200">
+                  <span className="font-bold text-sm text-brand-900 dark:text-[#b4f5bf]">
                     Venta al por mayor y distribuidores
                   </span>
                   {business.wholesale_min_order && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-medium text-[11px]">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-100 dark:bg-[#24422e] text-brand-800 dark:text-[#b4f5bf] font-semibold text-[11px] border border-transparent dark:border-[#386546]">
                       Pedido mín: {business.wholesale_min_order}
                     </span>
                   )}
                 </div>
                 {business.wholesale_terms ? (
-                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                  <p className="text-brand-800 dark:text-[#e8efe9] text-xs leading-relaxed">
                     {business.wholesale_terms}
                   </p>
                 ) : (
-                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                  <p className="text-brand-800 dark:text-[#e8efe9] text-xs leading-relaxed">
                     Este emprendimiento ofrece precios especiales para tiendas, distribuidores y compras por volumen.
                   </p>
                 )}
                 {business.whatsapp && !isOwner && (
-                  <div className="pt-1.5">
+                  <div className="pt-1">
                     <a
                       href={getWholesaleWhatsAppUrl()}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-semibold text-xs text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 hover:underline"
+                      className="inline-flex items-center gap-1.5 font-semibold text-xs text-brand-700 dark:text-[#78de8b] hover:text-brand-900 dark:hover:text-white hover:underline"
                     >
                       <UI_ICONS.whatsapp size={14} className="text-[#25D366]" />
                       Consultar precios mayoristas por WhatsApp
@@ -290,9 +301,12 @@ export default function BusinessDetailPage() {
               <button
                 type="button"
                 onClick={handleWhatsApp}
-                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
+                className={cn(
+                  "group flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#20bd5a] hover:shadow-md hover:shadow-[#25D366]/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer",
+                  !business.phone && "sm:col-span-2"
+                )}
               >
-                <UI_ICONS.whatsapp size={18} />
+                <UI_ICONS.whatsapp size={18} className="transition-transform duration-200 group-hover:scale-115 group-hover:-rotate-6" />
                 Contactar por WhatsApp
               </button>
             )}
@@ -303,7 +317,7 @@ export default function BusinessDetailPage() {
                 variant="secondary"
                 onClick={handleCall}
                 fullWidth
-                className="min-h-12"
+                className={cn("min-h-12", !business.whatsapp && "sm:col-span-2")}
               >
                 <UI_ICONS.phone size={18} />
                 Llamar directo
@@ -376,9 +390,9 @@ export default function BusinessDetailPage() {
                 }
                 setReportModalOpen(true)
               }}
-              className="inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-rose-700 transition-colors cursor-pointer"
+              className="group inline-flex items-center gap-1.5 text-xs text-ink-500 hover:text-rose-700 transition-colors cursor-pointer active:scale-95"
             >
-              <UI_ICONS.flag size={13} className="shrink-0" />
+              <UI_ICONS.flag size={13} className="shrink-0 transition-transform duration-150 group-hover:scale-115 group-hover:-rotate-12" />
               Reportar irregularidad o posible fraude
             </button>
           </div>
@@ -501,10 +515,10 @@ export default function BusinessDetailPage() {
                   <button
                     type="button"
                     onClick={() => handleSelectService(item)}
-                    className="self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline pt-1 cursor-pointer"
+                    className="group self-start inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-800 pt-1 cursor-pointer active:scale-95 transition-transform"
                   >
-                    <span>Pedir este trabajo</span>
-                    <span aria-hidden="true">&rarr;</span>
+                    <span className="hover:underline">Pedir este trabajo</span>
+                    <span aria-hidden="true" className="transition-transform duration-150 group-hover:translate-x-1">&rarr;</span>
                   </button>
                 )}
               </div>
@@ -515,19 +529,36 @@ export default function BusinessDetailPage() {
 
       {business.photos.length > 0 && (
         <section aria-labelledby="portafolio">
-          <h2 id="portafolio" className="mb-2 text-lg font-bold">
-            Portafolio
-          </h2>
-          <ul className="grid grid-cols-3 gap-2">
-            {business.photos.map((src) => (
+          <div className="mb-2.5 flex items-center justify-between">
+            <h2 id="portafolio" className="text-lg font-bold">
+              Portafolio
+            </h2>
+            <span className="text-xs text-ink-500 font-medium">
+              Toca para ampliar y hacer zoom
+            </span>
+          </div>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {business.photos.map((src, idx) => (
               <li key={src}>
-                <img
-                  src={src}
-                  alt={`Trabajo de ${business.name}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="aspect-square w-full rounded-xl object-cover"
-                />
+                <button
+                  type="button"
+                  onClick={() => setLightboxIndex(idx)}
+                  className="group relative aspect-square w-full overflow-hidden rounded-xl bg-ink-100 dark:bg-ink-800 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer block border border-ink-200/60 dark:border-ink-700/40 shadow-2xs hover:shadow-md transition-shadow"
+                  aria-label={`Ver foto ${idx + 1} de ${business.name} en tamaño completo`}
+                >
+                  <img
+                    src={src}
+                    alt={`Trabajo de ${business.name}`}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-108"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-black/65 text-white rounded-full p-2.5 shadow-lg transform scale-75 group-hover:scale-100">
+                      <UI_ICONS.zoomIn size={18} />
+                    </span>
+                  </div>
+                </button>
               </li>
             ))}
           </ul>
@@ -601,6 +632,17 @@ export default function BusinessDetailPage() {
         <p className="rounded-xl bg-brand-50 p-3 text-sm text-brand-700">
           Estás contratando como cliente. Tu negocio no se ve afectado.
         </p>
+      )}
+
+      {business.photos.length > 0 && lightboxIndex !== null && (
+        <ImageLightboxModal
+          key={lightboxIndex}
+          images={business.photos}
+          initialIndex={lightboxIndex}
+          open={lightboxIndex !== null}
+          onClose={() => setLightboxIndex(null)}
+          title={business.name}
+        />
       )}
     </div>
   )
@@ -717,13 +759,14 @@ function RequestForm({
             type="button"
             onClick={() => setServiceLocationType('workshop')}
             className={cn(
-              'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
+              'group flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs select-none cursor-pointer',
+              'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95',
               serviceLocationType === 'workshop'
-                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold'
-                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
+                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold ring-1 ring-brand-400/50 shadow-xs'
+                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
-            <UI_ICONS.tools size={18} className="mb-1 text-brand-600" />
+            <UI_ICONS.tools size={18} className="mb-1 text-brand-600 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6" />
             <span>En taller / local</span>
             <span className="text-[10px] text-ink-500 font-normal">Llevas o recoges allí</span>
           </button>
@@ -732,13 +775,14 @@ function RequestForm({
             type="button"
             onClick={() => setServiceLocationType('home_delivery')}
             className={cn(
-              'flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs transition-colors cursor-pointer',
+              'group flex flex-col items-center justify-center p-3 rounded-xl border text-center text-xs select-none cursor-pointer',
+              'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95',
               serviceLocationType === 'home_delivery'
-                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold'
-                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
+                ? 'border-brand-500 bg-brand-50 text-brand-900 font-semibold ring-1 ring-brand-400/50 shadow-xs'
+                : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200',
             )}
           >
-            <UI_ICONS.map size={18} className="mb-1 text-brand-600" />
+            <UI_ICONS.map size={18} className="mb-1 text-brand-600 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6" />
             <span>A domicilio</span>
             <span className="text-[10px] text-ink-500 font-normal">En tu casa o dirección</span>
           </button>
@@ -790,7 +834,7 @@ function RequestForm({
                   type="button"
                   onClick={() => removePhoto(i)}
                   aria-label={`Quitar foto ${i + 1}`}
-                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white text-xs leading-none shadow-sm hover:bg-rose-700 transition-colors cursor-pointer"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-600 text-white text-xs leading-none shadow-sm hover:bg-rose-700 hover:scale-110 active:scale-90 transition-all duration-150 cursor-pointer"
                 >
                   ×
                 </button>

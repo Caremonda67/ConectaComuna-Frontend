@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { orderService } from '@/services/orderService'
 import { OrderCard } from '@/components/orders/OrderCard'
@@ -17,6 +18,11 @@ import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 
 /** Panel del cliente: historial y seguimiento de sus solicitudes. */
 export default function ClientDashboard() {
+  usePageMeta({
+    title: 'Mis Solicitudes · ConectaComuna',
+    description: 'Historial y seguimiento de tus solicitudes y servicios contratados.',
+  })
+
   const navigate = useNavigate()
   const { userId, profile, refresh, isDual, setActiveRole } = useAuth()
   const { data, loading, error, reload } = useAsync(
@@ -127,10 +133,10 @@ export default function ClientDashboard() {
                   type="button"
                   onClick={detectarBarrio}
                   disabled={detectando}
-                  className="flex items-center text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 disabled:opacity-50"
+                  className="group inline-flex items-center text-xs font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 disabled:opacity-50 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
                 >
                   {detectando ? '⏳ Detectando...' : (
-                    <><UI_ICONS.map size={14} className="mr-1" /> Usar GPS</>
+                    <><UI_ICONS.map size={14} className="mr-1 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-6" /> Usar GPS</>
                   )}
                 </button>
               </div>

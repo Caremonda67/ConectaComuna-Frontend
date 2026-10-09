@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { BARRIOS_COMUNA } from '@/services/direccionService'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +31,12 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function RegisterPage() {
+  usePageMeta({
+    title: 'Crear cuenta · ConectaComuna',
+    description:
+      'Regístrate como vecino para contratar oficios, o como emprendedor para dar a conocer tu taller o negocio en la comuna.',
+  })
+
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -149,13 +156,13 @@ export default function RegisterPage() {
             type="button"
             onClick={handleGetLocation}
             disabled={loadingLocation}
-            className="flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50"
+            className="group inline-flex items-center text-sm font-medium text-brand-600 hover:text-brand-700 disabled:opacity-50 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
           >
             {loadingLocation ? (
               <span className="mr-2 animate-pulse">⏳ Obteniendo ubicación...</span>
             ) : (
               <>
-                <UI_ICONS.map size={16} className="mr-1" />
+                <UI_ICONS.map size={16} className="mr-1.5 transition-transform duration-200 group-hover:scale-115 group-hover:rotate-6" />
                 Usar mi ubicación actual
               </>
             )}
@@ -171,7 +178,7 @@ export default function RegisterPage() {
                     setValue('neighborhood', b.nombre)
                     setServerError(null)
                   }}
-                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 active:scale-95 transition-transform"
+                  className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700 hover:bg-brand-100 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 transition-all duration-150 cursor-pointer"
                 >
                   📍 {b.nombre}
                 </button>
@@ -190,6 +197,7 @@ export default function RegisterPage() {
           <label className="flex items-start gap-2.5 text-xs text-ink-700 cursor-pointer select-none">
             <input
               type="checkbox"
+              aria-invalid={errors.termsAccepted ? 'true' : undefined}
               {...register('termsAccepted')}
               className="mt-0.5 rounded border-ink-300 text-brand-600 focus:ring-brand-500 shrink-0"
             />
@@ -229,7 +237,7 @@ export default function RegisterPage() {
           state={fromState ? { from: fromState } : undefined}
           className="font-semibold text-brand-700 underline"
         >
-          Entrar
+          Ingresar
         </Link>
       </p>
     </div>
