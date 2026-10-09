@@ -70,7 +70,7 @@ export default function PrivacyPage() {
               <a
                 href="https://wa.me/573001234567?text=Hola,%20tengo%20una%20consulta%20sobre%20mis%20datos%20en%20ConectaComuna"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="text-brand-700 font-semibold underline"
               >
                 +57 300 123 4567

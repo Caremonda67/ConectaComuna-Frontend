@@ -23,6 +23,7 @@ function applySort(list: BusinessWithDistance[], sort: BusinessFilters['sort']) 
 }
 
 export function overlayLocalTrust<T extends Business>(b: T): T {
+  if (!isDemoMode) return b
   try {
     const raw = localStorage.getItem(`cc_verif_${b.id}`)
     if (raw) {

@@ -598,11 +598,11 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         <p>
           Al guardar este negocio, autorizas que el nombre del oficio, fotos y número de WhatsApp se
           muestren públicamente en el directorio conforme a nuestra{' '}
-          <Link to="/privacidad" target="_blank" className="text-brand-700 underline font-medium">
+          <Link to="/privacidad" target="_blank" rel="noopener noreferrer" className="text-brand-700 underline font-medium">
             Política de Privacidad
           </Link>{' '}
           y los{' '}
-          <Link to="/terminos" target="_blank" className="text-brand-700 underline font-medium">
+          <Link to="/terminos" target="_blank" rel="noopener noreferrer" className="text-brand-700 underline font-medium">
             Términos de Uso
           </Link>
           . Tu dirección residencial exacta nunca se expone en mapas públicos.
