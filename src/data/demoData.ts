@@ -219,6 +219,37 @@ export const demoBusinesses: Business[] = [
     is_active: true,
     created_at: '2025-03-12T10:00:00Z',
   },
+  {
+    id: 'biz-7',
+    owner_id: 'user-barber',
+    name: 'Suanfer Barber Studio',
+    description:
+      'Servicio de barbería y peluquería con servicios orientados a la apariencia masculina. Cortes clásicos, degradados y perfilado de barba.',
+    category: 'belleza',
+    phone: '3157778899',
+    whatsapp: '3157778899',
+    address: 'Carrera 40C #49-57',
+    neighborhood: 'Vallado',
+    lat: 3.414,
+    lng: -76.505,
+    photos: [
+      'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=60',
+      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=600&q=60',
+      'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=600&q=60',
+    ],
+    hours: defaultHours(),
+    rating_avg: 4.7,
+    rating_count: 19,
+    completed_orders: 28,
+    verification_status: 'unverified',
+    is_active: true,
+    services_catalog: [
+      { id: 'srv-barber-1', name: 'Corte clásico o degradado', price: 18000, description: 'Corte con tijera y máquina' },
+      { id: 'srv-barber-2', name: 'Perfilado de barba', price: 12000, description: 'Arreglo con toalla caliente y navaja' },
+      { id: 'srv-barber-3', name: 'Combo Corte + Barba', price: 26000, description: 'Servicio completo de barbería' },
+    ],
+    created_at: '2025-05-10T10:00:00Z',
+  },
 ]
 
 export const demoOrders: Order[] = [

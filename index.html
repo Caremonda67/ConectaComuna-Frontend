@@ -9,11 +9,31 @@
     <meta name="theme-color" content="#0a6450" />
     <meta
       name="description"
-      content="ConectaComuna: encuentra costura, manicure, cerrajeria, ropa y mas oficios de tu comuna en Cali."
+      content="ConectaComuna: encuentra costura, manicure, cerrajería, ropa y más oficios de tu comuna en Cali con Trato Seguro Comunal."
     />
-    <!-- Precalentamos la conexion a los tiles de OpenStreetMap: ahorra el
-         handshake TLS cuando el usuario abre el mapa en redes lentas. -->
-    <link rel="preconnect" href="https://a.tile.openstreetmap.org" crossorigin />
+    <!-- Open Graph para WhatsApp, Facebook y enlaces compartidos -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ConectaComuna" />
+    <meta property="og:title" content="ConectaComuna | Oficios de tu comuna en Cali" />
+    <meta
+      property="og:description"
+      content="Directorio barrial de oficios y servicios en Cali. Costura, belleza, cerrajería, reparaciones y más con Trato Seguro Comunal."
+    />
+    <meta property="og:image" content="/brand/app-icon.png" />
+    <meta property="og:locale" content="es_CO" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="ConectaComuna | Oficios de tu comuna en Cali" />
+    <meta
+      name="twitter:description"
+      content="Directorio barrial de oficios y servicios en Cali. Encuentra micro-emprendedores locales con Trato Seguro Comunal."
+    />
+    <meta name="twitter:image" content="/brand/app-icon.png" />
+
+    <!-- Precalentamos conexion a los tiles CDN de mapas -->
+    <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin />
+    <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin />
     <title>ConectaComuna | Oficios de tu comuna</title>
     <script>
       (function () {

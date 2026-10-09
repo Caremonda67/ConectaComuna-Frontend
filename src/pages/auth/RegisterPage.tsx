@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { BARRIOS_COMUNA } from '@/services/direccionService'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +31,12 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function RegisterPage() {
+  usePageMeta({
+    title: 'Crear cuenta · ConectaComuna',
+    description:
+      'Regístrate como vecino para contratar oficios, o como emprendedor para dar a conocer tu taller o negocio en la comuna.',
+  })
+
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -229,7 +236,7 @@ export default function RegisterPage() {
           state={fromState ? { from: fromState } : undefined}
           className="font-semibold text-brand-700 underline"
         >
-          Entrar
+          Ingresar
         </Link>
       </p>
     </div>

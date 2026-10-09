@@ -1,7 +1,14 @@
 import { Link } from 'react-router-dom'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function PrivacyPage() {
+  usePageMeta({
+    title: 'Política de Privacidad · ConectaComuna',
+    description:
+      'Política de privacidad y protección de datos personales de ConectaComuna conforme a la Ley 1581 de 2012 de Habeas Data.',
+  })
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 py-2 sm:py-4">
       {/* Cabecera */}

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useAsync } from '@/hooks/useAsync'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { businessService } from '@/services/businessService'
 import { LazyMap } from '@/components/map/LazyMap'
 import { BusinessCard } from '@/components/business/BusinessCard'
@@ -13,6 +14,12 @@ import type { CategorySlug } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 
 export default function MapPage() {
+  usePageMeta({
+    title: 'Mapa Comunal de Oficios · ConectaComuna',
+    description:
+      'Ubica en el mapa talleres, locales y oficios comunitarios cerca de tu barrio en Cali.',
+  })
+
   const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
   const [category, setCategory] = useState<CategorySlug | 'all'>('all')
   const [radiusKm, setRadiusKm] = useState(5)

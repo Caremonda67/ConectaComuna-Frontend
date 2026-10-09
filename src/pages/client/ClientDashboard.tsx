@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { orderService } from '@/services/orderService'
 import { OrderCard } from '@/components/orders/OrderCard'
@@ -17,6 +18,11 @@ import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 
 /** Panel del cliente: historial y seguimiento de sus solicitudes. */
 export default function ClientDashboard() {
+  usePageMeta({
+    title: 'Mis Solicitudes · ConectaComuna',
+    description: 'Historial y seguimiento de tus solicitudes y servicios contratados.',
+  })
+
   const navigate = useNavigate()
   const { userId, profile, refresh, isDual, setActiveRole } = useAuth()
   const { data, loading, error, reload } = useAsync(

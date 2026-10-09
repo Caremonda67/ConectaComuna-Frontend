@@ -20,6 +20,7 @@ import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
 import { BusinessShareModal } from '@/components/business/BusinessShareModal'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import type { Order, ServiceCatalogItem } from '@/types'
 
 export default function BusinessDetailPage() {
@@ -41,7 +42,15 @@ export default function BusinessDetailPage() {
     () => businessService.getById(id),
     [id],
   )
-  const motivoContacto = `Para contactar a ${business?.name ?? 'este emprendedor'}, necesitas iniciar sesión.`
+
+  usePageMeta({
+    title: business ? `${business.name} · ${categoryLabel(business.category)} en ${business.neighborhood || 'Cali'}` : 'Detalle de oficio',
+    description: business?.description || 'Consulta los servicios, tarifas y contacto de este emprendedor en ConectaComuna.',
+    image: business?.photos?.[0],
+    url: typeof window !== 'undefined' ? window.location.href : undefined,
+  })
+
+  const motivoContacto = `Para contactar a ${business?.name ?? 'este emprendedor'}, necesitas ingresar a tu cuenta.`
   const { data: reviews } = useAsync(() => businessService.listReviews(id), [id])
 
   if (loading) return <CardSkeletonList count={2} />
@@ -193,26 +202,26 @@ export default function BusinessDetailPage() {
         )}
 
         {business.wholesale_enabled && (
-          <div className="mt-3.5 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/70 dark:bg-indigo-950/40 p-3.5 text-xs text-indigo-950 dark:text-indigo-200">
+          <div className="mt-3.5 rounded-xl border border-brand-200 dark:border-brand-800/60 bg-brand-50/70 dark:bg-brand-950/40 p-3.5 text-xs text-brand-950 dark:text-brand-200">
             <div className="flex items-start gap-2.5">
-              <UI_ICONS.package size={20} className="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
+              <UI_ICONS.package size={20} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="font-bold text-sm text-indigo-900 dark:text-indigo-200">
+                  <span className="font-bold text-sm text-brand-900 dark:text-brand-200">
                     Venta al por mayor y distribuidores
                   </span>
                   {business.wholesale_min_order && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-medium text-[11px]">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-100 dark:bg-brand-900/60 text-brand-800 dark:text-brand-300 font-medium text-[11px]">
                       Pedido mín: {business.wholesale_min_order}
                     </span>
                   )}
                 </div>
                 {business.wholesale_terms ? (
-                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                  <p className="text-brand-800 dark:text-brand-300 text-xs">
                     {business.wholesale_terms}
                   </p>
                 ) : (
-                  <p className="text-indigo-800 dark:text-indigo-300 text-xs">
+                  <p className="text-brand-800 dark:text-brand-300 text-xs">
                     Este emprendimiento ofrece precios especiales para tiendas, distribuidores y compras por volumen.
                   </p>
                 )}
@@ -222,7 +231,7 @@ export default function BusinessDetailPage() {
                       href={getWholesaleWhatsAppUrl()}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-semibold text-xs text-indigo-700 dark:text-indigo-300 hover:text-indigo-900 dark:hover:text-indigo-100 hover:underline"
+                      className="inline-flex items-center gap-1.5 font-semibold text-xs text-brand-700 dark:text-brand-300 hover:text-brand-900 dark:hover:text-brand-100 hover:underline"
                     >
                       <UI_ICONS.whatsapp size={14} className="text-[#25D366]" />
                       Consultar precios mayoristas por WhatsApp

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 
@@ -28,6 +29,12 @@ const steps = [
 
 /** Bloque 7 del diseño: explicación del flujo en cuatro pasos. */
 export default function HowItWorksPage() {
+  usePageMeta({
+    title: 'Cómo Funciona · ConectaComuna',
+    description:
+      'Aprende cómo funciona ConectaComuna: busca servicios locales, contacta de forma directa y respalda tus acuerdos vecinales.',
+  })
+
   const { profile } = useAuth()
 
   const destination = profile

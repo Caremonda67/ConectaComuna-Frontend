@@ -20,7 +20,8 @@ export function distanceKm(a: Coordinates, b: Coordinates): number {
 }
 
 export function formatDistance(km: number | null): string {
-  if (km == null) return 'Distancia no disponible'
+  if (km == null) return 'Ubicación por confirmar'
+  if (km < 0.05) return 'En el sector'
   if (km < 1) return `${Math.round(km * 1000)} m`
   return `${km.toFixed(1)} km`
 }
@@ -222,8 +223,32 @@ export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
   const currentDay = now.getDay() // 0 = Dom, 1 = Lun ... 6 = Sáb
   const today = hours.find((h) => h.day === currentDay)
 
+  // Determinar el próximo día y hora de apertura para informar al usuario de noche o fines de semana
+  let nextOpenDay: BusinessHours | undefined
+  let daysAhead = 0
+
+  for (let i = 1; i <= 7; i++) {
+    const nextDayIndex = (currentDay + i) % 7
+    const candidate = hours.find((h) => h.day === nextDayIndex)
+    if (candidate && !candidate.closed && candidate.opens) {
+      nextOpenDay = candidate
+      daysAhead = i
+      break
+    }
+  }
+
+  const proximaApertura = nextOpenDay
+    ? daysAhead === 1
+      ? `Abre mañana a las ${nextOpenDay.opens}`
+      : `Abre el ${DAY_NAMES[nextOpenDay.day]} a las ${nextOpenDay.opens}`
+    : 'Cerrado por hoy'
+
   if (!today || today.closed || !today.opens || !today.closes) {
-    return { isOpen: false, label: 'Cerrado hoy' }
+    return {
+      isOpen: false,
+      label: proximaApertura,
+      detail: proximaApertura,
+    }
   }
 
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
@@ -243,14 +268,15 @@ export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
   if (currentMinutes < openMinutes) {
     return {
       isOpen: false,
-      label: 'Cerrado ahora',
+      label: `Abre hoy a las ${today.opens}`,
       detail: `Abre hoy a las ${today.opens}`,
     }
   }
 
   return {
     isOpen: false,
-    label: 'Cerrado por hoy',
+    label: proximaApertura,
+    detail: proximaApertura,
   }
 }
 

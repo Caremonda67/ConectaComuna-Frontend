@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { businessService } from '@/services/businessService'
 import { facilitadorService } from '@/services/facilitadorService'
 import { LazyMap } from '@/components/map/LazyMap'
@@ -51,6 +52,11 @@ interface FormProps {
 }
 
 export default function BusinessProfileEditor() {
+  usePageMeta({
+    title: 'Editar Perfil de Oficio · ConectaComuna',
+    description: 'Edita la información, ubicación, horarios y catálogo de tu negocio u oficio.',
+  })
+
   const { userId, business, profile, refresh } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()

@@ -58,7 +58,10 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
           <span className="flex items-center gap-1 truncate text-ink-500">
             <MapPin aria-hidden="true" size={13} strokeWidth={1.75} className="shrink-0" />
             {business.neighborhood}
-            {business.distanceKm != null && ` · ${formatDistance(business.distanceKm)}`}
+            {business.distanceKm != null &&
+              (Math.abs(business.lat - 3.4372) < 0.0001 && Math.abs(business.lng - (-76.5225)) < 0.0001
+                ? ' · Ubicación por confirmar'
+                : ` · ${formatDistance(business.distanceKm)}`)}
           </span>
         )}
         {business.hours && business.hours.length > 0 && (

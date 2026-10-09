@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { facilitadorService } from '@/services/facilitadorService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
@@ -9,6 +10,12 @@ import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
 
 export default function FacilitatorDashboard() {
+  usePageMeta({
+    title: 'Panel de Facilitador Comunitario · ConectaComuna',
+    description:
+      'Acompañamiento y apadrinamiento para micro-emprendedores con baja experiencia digital.',
+  })
+
   const { userId, profile, email, refresh } = useAuth()
   const navigate = useNavigate()
   const [vinculaciones, setVinculaciones] = useState<Array<{ vinculacion: FacilitadorNegocio, negocio: Business }>>([])

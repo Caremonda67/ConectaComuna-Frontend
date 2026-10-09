@@ -10,6 +10,7 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
 /**
@@ -17,6 +18,11 @@ import type { BusinessFilters, CategorySlug } from '@/types'
  * por WhatsApp y sobrevive al botón "atrás" del celular.
  */
 export default function ExplorePage() {
+  usePageMeta({
+    title: 'Explorar oficios en la comuna',
+    description: 'Directorio barrial de oficios y servicios en Cali. Filtra por categoría, ubicación y disponibilidad.',
+  })
+
   const [params, setParams] = useSearchParams()
   const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
 
@@ -97,12 +103,36 @@ export default function ExplorePage() {
       {error && <ErrorState message={error} onRetry={reload} />}
       {!loading && !error && (data?.length ?? 0) === 0 && (
         <EmptyState
-          title="No encontramos negocios con esos filtros"
-          description="Prueba ampliando el radio o quitando la categoría."
+          title={
+            filters.openNow
+              ? 'No hay negocios abiertos en este momento'
+              : 'No encontramos negocios con esos filtros'
+          }
+          description={
+            filters.openNow
+              ? 'En este horario los talleres se encuentran cerrados. Desactiva «Solo abiertos ahora» para ver todos los oficios disponibles y coordinar por WhatsApp.'
+              : filters.wholesaleOnly
+                ? 'No encontramos opciones con venta al por mayor para esta combinación. Desactiva el filtro mayorista o prueba en otra categoría.'
+                : filters.query
+                  ? `No hubo coincidencias para «${filters.query}». Revisa la ortografía o limpia los filtros de búsqueda.`
+                  : 'Prueba ampliando el radio de búsqueda o cambiando la categoría seleccionada.'
+          }
           action={
-            <Button variant="secondary" onClick={() => setParams(new URLSearchParams())}>
-              Limpiar filtros
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {filters.openNow && (
+                <Button variant="primary" onClick={() => onChange({ openNow: false })}>
+                  Ver todos los negocios
+                </Button>
+              )}
+              {filters.wholesaleOnly && (
+                <Button variant="primary" onClick={() => onChange({ wholesaleOnly: false })}>
+                  Quitar filtro mayorista
+                </Button>
+              )}
+              <Button variant="secondary" onClick={() => setParams(new URLSearchParams())}>
+                Limpiar filtros
+              </Button>
+            </div>
           }
         />
       )}

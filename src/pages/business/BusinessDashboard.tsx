@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
 import { orderService } from '@/services/orderService'
 import { facilitadorService } from '@/services/facilitadorService'
@@ -17,6 +18,11 @@ import { UI_ICONS } from '@/components/ui/icons'
 
 /** Panel del negocio: pedidos recibidos, reputación y perfil asistido. */
 export default function BusinessDashboard() {
+  usePageMeta({
+    title: 'Panel de Negocio · ConectaComuna',
+    description: 'Administra tus solicitudes, servicios y catálogo de oficio.',
+  })
+
   const { business } = useAuth()
   const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
   const [generandoCodigo, setGenerandoCodigo] = useState(false)

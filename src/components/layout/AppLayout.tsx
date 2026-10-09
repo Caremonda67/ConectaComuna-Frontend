@@ -245,8 +245,7 @@ export function AppLayout() {
                   to="/entrar"
                   className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 hover:bg-cream-200 transition-colors"
                 >
-                  <span className="sm:hidden">Entrar</span>
-                  <span className="hidden sm:inline">Iniciar sesión</span>
+                  <span>Ingresar</span>
                 </NavLink>
                 <NavLink
                   to="/registro"

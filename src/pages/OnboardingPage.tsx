@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { profileService } from '@/services/profileService'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { BARRIOS_COMUNA } from '@/services/direccionService'
@@ -10,6 +11,11 @@ import { UI_ICONS } from '@/components/ui/icons'
 import type { AccountType } from '@/types'
 
 export default function OnboardingPage() {
+  usePageMeta({
+    title: 'Completa tu perfil · ConectaComuna',
+    description: 'Completa tus datos para empezar a usar ConectaComuna en tu barrio.',
+  })
+
   const navigate = useNavigate()
   const { userId, profile, refresh } = useAuth()
   const [submitting, setSubmitting] = useState(false)

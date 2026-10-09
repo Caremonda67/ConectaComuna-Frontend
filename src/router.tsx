@@ -3,9 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
-import { EmptyState } from '@/components/ui/States'
 import HomePage from '@/pages/HomePage'
-import { UI_ICONS } from '@/components/ui/icons'
 
 // Code splitting por ruta: el primer render solo baja Home + layout.
 const ExplorePage = lazy(() => import('@/pages/ExplorePage'))
@@ -21,6 +19,7 @@ const TratoSeguroPage = lazy(() => import('@/pages/TratoSeguroPage'))
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
+const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<CardSkeletonList count={3} />}>{children}</Suspense>
@@ -148,11 +147,9 @@ const router = createBrowserRouter([
       {
         path: '*',
         element: (
-          <EmptyState
-            icon={UI_ICONS.compass}
-            title="No encontramos esa página"
-            description="Revisa el enlace o vuelve al inicio."
-          />
+          <Lazy>
+            <NotFoundPage />
+          </Lazy>
         ),
       },
     ],

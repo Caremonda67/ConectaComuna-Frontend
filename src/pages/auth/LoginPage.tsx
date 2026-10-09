@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { usePageMeta } from '@/hooks/usePageMeta'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
@@ -22,6 +23,11 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 
 export default function LoginPage() {
+  usePageMeta({
+    title: 'Ingresar a mi cuenta · ConectaComuna',
+    description: 'Ingresa a tu cuenta para pedir servicios o administrar tu negocio en la comuna.',
+  })
+
   const { signIn, userId, loading } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -53,7 +59,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm space-y-4">
-      <h1 className="text-2xl font-extrabold">Entrar</h1>
+      <h1 className="text-2xl font-extrabold">Ingresar</h1>
       <p className="text-sm text-ink-500">
         Ingresa para pedir servicios o administrar tu negocio.
       </p>
@@ -93,7 +99,7 @@ export default function LoginPage() {
           </p>
         )}
         <Button type="submit" fullWidth loading={isSubmitting}>
-          Entrar
+          Ingresar
         </Button>
       </form>
 
