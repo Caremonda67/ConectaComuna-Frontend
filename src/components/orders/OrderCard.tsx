@@ -81,10 +81,14 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
   async function confirmAccept(e: React.FormEvent) {
     e.preventDefault()
     if (!onStatusChange) return
+    const priceVal = inputFinalPrice ? Number(inputFinalPrice) : order.price_estimate
+    const advVal = inputAdvance ? Number(inputAdvance) : 0
+    if (priceVal && advVal > Math.floor(priceVal * 0.5)) {
+      alert('Por regla del Trato Seguro Comunal, el anticipo no puede superar el 50% del precio acordado.')
+      return
+    }
     setBusy(true)
     try {
-      const priceVal = inputFinalPrice ? Number(inputFinalPrice) : order.price_estimate
-      const advVal = inputAdvance ? Number(inputAdvance) : 0
       await onStatusChange('accepted', {
         finalPrice: priceVal,
         advancePayment: advVal,
@@ -388,10 +392,15 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
                 label="Anticipo acordado / recibido (opcional)"
                 type="number"
                 min="0"
+                max={inputFinalPrice ? String(Math.max(0, Math.floor(Number(inputFinalPrice) * 0.5))) : undefined}
                 step="500"
                 value={inputAdvance}
                 onChange={(e) => setInputAdvance(e.target.value)}
-                hint="Tope sugerido de Trato Seguro: 50% para materiales."
+                hint={
+                  inputFinalPrice
+                    ? `Tope Trato Seguro (máx. 50%): hasta ${formatCurrency(Math.floor(Number(inputFinalPrice) * 0.5))}`
+                    : 'Regla Trato Seguro Comunal: Máximo 50% para materiales.'
+                }
               />
               {inputFinalPrice && (
                 <div className="rounded-lg bg-cream-50 dark:bg-cream-100 p-2.5 text-xs flex justify-between font-semibold">

@@ -195,11 +195,11 @@ export default function RegisterPage() {
             />
             <span>
               Acepto los{' '}
-              <Link to="/terminos" target="_blank" className="font-semibold text-brand-700 underline">
+              <Link to="/terminos" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 underline">
                 Términos y Condiciones
               </Link>{' '}
               y autorizo el tratamiento de mis datos conforme a la{' '}
-              <Link to="/privacidad" target="_blank" className="font-semibold text-brand-700 underline">
+              <Link to="/privacidad" target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-700 underline">
                 Política de Privacidad
               </Link>
               .
