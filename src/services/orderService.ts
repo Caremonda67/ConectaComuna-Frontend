@@ -120,20 +120,46 @@ export const orderService = {
     return count ?? 0
   },
 
-  /** Cantidad de pedidos activos o pendientes para el cliente. */
+  /** Marca los pedidos del cliente como revisados al entrar a su panel. */
+  markClientOrdersSeen(clientId: string): void {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`cc_seen_client_orders_${clientId}`, new Date().toISOString())
+      window.dispatchEvent(new CustomEvent('conectacomuna:orders-seen'))
+    } catch {}
+  },
+
+  /** Cantidad de pedidos con novedades no vistas para el cliente. */
   async countPendingAsClient(clientId: string): Promise<number> {
+    const lastSeenStr = typeof window !== 'undefined'
+      ? localStorage.getItem(`cc_seen_client_orders_${clientId}`)
+      : null
+    const lastSeenTime = lastSeenStr ? new Date(lastSeenStr).getTime() : 0
+
     if (isDemoMode) {
-      return readDb().orders.filter(
-        (o) => o.client_id === clientId && (o.status === 'pending' || o.status === 'accepted'),
-      ).length
+      const orders = readDb().orders.filter((o) => o.client_id === clientId)
+      if (!lastSeenTime) {
+        return orders.filter((o) => o.status === 'pending' || o.status === 'accepted').length
+      }
+      return orders.filter((o) => {
+        const t = new Date(o.updated_at || o.created_at).getTime()
+        return t > lastSeenTime && (o.status === 'pending' || o.status === 'accepted')
+      }).length
     }
-    const { count, error } = await requireSupabase()
+
+    const { data, error } = await requireSupabase()
       .from('orders')
-      .select('*', { count: 'exact', head: true })
+      .select('id, status, created_at, updated_at')
       .eq('client_id', clientId)
-      .in('status', ['pending', 'accepted'])
-    if (error) return 0
-    return count ?? 0
+      .in('status', ['pending', 'accepted', 'in_progress'])
+
+    if (error || !data) return 0
+    if (!lastSeenTime) return data.length
+
+    return data.filter((o) => {
+      const t = new Date((o as any).updated_at || (o as any).created_at).getTime()
+      return t > lastSeenTime
+    }).length
   },
 
   async create(input: CreateOrderInput): Promise<Order> {

@@ -52,7 +52,7 @@ export default function TermsPage() {
         {/* 1 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               1
             </span>
             Objeto de la plataforma y gratuidad
@@ -73,7 +73,7 @@ export default function TermsPage() {
         {/* 2 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               2
             </span>
             Autonomía de los emprendedores y deslinde de responsabilidad
@@ -113,7 +113,7 @@ export default function TermsPage() {
         {/* 3 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               3
             </span>
             Capacidad legal y registro de usuarios
@@ -133,7 +133,7 @@ export default function TermsPage() {
         {/* 4 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               4
             </span>
             Régimen especial para Facilitadores Comunitarios
@@ -155,7 +155,7 @@ export default function TermsPage() {
         {/* 5 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               5
             </span>
             Contenido subido por usuarios y propiedad intelectual
@@ -180,7 +180,7 @@ export default function TermsPage() {
         {/* 6 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               6
             </span>
             Conductas prohibidas y convivencia comunitaria
@@ -204,7 +204,7 @@ export default function TermsPage() {
         {/* 7 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               7
             </span>
             Moderación, reportes y suspensión de cuentas
@@ -221,7 +221,7 @@ export default function TermsPage() {
         {/* 8 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
               8
             </span>
             Legislación aplicable y jurisdicción

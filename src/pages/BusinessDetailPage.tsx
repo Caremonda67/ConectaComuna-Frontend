@@ -17,6 +17,7 @@ import { DAY_NAMES, formatDate, getBadges, shouldSkipTratoSeguro, getBusinessOpe
 import { AuthGate } from '@/components/auth/AuthGate'
 import { UI_ICONS } from '@/components/ui/icons'
 import { TratoSeguroModal } from '@/components/trust/TratoSeguroModal'
+import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import { ReportBusinessModal } from '@/components/trust/ReportBusinessModal'
 import { BusinessShareModal } from '@/components/business/BusinessShareModal'
 import type { Order, ServiceCatalogItem } from '@/types'
@@ -32,6 +33,7 @@ export default function BusinessDetailPage() {
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [solicitudExitosa, setSolicitudExitosa] = useState<Order | null>(null)
+  const [comprobanteModalOrder, setComprobanteModalOrder] = useState<Order | null>(null)
   const [selectedService, setSelectedService] = useState<ServiceCatalogItem | null>(null)
   const rutaNegocio = `/negocio/${id}`
 
@@ -447,11 +449,20 @@ export default function BusinessDetailPage() {
           order={solicitudExitosa}
           businessName={business.name}
           businessPhone={business.phone || business.whatsapp || undefined}
+          onVerComprobante={() => setComprobanteModalOrder(solicitudExitosa)}
           onClose={() => setSolicitudExitosa(null)}
           onGoToPanel={() => {
             setSolicitudExitosa(null)
             navigate('/panel')
           }}
+        />
+      )}
+
+      {comprobanteModalOrder && (
+        <TratoSeguroReceiptModal
+          open={!!comprobanteModalOrder}
+          onClose={() => setComprobanteModalOrder(null)}
+          order={comprobanteModalOrder}
         />
       )}
 
@@ -830,12 +841,14 @@ function SolicitudEnviadaModal({
   order,
   businessName,
   businessPhone,
+  onVerComprobante,
   onClose,
   onGoToPanel,
 }: {
   order: Order
   businessName: string
   businessPhone?: string
+  onVerComprobante: () => void
   onClose: () => void
   onGoToPanel: () => void
 }) {
@@ -851,9 +864,9 @@ function SolicitudEnviadaModal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in"
     >
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-50 p-5 shadow-xl border border-ink-200 space-y-4">
+      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-cream-100 p-5 shadow-xl border border-ink-200 dark:border-ink-800 space-y-4">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
             <UI_ICONS.shieldCheck size={28} />
@@ -862,24 +875,24 @@ function SolicitudEnviadaModal({
             <h2 className="text-lg font-bold text-ink-900">
               ¡Solicitud registrada!
             </h2>
-            <p className="text-xs text-ink-600 mt-0.5">
+            <p className="text-xs text-ink-600 dark:text-ink-400 mt-0.5">
               Código de seguimiento:{' '}
-              <span className="font-mono font-bold text-brand-800 dark:text-brand-800 bg-brand-100 dark:bg-brand-100 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-200">
+              <span className="font-mono font-bold text-brand-800 dark:text-brand-200 bg-brand-100 dark:bg-brand-950/80 px-2 py-0.5 rounded border border-brand-200 dark:border-brand-800/60">
                 {code}
               </span>
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
+        <div className="rounded-xl border border-ink-200 dark:border-ink-800 bg-cream-50 dark:bg-cream-200/40 p-4 space-y-2.5 text-sm">
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 text-xs font-medium">Servicio:</span>
+            <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Servicio:</span>
             <span className="font-semibold text-ink-900 text-right">{order.title}</span>
           </div>
 
           <div className="flex justify-between items-start">
-            <span className="text-ink-600 text-xs font-medium">Modalidad:</span>
-            <span className="text-xs font-medium text-ink-800">
+            <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Modalidad:</span>
+            <span className="text-xs font-medium text-ink-800 dark:text-ink-200">
               {order.service_location_type === 'home_delivery'
                 ? `A domicilio (${order.delivery_address || 'Dirección acordada'})`
                 : 'En taller o local del emprendedor'}
@@ -887,8 +900,8 @@ function SolicitudEnviadaModal({
           </div>
 
           {order.price_estimate && (
-            <div className="flex justify-between items-center pt-2 border-t border-ink-200">
-              <span className="text-ink-600 text-xs font-medium">Presupuesto inicial:</span>
+            <div className="flex justify-between items-center pt-2 border-t border-ink-200 dark:border-ink-800">
+              <span className="text-ink-600 dark:text-ink-400 text-xs font-medium">Presupuesto inicial:</span>
               <span className="font-bold text-brand-700 dark:text-brand-300">
                 {formatCurrency(order.price_estimate)}
               </span>
@@ -918,6 +931,17 @@ function SolicitudEnviadaModal({
               Avisar a {businessName} por WhatsApp
             </a>
           )}
+
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onVerComprobante}
+            fullWidth
+            className="min-h-11 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-800/60"
+          >
+            <span aria-hidden="true">🤝</span>
+            Ver ficha de solicitud
+          </Button>
 
           <div className="flex gap-2">
             <Button onClick={onGoToPanel} fullWidth className="min-h-11">

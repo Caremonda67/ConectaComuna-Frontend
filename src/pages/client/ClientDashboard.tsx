@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
@@ -26,6 +26,13 @@ export default function ClientDashboard() {
 
   const reloadStable = useCallback(() => reload(), [reload])
   useRealtimeOrders('client_id', userId, reloadStable)
+
+  // Al ingresar al panel, se marcan las solicitudes como revisadas para limpiar la alerta
+  useEffect(() => {
+    if (userId) {
+      orderService.markClientOrdersSeen(userId)
+    }
+  }, [userId, data])
 
   const [activandoNegocio, setActivandoNegocio] = useState(false)
   const [errorActivacion, setErrorActivacion] = useState<string | null>(null)
@@ -240,6 +247,23 @@ export default function ClientDashboard() {
               </Link>
             }
           />
+        )}
+        {!loading && !error && active.some((o) => o.status === 'pending') && (
+          <div className="mb-3 rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 text-xs font-bold shrink-0">
+                {active.filter((o) => o.status === 'pending').length}
+              </span>
+              <span>
+                {active.filter((o) => o.status === 'pending').length === 1
+                  ? 'Tienes 1 solicitud a la espera de confirmación del taller.'
+                  : `Tienes ${active.filter((o) => o.status === 'pending').length} solicitudes a la espera de confirmación del taller.`}
+              </span>
+            </div>
+            <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 shrink-0">
+              Trato Seguro activo
+            </span>
+          </div>
         )}
         <div className="grid gap-3">
           {active.map((o) => (

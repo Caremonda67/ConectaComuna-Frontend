@@ -269,8 +269,8 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           </Button>
         )}
 
-        {/* Comprobante de Trato Seguro si está acordado o finalizado */}
-        {['accepted', 'in_progress', 'completed'].includes(order.status) && (
+        {/* Comprobante de Trato Seguro si no está cancelado */}
+        {order.status !== 'cancelled' && (
           <Button
             size="sm"
             variant="secondary"
@@ -278,7 +278,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
             className="text-brand-700 dark:text-brand-300"
           >
             <span aria-hidden="true">🤝</span>
-            Comprobante de acuerdo
+            {order.status === 'pending' ? 'Comprobante de solicitud' : 'Comprobante de acuerdo'}
           </Button>
         )}
 

@@ -76,17 +76,22 @@ export function usePendingOrdersCount() {
     }
   }, [profileId, accountType, businessId])
 
-  // Escuchar mutaciones en modo demo
+  // Escuchar cuando el usuario revisa su panel o muta la base local
   useEffect(() => {
-    if (!isDemoMode) return
     const handleUpdate = () => {
       void refreshCounts()
     }
-    window.addEventListener('conectacomuna:db-updated', handleUpdate)
-    window.addEventListener('storage', handleUpdate)
+    window.addEventListener('conectacomuna:orders-seen', handleUpdate)
+    if (isDemoMode) {
+      window.addEventListener('conectacomuna:db-updated', handleUpdate)
+      window.addEventListener('storage', handleUpdate)
+    }
     return () => {
-      window.removeEventListener('conectacomuna:db-updated', handleUpdate)
-      window.removeEventListener('storage', handleUpdate)
+      window.removeEventListener('conectacomuna:orders-seen', handleUpdate)
+      if (isDemoMode) {
+        window.removeEventListener('conectacomuna:db-updated', handleUpdate)
+        window.removeEventListener('storage', handleUpdate)
+      }
     }
   }, [refreshCounts])
 
