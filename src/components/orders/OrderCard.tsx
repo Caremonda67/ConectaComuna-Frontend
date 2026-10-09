@@ -237,7 +237,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
               <dd className="font-medium">{formatCurrency(anticipo)}</dd>
             </div>
             {saldo !== null && (
-              <div className="flex gap-1 font-bold text-brand-700 dark:text-brand-300">
+              <div className="flex gap-1 font-bold text-brand-700">
                 <dt>Saldo contra entrega:</dt>
                 <dd>{formatCurrency(saldo)}</dd>
               </div>
@@ -275,7 +275,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
             size="sm"
             variant="secondary"
             onClick={() => setReceiptOpen(true)}
-            className="text-brand-700 dark:text-brand-300"
+            className="text-brand-700"
           >
             <span aria-hidden="true">🤝</span>
             {order.status === 'pending' ? 'Comprobante de solicitud' : 'Comprobante de acuerdo'}
@@ -365,7 +365,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
         >
           <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-ink-900">
@@ -396,7 +396,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
               {inputFinalPrice && (
                 <div className="rounded-lg bg-cream-50 dark:bg-cream-100 p-2.5 text-xs flex justify-between font-semibold">
                   <span>Saldo contra entrega:</span>
-                  <span className="text-brand-700 dark:text-brand-300">
+                  <span className="text-brand-700">
                     {formatCurrency(
                       Math.max(0, Number(inputFinalPrice) - (inputAdvance ? Number(inputAdvance) : 0)),
                     )}
@@ -426,7 +426,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
         >
           <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-rose-700 dark:text-rose-400">
@@ -487,7 +487,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/60 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
         >
           <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
             <h3 className="font-bold text-base text-ink-900">

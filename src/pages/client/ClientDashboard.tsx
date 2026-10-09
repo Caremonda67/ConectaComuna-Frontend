@@ -181,8 +181,8 @@ export default function ClientDashboard() {
         )}
 
         {!isDual && (
-          <div className="mt-4 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-100 dark:border-brand-900/40 p-3">
-            <p className="text-sm text-brand-700 dark:text-brand-300">
+          <div className="mt-4 rounded-xl bg-brand-50 border border-brand-200 p-3">
+            <p className="text-sm text-brand-800">
               ¿Tienes un oficio? Activa tu cuenta de negocio y empieza a recibir clientes de
               la comuna.
             </p>

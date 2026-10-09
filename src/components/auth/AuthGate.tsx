@@ -25,7 +25,7 @@ export function AuthGate({ open, onClose, from, motivo }: Props) {
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center backdrop-blur-xs">
       <button
         type="button"
-        className="absolute inset-0 bg-ink-900/40"
+        className="absolute inset-0 bg-black/60"
         aria-label="Cerrar"
         onClick={onClose}
       />

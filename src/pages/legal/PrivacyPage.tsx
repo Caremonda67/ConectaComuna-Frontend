@@ -50,7 +50,7 @@ export default function PrivacyPage() {
         {/* 1 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               1
             </span>
             Responsable del tratamiento de tus datos
@@ -86,7 +86,7 @@ export default function PrivacyPage() {
         {/* 2 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               2
             </span>
             Datos que recolectamos y finalidades específicas
@@ -123,7 +123,7 @@ export default function PrivacyPage() {
         {/* 3 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               3
             </span>
             Autorización previa y consentimiento informado
@@ -144,7 +144,7 @@ export default function PrivacyPage() {
         {/* 4 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               4
             </span>
             Tus derechos como titular (Habeas Data)
@@ -173,7 +173,7 @@ export default function PrivacyPage() {
         {/* 5 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               5
             </span>
             Procedimiento y plazos para peticiones y reclamos (PQR)
@@ -192,7 +192,7 @@ export default function PrivacyPage() {
         {/* 6 */}
         <section className="card p-6 space-y-3">
           <h2 className="text-base sm:text-lg font-bold text-ink-900 flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold shrink-0">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold shrink-0 border border-brand-200">
               6
             </span>
             Seguridad técnica y almacenamiento local

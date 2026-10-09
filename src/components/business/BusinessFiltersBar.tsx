@@ -201,11 +201,11 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           className={cn(
             'inline-flex items-center gap-1.5 min-h-9 px-3 rounded-[10px] border text-xs sm:text-sm font-medium transition-colors cursor-pointer',
             filters.wholesaleOnly
-              ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm dark:bg-brand-950/40 dark:text-brand-300 dark:border-brand-700/60 font-semibold'
+              ? 'border-brand-500 bg-brand-50 text-brand-800 shadow-sm font-semibold'
               : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-100 dark:hover:bg-cream-200',
           )}
         >
-          <UI_ICONS.package size={15} className="shrink-0 text-brand-600 dark:text-brand-400" />
+          <UI_ICONS.package size={15} className="shrink-0 text-brand-600" />
           Venta al por mayor
         </button>
 

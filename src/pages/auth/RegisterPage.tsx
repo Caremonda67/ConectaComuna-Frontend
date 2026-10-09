@@ -256,7 +256,7 @@ function TypeCard({
       aria-pressed={active}
       className={cn(
         'group relative rounded-[14px] border-2 p-3 text-left transition-all duration-200 active:scale-[0.97] hover:-translate-y-0.5 cursor-pointer select-none',
-        active ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 shadow-xs' : 'border-ink-200 bg-white dark:bg-cream-50 hover:border-ink-300 dark:hover:bg-cream-200',
+        active ? 'border-brand-500 bg-brand-50 shadow-xs' : 'border-ink-200 bg-white dark:bg-cream-50 hover:border-ink-300 dark:hover:bg-cream-200',
       )}
     >
       <span

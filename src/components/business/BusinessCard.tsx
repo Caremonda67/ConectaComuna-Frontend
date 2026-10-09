@@ -42,9 +42,9 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         {business.wholesale_enabled && (
           <span
             title={business.wholesale_min_order ? `Mayorista: ${business.wholesale_min_order}` : 'Vende al por mayor'}
-            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800/60 px-1.5 py-0.5 text-[10px] font-semibold text-brand-800 dark:text-brand-300"
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-brand-50 border border-brand-200 px-1.5 py-0.5 text-[10px] font-semibold text-brand-800"
           >
-            <UI_ICONS.package size={11} className="text-brand-600 dark:text-brand-400" />
+            <UI_ICONS.package size={11} className="text-brand-600 shrink-0" />
             Por mayor
           </span>
         )}
@@ -67,7 +67,7 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
               'inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium px-1.5 py-0.5 rounded-md',
               openStatus.isOpen
                 ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60'
-                : 'text-ink-600 dark:text-ink-400 bg-cream-200/80 dark:bg-cream-200/40',
+                : 'text-ink-600 bg-cream-200',
             )}
             title={openStatus.detail ?? openStatus.label}
           >

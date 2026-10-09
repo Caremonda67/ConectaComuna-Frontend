@@ -147,7 +147,7 @@ export function ReportBusinessModal({
               <UI_ICONS.shieldCheck size={24} />
             </div>
             <h2 className="text-lg font-bold text-ink-900">Reporte recibido</h2>
-            <p className="text-xs text-ink-600 dark:text-ink-400 leading-relaxed">
+            <p className="text-xs text-ink-600 leading-relaxed">
               Gracias por cuidar la seguridad de nuestra comuna. El equipo de facilitadores y la administración revisarán la información de {businessName}.
             </p>
             <Button

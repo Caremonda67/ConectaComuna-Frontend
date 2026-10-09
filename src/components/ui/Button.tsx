@@ -15,8 +15,8 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 const variants: Record<Variant, string> = {
   primary: 'bg-brand-500 text-white hover:bg-brand-600 disabled:bg-brand-300 dark:disabled:bg-brand-900/50',
   secondary: 'bg-white text-ink-900 border border-ink-200 hover:bg-cream-200 dark:bg-cream-50 dark:text-ink-900 dark:border-ink-200 dark:hover:bg-cream-200',
-  ghost: 'bg-transparent text-brand-700 hover:bg-brand-50 dark:text-brand-600 dark:hover:bg-brand-950/40',
-  danger: 'bg-white text-rose-700 border border-rose-300 hover:bg-rose-50 dark:bg-cream-50 dark:text-rose-400 dark:border-rose-900/60 dark:hover:bg-rose-950/40',
+  ghost: 'bg-transparent text-brand-700 hover:bg-brand-50',
+  danger: 'bg-white text-rose-700 border border-rose-300 hover:bg-rose-50 dark:bg-cream-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/40',
 }
 
 // min-h-11 ≈ 44px: área táctil mínima recomendada para uso con el pulgar.

@@ -86,7 +86,7 @@ export function TratoSeguroModal({
 
         <div className="space-y-2.5 text-xs text-ink-700">
           <div className="flex items-start gap-2.5">
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/60 font-bold text-brand-800 dark:text-brand-300 text-[11px]">
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-800 text-[11px]">
               1
             </span>
             <p>

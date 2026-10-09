@@ -99,7 +99,7 @@ export function MisDirecciones({ usuarioId }: Props) {
           >
             <div className="min-w-0">
               <p className="font-semibold text-ink-900">{d.etiqueta}</p>
-              <p className="truncate text-sm text-ink-500 dark:text-ink-400">{d.direccion_texto}</p>
+              <p className="truncate text-sm text-ink-500">{d.direccion_texto}</p>
             </div>
             <div className="flex shrink-0 gap-2">
               <Button size="sm" variant="secondary" onClick={() => usar(d)}>

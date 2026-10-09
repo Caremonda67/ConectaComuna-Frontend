@@ -120,7 +120,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
         className={cn(
           'flex min-h-11 w-full items-center justify-between gap-2 rounded-full border px-4 text-left transition-colors',
           abierto
-            ? 'border-brand-500 bg-brand-50 dark:bg-brand-950/40 text-ink-900'
+            ? 'border-brand-500 bg-brand-50 text-ink-900'
             : 'border-ink-300 dark:border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:bg-cream-200 dark:hover:bg-cream-200',
         )}
       >
