@@ -108,8 +108,8 @@ export default function TratoSeguroPage() {
         </Link>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200">
-            <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
+            <UI_ICONS.shieldCheck size={14} className="text-brand-700 dark:text-brand-300" />
             Pacto vecinal de confianza
           </span>
           <span className="text-xs text-ink-500">Uso ético y protección local</span>
@@ -228,7 +228,7 @@ export default function TratoSeguroPage() {
             <ul className="space-y-3">
               {CONSEJOS_CLIENTE.map((consejo, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-ink-700">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold mt-0.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold mt-0.5">
                     ✓
                   </span>
                   <span>{consejo}</span>
@@ -239,7 +239,7 @@ export default function TratoSeguroPage() {
             <ul className="space-y-3">
               {CONSEJOS_EMPRENDEDOR.map((consejo, i) => (
                 <li key={i} className="flex items-start gap-3 text-xs sm:text-sm text-ink-700">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-800 text-xs font-bold mt-0.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-800 dark:text-brand-300 text-xs font-bold mt-0.5">
                     ✓
                   </span>
                   <span>{consejo}</span>

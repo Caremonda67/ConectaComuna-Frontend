@@ -198,7 +198,7 @@ export function AppLayout() {
                         <span className="inline-flex items-center gap-1">
                           Negocio
                           {businessPendingCount > 0 && (
-                            <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-amber-500 text-[9px] font-extrabold text-white">
+                            <span className="flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-amber-500 text-[9px] font-extrabold text-white animate-notification-badge">
                               {businessPendingCount > 9 ? '9+' : businessPendingCount}
                             </span>
                           )}
@@ -223,7 +223,7 @@ export function AppLayout() {
                 >
                   <span>Mi cuenta</span>
                   {activeCount > 0 && (
-                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-white shadow-2xs animate-pulse">
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-bold text-white shadow-2xs animate-notification-badge">
                       {activeCount > 99 ? '99+' : activeCount}
                     </span>
                   )}
@@ -308,7 +308,7 @@ export function AppLayout() {
                           className={cn('transition-transform duration-200', isActive && 'scale-110')}
                         />
                         {item.to === '/panel' && activeCount > 0 && (
-                          <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[9px] font-bold text-white ring-2 ring-white dark:ring-ink-900 animate-pulse">
+                          <span className="absolute -top-1 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[9px] font-bold text-white ring-2 ring-white dark:ring-ink-900 animate-notification-badge">
                             {activeCount > 9 ? '9+' : activeCount}
                           </span>
                         )}
