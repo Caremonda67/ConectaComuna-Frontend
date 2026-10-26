@@ -164,13 +164,15 @@ export default function BusinessDetailPage() {
                   : 'text-ink-700 bg-cream-200 border border-ink-200',
               )}
             >
-              <span
-                className={cn(
-                  'h-2 w-2 rounded-full shrink-0',
-                  openStatus.isOpen ? 'bg-emerald-600 animate-pulse' : 'bg-ink-400',
-                )}
-              />
-              {openStatus.label} {openStatus.detail ? `· ${openStatus.detail}` : ''}
+              {openStatus.isOpen ? (
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-ink-400 shrink-0" />
+              )}
+              {openStatus.isOpen ? `En taller · Atendiendo ahora` : openStatus.label} {openStatus.detail ? `· ${openStatus.detail}` : ''}
             </span>
           )}
         </div>

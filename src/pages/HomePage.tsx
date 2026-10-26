@@ -103,6 +103,8 @@ export default function HomePage() {
         </div>
       )}
 
+      <div className="craft-stitch-divider my-8" aria-hidden="true" />
+
       <section aria-labelledby="cats">
         <h2 id="cats" className="mb-4 text-2xl font-bold">
           Explora por categoría
@@ -140,6 +142,8 @@ export default function HomePage() {
           ))}
         </ul>
       </section>
+
+      <div className="craft-stitch-divider my-8" aria-hidden="true" />
 
       <section aria-labelledby="destacados">
         <div className="mb-4 flex items-center justify-between">

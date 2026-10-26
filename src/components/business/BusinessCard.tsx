@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MapPin } from 'lucide-react'
+import { MapPin, Award } from 'lucide-react'
 import { categoryLabel } from '@/data/categories'
 import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { formatDistance, getBusinessOpenStatus, cn } from '@/lib/utils'
@@ -23,11 +23,20 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         <h3 className="font-semibold text-ink-900 min-w-0 line-clamp-1">{business.name}</h3>
         {business.verification_status === 'verified' && (
           <span
-            title="Verificado en territorio"
-            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:text-emerald-300"
+            title="Oficio verificado en territorio por facilitador o junta comunal"
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300"
           >
             <UI_ICONS.shieldCheck size={11} className="text-emerald-700 dark:text-emerald-400" />
-            Verificado
+            Mano de obra verificada
+          </span>
+        )}
+        {business.completed_orders >= 10 && (
+          <span
+            title="Artesano con trayectoria destacada en la comuna"
+            className="inline-flex items-center gap-1 shrink-0 rounded-full bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.5 text-[10px] font-bold text-amber-800 dark:text-amber-300"
+          >
+            <Award size={11} className="text-amber-600 dark:text-amber-400 shrink-0" />
+            Oficio tradicional
           </span>
         )}
         {business.verification_status === 'under_review' && (
@@ -67,20 +76,22 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         {business.hours && business.hours.length > 0 && (
           <span
             className={cn(
-              'inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-medium px-1.5 py-0.5 rounded-md',
+              'inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md',
               openStatus.isOpen
-                ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60'
-                : 'text-ink-600 bg-cream-200',
+                ? 'text-emerald-800 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800/60'
+                : 'text-ink-600 bg-cream-200 border border-ink-200',
             )}
             title={openStatus.detail ?? openStatus.label}
           >
-            <span
-              className={cn(
-                'h-1.5 w-1.5 rounded-full shrink-0',
-                openStatus.isOpen ? 'bg-emerald-600 animate-pulse' : 'bg-ink-400',
-              )}
-            />
-            {openStatus.label}
+            {openStatus.isOpen ? (
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+            ) : (
+              <span className="h-2 w-2 rounded-full bg-ink-400 shrink-0" />
+            )}
+            {openStatus.isOpen ? 'En taller · Abierto' : openStatus.label}
           </span>
         )}
       </div>

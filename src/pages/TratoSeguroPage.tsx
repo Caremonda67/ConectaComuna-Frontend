@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
+import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
 import { cn } from '@/lib/utils'
 import { usePageMeta } from '@/hooks/usePageMeta'
 
@@ -104,32 +105,40 @@ export default function TratoSeguroPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 py-2 sm:py-4">
-      {/* Cabecera */}
-      <header className="space-y-4">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-900 transition-colors"
-        >
-          <span aria-hidden="true">←</span> Volver al inicio
-        </Link>
+      {/* Cabecera con Sello Oficial de la JAC */}
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
+        <div className="space-y-4 max-w-2xl">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 hover:text-brand-900 transition-colors"
+          >
+            <span aria-hidden="true">←</span> Volver al inicio
+          </Link>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200">
-            <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
-            Pacto vecinal de confianza
-          </span>
-          <span className="text-xs text-ink-500">Uso ético y protección local</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
+              <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
+              Pacto vecinal de confianza · Ley 2166 de 2021
+            </span>
+            <span className="text-xs text-ink-500">Uso ético y mediación comunitaria</span>
+          </div>
+
+          <h1 className="text-3xl font-extrabold sm:text-4xl text-ink-900 leading-tight">
+            Trato Seguro Comunal
+          </h1>
+          <p className="max-w-2xl text-base text-ink-600 dark:text-ink-300 sm:text-lg leading-relaxed">
+            En ConectaComuna creemos en la palabra de la gente del barrio. Este pacto reúne pautas
+            claras de respeto, acuerdos de pago con tope máximo del 50% de anticipo y mediación amistosa
+            de la Junta de Acción Comunal (JAC) para que cada trabajo se haga con tranquilidad.
+          </p>
         </div>
 
-        <h1 className="text-3xl font-extrabold sm:text-4xl text-ink-900 leading-tight">
-          Trato Seguro Comunal
-        </h1>
-        <p className="max-w-2xl text-base text-ink-600 sm:text-lg leading-relaxed">
-          En ConectaComuna creemos en la palabra de la gente del barrio. Este pacto reúne pautas
-          claras de respeto, acuerdos de pago y convivencia para que cada trabajo se haga con
-          tranquilidad y sin intermediarios.
-        </p>
+        <div className="shrink-0 self-center sm:self-start">
+          <SelloOficialComunal size="md" />
+        </div>
       </header>
+
+      <div className="craft-stitch-divider" aria-hidden="true" />
 
       {/* Caja de verificación rápida de pactos */}
       <section aria-labelledby="verificador-rapido" className="card p-5 sm:p-6 border-brand-300 dark:border-brand-800 bg-brand-50/70 dark:bg-brand-950/40 space-y-3">
@@ -146,13 +155,22 @@ export default function TratoSeguroPage() {
               Comprueba que el oficio esté registrado, el anticipo respete el tope del 50% y cuente con respaldo de mediación de la JAC.
             </p>
           </div>
-          <Link
-            to="/trato-seguro/verificar"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 text-sm font-semibold shadow-xs shrink-0 transition-colors"
-          >
-            <UI_ICONS.search size={16} />
-            Verificar un pacto ahora
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Link
+              to="/trato-seguro/verificar/CC-DEMO2026"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand-300 dark:border-brand-700 bg-white dark:bg-cream-100 px-3.5 py-2.5 text-xs font-bold text-brand-800 dark:text-brand-300 shadow-2xs hover:bg-brand-50 transition-colors"
+            >
+              <UI_ICONS.checkCircle size={14} className="text-emerald-600" />
+              Ver pacto demo (#CC-DEMO2026)
+            </Link>
+            <Link
+              to="/trato-seguro/verificar"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 text-sm font-semibold shadow-xs transition-colors"
+            >
+              <UI_ICONS.search size={16} />
+              Consultar código
+            </Link>
+          </div>
         </div>
       </section>
 
