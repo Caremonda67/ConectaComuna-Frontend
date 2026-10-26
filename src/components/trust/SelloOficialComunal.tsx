@@ -50,9 +50,9 @@ export function SelloOficialComunal({
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Trayectorias circulares superior e inferior para el texto en arco */}
-          <path id="curve-seal-top" d="M 22,60 A 38,38 0 0,1 98,60" fill="none" />
-          <path id="curve-seal-bottom" d="M 98,60 A 38,38 0 0,1 22,60" fill="none" />
+          {/* Trayectorias circulares superior e inferior con radio 40.5 para no invadir el centro */}
+          <path id="curve-seal-top" d="M 19.5,60 A 40.5,40.5 0 0,1 100.5,60" fill="none" />
+          <path id="curve-seal-bottom" d="M 100.5,60 A 40.5,40.5 0 0,1 19.5,60" fill="none" />
         </defs>
 
         {/* Borde exterior dentado / linograbado popular */}
@@ -100,11 +100,11 @@ export function SelloOficialComunal({
           </textPath>
         </text>
 
-        {/* Icono central: Apretón de manos nítido y reconocible */}
-        <g transform="translate(44, 30)">
+        {/* Icono central: Apretón de manos nítido posicionado arriba con amplitud */}
+        <g transform="translate(46, 31)">
           <svg
-            width="32"
-            height="32"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="#FDE68A"
@@ -121,50 +121,39 @@ export function SelloOficialComunal({
           </svg>
         </g>
 
-        {/* Textos centrales basados en el marco legal (Ley 2166 de 2021) */}
+        {/* Textos centrales con respiro amplio: solo 2 líneas para evitar choques con el arco inferior */}
         <text
           x="60"
-          y="72"
-          fontSize="7"
+          y="66"
+          fontSize="6.8"
           fontWeight="900"
-          letterSpacing="0.8"
+          letterSpacing="0.6"
           fill="#FFFFFF"
           textAnchor="middle"
         >
-          MEDIACIÓN JAC
+          MEDIACIÓN EN EQUIDAD
         </text>
         <text
           x="60"
-          y="80"
-          fontSize="5.5"
+          y="75"
+          fontSize="5.4"
           fontWeight="800"
           letterSpacing="0.4"
           fill="#86EFAC"
           textAnchor="middle"
         >
-          EN EQUIDAD · LEY 2166
-        </text>
-        <text
-          x="60"
-          y="88"
-          fontSize="5"
-          fontWeight="700"
-          letterSpacing="0.3"
-          fill="#FDE68A"
-          textAnchor="middle"
-        >
-          MÁX. 50% ANTICIPO
+          LEY 2166 · TOPE 50%
         </text>
 
-        {/* Texto inferior arqueado */}
+        {/* Texto inferior arqueado pegado al borde exterior sin invadir el centro */}
         <text
-          fontSize="6.2"
+          fontSize="5.8"
           fontWeight="800"
           letterSpacing="0.5"
           className="fill-emerald-200 dark:fill-emerald-300 uppercase"
         >
           <textPath href="#curve-seal-bottom" startOffset="50%" textAnchor="middle">
-            COMISIÓN DE CONVIVENCIA
+            COMISIÓN DE CONVIVENCIA JAC
           </textPath>
         </text>
       </svg>
