@@ -10,6 +10,9 @@ import { usePendingOrdersCount } from '@/hooks/usePendingOrdersCount'
 import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
+import { AsistenteProvider } from '@/context/AsistenteContext'
+import { FloatingChatButton } from '@/components/chat/FloatingChatButton'
+import { AsistenteComunalModal } from '@/components/chat/AsistenteComunalModal'
 
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
@@ -98,7 +101,8 @@ export function AppLayout() {
   }, [loading, profile, location.pathname, navigate])
 
   return (
-    <div className="flex min-h-dvh flex-col bg-cream-100 overflow-x-clip">
+    <AsistenteProvider>
+      <div className="flex min-h-dvh flex-col bg-cream-100 overflow-x-clip">
       <a
         href="#contenido"
         className="sr-only-focusable absolute left-2 top-2 z-50 rounded bg-brand-600 px-3 py-2 text-white"
@@ -396,7 +400,12 @@ export function AppLayout() {
           </ul>
         </div>
       </nav>
+
+      {/* Asistente Comunal con IA y soporte de voz para oficios y trámites */}
+      <FloatingChatButton />
+      <AsistenteComunalModal />
     </div>
+    </AsistenteProvider>
   )
 }
 

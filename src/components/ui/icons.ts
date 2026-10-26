@@ -51,6 +51,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Maximize2,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Send,
+  Bot,
+  RotateCcw,
+  Loader2,
 } from 'lucide-react'
 
 /**
@@ -130,4 +138,12 @@ export const UI_ICONS = {
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
   maximize: Maximize2,
+  mic: Mic,
+  micOff: MicOff,
+  volume: Volume2,
+  volumeMute: VolumeX,
+  send: Send,
+  bot: Bot,
+  reset: RotateCcw,
+  loader: Loader2,
 } as const satisfies Record<string, LucideIcon>
