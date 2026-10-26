@@ -401,15 +401,38 @@ export const orderService = {
 
     try {
       const supabase = requireSupabase()
-      const { data, error } = await supabase
-        .from('orders')
-        .select(SELECT_WITH_RELATIONS)
-        .ilike('id', `${clean}%`)
-        .limit(1)
-        .maybeSingle()
+      let orderData = null
 
-      if (error || !data) return null
-      const mapped = mapDbOrder(data)
+      if (clean.length === 36 && clean.includes('-')) {
+        const { data } = await supabase
+          .from('orders')
+          .select(SELECT_WITH_RELATIONS)
+          .eq('id', clean)
+          .maybeSingle()
+        orderData = data
+      }
+
+      if (!orderData) {
+        const { data } = await supabase
+          .from('orders')
+          .select(SELECT_WITH_RELATIONS)
+          .order('created_at', { ascending: false })
+          .limit(25)
+
+        orderData =
+          (data || []).find(
+            (o: any) =>
+              o.id.toLowerCase() === clean.toLowerCase() ||
+              o.id.toLowerCase().startsWith(clean.toLowerCase()) ||
+              o.id
+                .replace(/-/g, '')
+                .toLowerCase()
+                .startsWith(clean.toLowerCase().replace('cc-', '').replace(/-/g, ''))
+          ) ?? null
+      }
+
+      if (!orderData) return null
+      const mapped = mapDbOrder(orderData)
       const precio = mapped.final_price ?? mapped.price_estimate ?? 0
       const anticipo = mapped.advance_payment ?? 0
       const saldo = Math.max(0, precio - anticipo)
