@@ -10,7 +10,7 @@ import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, ServicioSugeridoAi } from '@/types/ai'
 import type { ServiceCatalogItem } from '@/types'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 
 // Web Speech API interfaces
 interface IWindowSpeechRecognition extends EventTarget {
@@ -663,6 +663,77 @@ export function AsistenteComunalModal() {
                             {business ? 'Guardar directamente en mi catálogo' : 'Crear negocio para publicar este servicio'}
                           </button>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tarjeta de Pacto de Trato Seguro Preparado */}
+                  {estructurada && estructurada.tipo === 'acuerdo_trato_seguro' && (
+                    <div className="mt-3 w-full max-w-[95%] card-soft p-4 border-2 border-emerald-400/80 dark:border-emerald-500/60 rounded-2xl shadow-xs space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                          <UI_ICONS.shieldCheck size={16} />
+                          Pacto de Trato Seguro
+                        </span>
+                        <span className="font-mono text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800">
+                          Tope 50% anticipo
+                        </span>
+                      </div>
+
+                      {estructurada.acuerdo ? (
+                        <div className="space-y-2">
+                          <div className="font-bold text-ink-900 text-sm">
+                            {estructurada.acuerdo.servicio}
+                          </div>
+                          <div className="rounded-xl border border-ink-200 dark:border-ink-800 bg-white/70 dark:bg-ink-900/60 p-3 space-y-1.5 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-ink-600">Presupuesto total:</span>
+                              <span className="font-bold text-ink-900">{formatCurrency(estructurada.acuerdo.precioEstimado)}</span>
+                            </div>
+                            <div className="flex justify-between text-emerald-700 dark:text-emerald-400">
+                              <span>Anticipo máximo (50%):</span>
+                              <span className="font-semibold">{formatCurrency(estructurada.acuerdo.anticipoMaximo)}</span>
+                            </div>
+                            <div className="flex justify-between border-t border-ink-200 dark:border-ink-700 pt-1 font-bold">
+                              <span>Saldo contra entrega:</span>
+                              <span className="text-brand-700">{formatCurrency(estructurada.acuerdo.saldoContraEntrega)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-ink-700 leading-relaxed">
+                          Todo trabajo pactado en la comuna cuenta con tope de anticipo del 50%, comprobante oficial y respaldo de mediación comunitaria de la JAC.
+                        </p>
+                      )}
+
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            detenerLecturaVoz()
+                            cerrarAsistente()
+                            navigate(
+                              estructurada.acuerdo?.codigo
+                                ? `/trato-seguro/verificar/${estructurada.acuerdo.codigo}`
+                                : '/trato-seguro/verificar'
+                            )
+                          }}
+                          className="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-center transition-colors shadow-xs flex items-center justify-center gap-1.5"
+                        >
+                          <UI_ICONS.shieldCheck size={14} />
+                          <span>Verificar comprobante oficial</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            detenerLecturaVoz()
+                            cerrarAsistente()
+                            navigate('/trato-seguro')
+                          }}
+                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-800 text-center transition-colors border border-ink-200"
+                        >
+                          Conocer el pacto
+                        </button>
                       </div>
                     </div>
                   )}

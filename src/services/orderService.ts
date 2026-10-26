@@ -2,7 +2,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode, env } from '@/lib/env'
 import { apiFetch } from '@/lib/apiClient'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
-import type { Order, OrderStatus, Review } from '@/types'
+import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 
 const SELECT_WITH_RELATIONS =
   '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, phone), review:reviews(id, rating, comment, created_at)'
@@ -333,5 +333,120 @@ export const orderService = {
       .single()
     if (error) throw error
     return data as Review
+  },
+
+  /** Consulta pública y verificable de un acuerdo de Trato Seguro por código o ID */
+  async getVerifiableByCode(code: string): Promise<PactoVerificado | null> {
+    const raw = (code || '').trim()
+    if (!raw) return null
+    const clean = raw.replace(/^#?CC[-_]?/i, '').toLowerCase()
+
+    if (isDemoMode) {
+      const db = readDb()
+      const found = db.orders.find(
+        (o) =>
+          o.id.toLowerCase() === clean ||
+          o.id.toLowerCase().startsWith(clean) ||
+          `cc-${o.id.toLowerCase()}` === raw.toLowerCase(),
+      )
+      if (!found) return null
+      const hydrated = hydrate(found)
+      const precio = hydrated.final_price ?? hydrated.price_estimate ?? 0
+      const anticipo = hydrated.advance_payment ?? 0
+      const saldo = Math.max(0, precio - anticipo)
+      const tel = hydrated.client?.phone
+      const phoneMasked = tel ? `...${tel.slice(-4)}` : null
+
+      return delay({
+        codigo: `CC-${hydrated.id.slice(0, 8).toUpperCase()}`,
+        order_id: hydrated.id,
+        status: hydrated.status,
+        created_at: hydrated.created_at,
+        scheduled_for: hydrated.scheduled_for,
+        title: hydrated.title,
+        description: hydrated.description,
+        service_location_type: hydrated.service_location_type,
+        delivery_address: hydrated.delivery_address,
+        business: {
+          id: hydrated.business?.id ?? hydrated.business_id,
+          name: hydrated.business?.name ?? 'Taller Comunal',
+          category: hydrated.business?.category ?? 'Oficio',
+          phone: hydrated.business?.phone ?? null,
+          barrio: 'Antonio Nariño, Cali',
+          is_verified: true,
+        },
+        client: {
+          name: hydrated.client?.full_name ?? 'Vecino de la Comuna',
+          phone_masked: phoneMasked,
+        },
+        precio_total: precio,
+        anticipo,
+        saldo_contra_entrega: saldo,
+        porcentaje_anticipo: precio > 0 ? Math.round((anticipo / precio) * 100) : 0,
+        clausula_mediacion:
+          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
+      })
+    }
+
+    if (env.apiUrl) {
+      try {
+        const fromApi = await apiFetch<PactoVerificado>(`/api/orders/verificar/${encodeURIComponent(clean)}`)
+        if (fromApi?.order_id) {
+          return fromApi
+        }
+      } catch (apiErr) {
+        console.warn('API Express no respondió para verificación, probando PostgREST:', apiErr)
+      }
+    }
+
+    try {
+      const supabase = requireSupabase()
+      const { data, error } = await supabase
+        .from('orders')
+        .select(SELECT_WITH_RELATIONS)
+        .ilike('id', `${clean}%`)
+        .limit(1)
+        .maybeSingle()
+
+      if (error || !data) return null
+      const mapped = mapDbOrder(data)
+      const precio = mapped.final_price ?? mapped.price_estimate ?? 0
+      const anticipo = mapped.advance_payment ?? 0
+      const saldo = Math.max(0, precio - anticipo)
+      const tel = mapped.client?.phone
+      const phoneMasked = tel ? `...${tel.slice(-4)}` : null
+
+      return {
+        codigo: `CC-${mapped.id.slice(0, 8).toUpperCase()}`,
+        order_id: mapped.id,
+        status: mapped.status,
+        created_at: mapped.created_at,
+        scheduled_for: mapped.scheduled_for,
+        title: mapped.title,
+        description: mapped.description,
+        service_location_type: mapped.service_location_type,
+        delivery_address: mapped.delivery_address,
+        business: {
+          id: mapped.business?.id ?? mapped.business_id,
+          name: mapped.business?.name ?? 'Taller Comunal',
+          category: mapped.business?.category ?? 'Oficio',
+          phone: mapped.business?.phone ?? null,
+          barrio: 'Comuna',
+          is_verified: true,
+        },
+        client: {
+          name: mapped.client?.full_name ?? 'Vecino de la Comuna',
+          phone_masked: phoneMasked,
+        },
+        precio_total: precio,
+        anticipo,
+        saldo_contra_entrega: saldo,
+        porcentaje_anticipo: precio > 0 ? Math.round((anticipo / precio) * 100) : 0,
+        clausula_mediacion:
+          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
+      }
+    } catch {
+      return null
+    }
   },
 }

@@ -131,6 +131,31 @@ export default function TratoSeguroPage() {
         </p>
       </header>
 
+      {/* Caja de verificación rápida de pactos */}
+      <section aria-labelledby="verificador-rapido" className="card p-5 sm:p-6 border-brand-300 dark:border-brand-800 bg-brand-50/70 dark:bg-brand-950/40 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-800 dark:text-brand-300 inline-flex items-center gap-1.5">
+              <UI_ICONS.shieldCheck size={16} />
+              Verificador Oficial de Trato Seguro
+            </span>
+            <h2 id="verificador-rapido" className="text-lg font-bold text-ink-900 dark:text-white">
+              ¿Te compartieron un código de acuerdo o recibo?
+            </h2>
+            <p className="text-xs text-ink-600 dark:text-ink-400">
+              Comprueba que el oficio esté registrado, el anticipo respete el tope del 50% y cuente con respaldo de mediación de la JAC.
+            </p>
+          </div>
+          <Link
+            to="/trato-seguro/verificar"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 text-sm font-semibold shadow-xs shrink-0 transition-colors"
+          >
+            <UI_ICONS.search size={16} />
+            Verificar un pacto ahora
+          </Link>
+        </div>
+      </section>
+
       {/* Los 5 acuerdos */}
       <section aria-labelledby="acuerdos-titulo" className="space-y-4">
         <div className="flex items-center gap-3">

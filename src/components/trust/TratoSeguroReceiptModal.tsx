@@ -1,4 +1,5 @@
 import { motion } from 'motion/react'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 import { formatCurrency, formatDate } from '@/lib/utils'
@@ -18,6 +19,9 @@ export function TratoSeguroReceiptModal({ open, onClose, order }: Props) {
   const anticipo = order.advance_payment ?? 0
   const saldo = Math.max(0, precio - anticipo)
   const codigoAcuerdo = `CC-${order.id.slice(0, 8).toUpperCase()}`
+  const urlVerificacion = typeof window !== 'undefined'
+    ? `${window.location.origin}/trato-seguro/verificar/${codigoAcuerdo}`
+    : `https://conectacomuna.org/trato-seguro/verificar/${codigoAcuerdo}`
 
   const resumenTexto = isPending
     ? `🤝 *Ficha de Solicitud de Servicio ConectaComuna*
@@ -28,6 +32,9 @@ export function TratoSeguroReceiptModal({ open, onClose, order }: Props) {
 *Modalidad:* ${order.service_location_type === 'home_delivery' ? 'A domicilio' : 'En taller/local'}
 ${order.delivery_address ? `*Dirección:* ${order.delivery_address}\n` : ''}💰 *Presupuesto estimado:* ${formatCurrency(precio)}
 📅 *Fecha de solicitud:* ${formatDate(order.created_at)}
+
+*Verificación oficial:*
+${urlVerificacion}
 
 _Solicitud registrada bajo Trato Seguro Comunal: precio definitivo a acordar con el taller y máximo 50% de anticipo._`
     : `🤝 *Comprobante de Trato Seguro ConectaComuna*
@@ -40,6 +47,9 @@ ${order.delivery_address ? `*Dirección:* ${order.delivery_address}\n` : ''}💰
 💵 *Anticipo abonado:* ${formatCurrency(anticipo)}
 🧾 *Saldo contra entrega:* ${formatCurrency(saldo)}
 📅 *Fecha:* ${formatDate(order.created_at)}
+
+*Verificación oficial:*
+${urlVerificacion}
 
 _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a satisfacción._`
 
@@ -150,7 +160,15 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
         </div>
 
         {/* Acciones */}
-        <div className="p-4 bg-cream-50 dark:bg-cream-100 border-t border-ink-200 flex flex-wrap gap-2 justify-end shrink-0 print:hidden">
+        <div className="p-4 bg-cream-50 dark:bg-cream-100 border-t border-ink-200 flex flex-wrap items-center gap-2 justify-end shrink-0 print:hidden">
+          <Link
+            to={`/trato-seguro/verificar/${codigoAcuerdo}`}
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 hover:underline mr-auto"
+          >
+            <UI_ICONS.shieldCheck size={15} />
+            Ver pacto público con QR
+          </Link>
           <Button
             type="button"
             variant="secondary"

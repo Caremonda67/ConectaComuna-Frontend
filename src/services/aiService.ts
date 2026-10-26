@@ -337,14 +337,45 @@ function generarRespuestaLocal(
     }
   }
 
-  // 13. Trato Seguro / Anticipo con validación lógica del 50%
+  // 13. Trato Seguro / Anticipo con validación lógica del 50% y generación de acuerdos
   if (
     texto.includes('trato seguro') ||
     texto.includes('anticipo') ||
     texto.includes('garantia') ||
     texto.includes('garantía') ||
-    texto.includes('50%')
+    texto.includes('50%') ||
+    texto.includes('pactar') ||
+    texto.includes('acuerdo') ||
+    texto.includes('comprobante')
   ) {
+    if (texto.includes('verificar') || texto.includes('código') || texto.includes('codigo')) {
+      return {
+        mensaje: `Puedes verificar la autenticidad de cualquier acuerdo vecinal escaneando su código QR o buscando su código oficial (por ejemplo CC-ORD-1). Aquí puedes consultar el comprobante en tiempo real:`,
+        tipo: 'navegacion',
+        rutaNavegacion: '/trato-seguro/verificar',
+        sugerencias: ['Verificar CC-ORD-1', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
+      }
+    }
+
+    if (texto.includes('pactar') || texto.includes('hacer acuerdo') || texto.includes('crear acuerdo')) {
+      const precioBase = 45000
+      const anticipoMax = 22500
+      return {
+        mensaje: `¡Excelente iniciativa, ${nombreUsuario}! He estructurado la ficha de Pacto de Trato Seguro. Cumple con la regla comunal: máximo 50% de anticipo para materiales y saldo contra entrega a entera satisfacción:`,
+        tipo: 'acuerdo_trato_seguro',
+        acuerdo: {
+          codigo: 'CC-ORD-1',
+          servicio: 'Servicio de oficio comunal acordado',
+          negocioNombre: 'Taller Comunitario',
+          precioEstimado: precioBase,
+          anticipoMaximo: anticipoMax,
+          saldoContraEntrega: precioBase - anticipoMax,
+          modalidad: 'workshop',
+        },
+        sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+      }
+    }
+
     const matchPorcentaje = texto.match(/(\d{2,3})\s*%/)
     if (matchPorcentaje && parseInt(matchPorcentaje[1], 10) > 50) {
       const pct = matchPorcentaje[1]
@@ -356,9 +387,18 @@ function generarRespuestaLocal(
     }
 
     return {
-      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. Todo queda registrado por escrito con código de verificación oficial.\n3. Si surge algún desacuerdo, cuentas con mediación vecinal comunitaria antes de cualquier conflicto.`,
-      tipo: 'conversacion',
-      sugerencias: ['¿Cómo pedir un servicio?', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. 🛡️ Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. 🧾 Todo queda registrado por escrito con código de verificación oficial y código QR escaneable.\n3. 🤝 Si surge algún desacuerdo, cuentas con el respaldo de mediación comunitaria de la Junta de Acción Comunal (JAC) antes de cualquier conflicto.`,
+      tipo: 'acuerdo_trato_seguro',
+      acuerdo: {
+        codigo: 'CC-ORD-1',
+        servicio: 'Servicio de mantenimiento y arreglo',
+        negocioNombre: 'Taller Comunal',
+        precioEstimado: 45000,
+        anticipoMaximo: 22500,
+        saldoContraEntrega: 22500,
+        modalidad: 'workshop',
+      },
+      sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
     }
   }
 

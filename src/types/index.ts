@@ -148,6 +148,35 @@ export interface Review {
   client?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>
 }
 
+export interface PactoVerificado {
+  codigo: string
+  order_id: string
+  status: OrderStatus
+  created_at: string
+  scheduled_for: string | null
+  title: string
+  description: string
+  service_location_type?: 'workshop' | 'home_delivery'
+  delivery_address?: string | null
+  business: {
+    id: string
+    name: string
+    category: string
+    phone: string | null
+    barrio?: string | null
+    is_verified?: boolean
+  }
+  client: {
+    name: string
+    phone_masked?: string | null
+  }
+  precio_total: number
+  anticipo: number
+  saldo_contra_entrega: number
+  porcentaje_anticipo: number
+  clausula_mediacion: string
+}
+
 export interface Badge {
   id: string
   label: string

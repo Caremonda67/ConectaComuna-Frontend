@@ -379,7 +379,14 @@ export default function BusinessDetailPage() {
               className="inline-flex items-center gap-1.5 text-xs text-brand-700 hover:text-brand-900 transition-colors"
             >
               <UI_ICONS.shieldCheck size={14} className="shrink-0" />
-              Contacto respaldado por el Trato Seguro Comunal
+              Respaldado por el Trato Seguro Comunal
+            </Link>
+            <Link
+              to="/trato-seguro/verificar"
+              className="inline-flex items-center gap-1 text-xs text-ink-500 hover:text-brand-700 transition-colors"
+            >
+              <UI_ICONS.search size={13} className="shrink-0" />
+              Verificar un pacto con QR
             </Link>
             <button
               type="button"
@@ -986,6 +993,14 @@ function SolicitudEnviadaModal({
             <span aria-hidden="true">🤝</span>
             Ver ficha de solicitud
           </Button>
+
+          <Link
+            to={`/trato-seguro/verificar/${code.replace('#', '')}`}
+            className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/40 px-4 py-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 transition-colors"
+          >
+            <UI_ICONS.shieldCheck size={14} />
+            Ver pacto público verificable con QR
+          </Link>
 
           <div className="flex gap-2">
             <Button onClick={onGoToPanel} fullWidth className="min-h-11">

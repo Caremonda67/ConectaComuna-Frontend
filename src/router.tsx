@@ -16,6 +16,7 @@ const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
 const TratoSeguroPage = lazy(() => import('@/pages/TratoSeguroPage'))
+const TratoSeguroVerificationPage = lazy(() => import('@/pages/TratoSeguroVerificationPage'))
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
@@ -59,6 +60,38 @@ const router = createBrowserRouter([
         element: (
           <Lazy>
             <HowItWorksPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'trato-seguro/verificar/:codigo',
+        element: (
+          <Lazy>
+            <TratoSeguroVerificationPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'trato-seguro/verificar',
+        element: (
+          <Lazy>
+            <TratoSeguroVerificationPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'verificar-trato/:codigo',
+        element: (
+          <Lazy>
+            <TratoSeguroVerificationPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'verificar-trato',
+        element: (
+          <Lazy>
+            <TratoSeguroVerificationPage />
           </Lazy>
         ),
       },

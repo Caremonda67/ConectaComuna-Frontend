@@ -38,11 +38,23 @@ export interface AccionPendienteAi {
   botonCancelar: string
 }
 
+export interface AcuerdoTratoSeguroAi {
+  codigo: string
+  servicio: string
+  negocioNombre: string
+  negocioId?: string
+  precioEstimado: number
+  anticipoMaximo: number
+  saldoContraEntrega: number
+  modalidad?: 'workshop' | 'home_delivery'
+}
+
 export interface RespuestaAi {
   mensaje: string
   tipo: TipoRespuestaAi
   negociosSugeridos?: NegocioSugeridoAi[]
   servicio?: ServicioSugeridoAi
+  acuerdo?: AcuerdoTratoSeguroAi
   rutaNavegacion?: string
   sugerencias?: string[]
   accionPendiente?: AccionPendienteAi
