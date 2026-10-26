@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { businessService } from '@/services/businessService'
@@ -20,8 +21,11 @@ export default function MapPage() {
       'Ubica en el mapa talleres, locales y oficios comunitarios cerca de tu barrio en Cali.',
   })
 
+  const [searchParams] = useSearchParams()
+  const catParam = (searchParams.get('categoria') || searchParams.get('cat')) as CategorySlug | null
+
   const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
-  const [category, setCategory] = useState<CategorySlug | 'all'>('all')
+  const [category, setCategory] = useState<CategorySlug | 'all'>(catParam || 'all')
   const [radiusKm, setRadiusKm] = useState(5)
 
   const elegirUbicacion = (u: UbicacionElegida) => {

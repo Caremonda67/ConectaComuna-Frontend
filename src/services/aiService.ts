@@ -34,16 +34,109 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
   const mensajesBot = historial.filter((m) => m.emisor === 'asistente')
   const ultimoMensajeBot = mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].texto.toLowerCase() : ''
 
-  // 1. Petición para aprender a dictar o iniciar el dictado (NO crea servicio falso)
+  // 1. Navegación al mapa comunal
+  if (
+    texto === 'ver en el mapa' ||
+    texto.includes('en el mapa') ||
+    texto.includes('ver mapa') ||
+    texto.includes('abrir mapa') ||
+    texto === 'mapa'
+  ) {
+    let ruta = '/mapa'
+    let catNombre = ''
+    if (ultimoMensajeBot.includes('costura') || ultimoMensajeBot.includes('modista') || ultimoMensajeBot.includes('marta')) {
+      ruta = '/mapa?categoria=costura'
+      catNombre = 'de costura y modistería'
+    } else if (ultimoMensajeBot.includes('cerraj')) {
+      ruta = '/mapa?categoria=cerrajeria'
+      catNombre = 'de cerrajería'
+    } else if (ultimoMensajeBot.includes('barber') || ultimoMensajeBot.includes('belleza') || ultimoMensajeBot.includes('peluquer')) {
+      ruta = '/mapa?categoria=belleza'
+      catNombre = 'de estética y barbería'
+    } else if (ultimoMensajeBot.includes('comida') || ultimoMensajeBot.includes('almuerzo')) {
+      ruta = '/mapa?categoria=comida'
+      catNombre = 'de comida casera'
+    } else if (ultimoMensajeBot.includes('celular') || ultimoMensajeBot.includes('tecnolog')) {
+      ruta = '/mapa?categoria=tecnologia'
+      catNombre = 'de reparación técnica'
+    }
+
+    const detalle = catNombre ? `los talleres ${catNombre}` : 'los talleres, modisterías y cerrajerías'
+
+    return {
+      mensaje: `¡Con gusto, vecino! En el mapa comunal interactivo puedes ubicar ${detalle} geolocalizados cerca de tu barrio. Toca el botón para abrir el mapa directamente:`,
+      tipo: 'navegacion',
+      rutaNavegacion: ruta,
+      sugerencias: ['Oficios cerca de mí', '🔑 Cerrajería urgente', 'Buscar otro oficio'],
+    }
+  }
+
+  // 2. Navegación a explorar oficios / buscar otro oficio
+  if (
+    texto.includes('buscar otro oficio') ||
+    texto.includes('explorar oficios') ||
+    texto.includes('ver categorías') ||
+    texto.includes('ver categorias') ||
+    texto.includes('otro oficio')
+  ) {
+    return {
+      mensaje: `En nuestra comuna encuentras modistas, cerrajeros, zapateros, técnicos de celular, barberías y comida casera. Puedes tocar una categoría o explorar el directorio completo:`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/explorar',
+      sugerencias: ['👗 Costura y modistería', '🔑 Cerrajería', '💇 Barbería y estética', '📱 Reparación de celulares'],
+    }
+  }
+
+  // 3. ¿Cómo pedir un servicio?
+  if (
+    texto.includes('cómo pedir') ||
+    texto.includes('como pedir') ||
+    texto.includes('cómo contratar') ||
+    texto.includes('como contratar') ||
+    texto.includes('pedir un servicio')
+  ) {
+    return {
+      mensaje: `Pedir un servicio en ConectaComuna es directo y seguro:\n1. 🔍 Buscas el oficio que necesitas (por cercanía o categoría).\n2. 💬 Tocas el botón verde de WhatsApp para acordar directamente con el emprendedor.\n3. 🛡️ Si el trabajo requiere compra previa de repuestos o materiales, recuerden pactar el Trato Seguro: anticipo máximo del 50% con comprobante oficial.`,
+      tipo: 'conversacion',
+      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos', 'Ver en el mapa'],
+    }
+  }
+
+  // 4. Registro de nuevo negocio / Crear perfil
+  if (
+    texto.includes('crear perfil') ||
+    texto.includes('crear negocio') ||
+    texto.includes('cómo me registro') ||
+    texto.includes('como me registro') ||
+    texto.includes('registrar mi negocio') ||
+    texto.includes('cómo publicar') ||
+    texto.includes('como publicar')
+  ) {
+    return {
+      mensaje: `¡Publicar tu oficio es 100% gratuito y toma menos de 2 minutos! Así tus vecinos podrán encontrarte en el mapa y pedirte servicios por WhatsApp sin comisiones ni intermediarios.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/registro?tipo=business',
+      sugerencias: ['¿Qué necesito para registrarme?', '🎙️ Dictar mi servicio para el catálogo', '¿Qué es el facilitador?'],
+    }
+  }
+
+  // 5. ¿Qué necesito para registrarme?
+  if (texto.includes('qué necesito') || texto.includes('que necesito') || texto.includes('requisitos')) {
+    return {
+      mensaje: `Para publicar tu oficio solo necesitas:\n• El nombre de tu taller u oficio.\n• Tu número de WhatsApp de contacto.\n• Tu barrio en la comuna (o dirección aproximada).\n• Si tienes fotos de tus trabajos, ¡mucho mejor! Y si no sabes cómo subirlas, un Facilitador Comunitario te apoya en persona.`,
+      tipo: 'conversacion',
+      sugerencias: ['Crear negocio para publicar', '¿Qué es el facilitador?', 'Ver en el mapa'],
+    }
+  }
+
+  // 6. Petición para aprender a dictar o iniciar el dictado (NO crea servicio falso)
   const esPeticionDictado =
     texto.includes('dictar mi servicio') ||
     texto.includes('cómo dicto') ||
     texto.includes('como dicto') ||
     texto.includes('quiero dictar') ||
     texto.includes('dictar un servicio') ||
-    texto.includes('dictar servicio') ||
-    texto.includes('cómo publico') ||
-    texto.includes('como publico')
+    texto.includes('dictar servicio')
 
   if (esPeticionDictado) {
     return {
@@ -57,7 +150,7 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
     }
   }
 
-  // 2. Intención de cambiar el precio
+  // 7. Intención de cambiar el precio
   const esPeticionCambiarPrecio =
     texto === 'cambiar el precio' ||
     texto.includes('cambiar el precio') ||
@@ -75,7 +168,7 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
     }
   }
 
-  // 3. Respuesta con un nuevo monto tras pedir cambio de precio
+  // 8. Respuesta con un nuevo monto tras pedir cambio de precio
   const precioSoloMatch = texto.match(/\b(\d{1,3}(?:\.\d{3})*|\d+)\s*(?:mil|pesos|\$)?\b/)
   const contextoPrevioPidePrecio =
     ultimoMensajeBot.includes('precio') ||
@@ -100,7 +193,7 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
     }
   }
 
-  // 4. Intención de guardar en el catálogo
+  // 9. Guardar en catálogo
   const esPeticionGuardar =
     texto === 'guardar en mi catálogo' ||
     texto === 'guardar en mi catalogo' ||
@@ -110,31 +203,57 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
 
   if (esPeticionGuardar) {
     return {
-      mensaje: `Para publicar este servicio en la plataforma:\n1. Si ya tienes tu cuenta de negocio, toca el botón verde "Guardar directamente en mi catálogo" en la tarjeta superior y se registrará al instante.\n2. Si aún no te has registrado como emprendedor, toca el botón para crear tu perfil gratis en 1 minuto. Así tu taller quedará visible para todos los vecinos.`,
+      mensaje: `Para publicar este servicio en la plataforma:\n1. Si ya tienes tu cuenta de negocio, solo toca el botón verde "Guardar directamente en mi catálogo" en la tarjeta superior y se registrará al instante.\n2. Si aún no te has registrado como emprendedor, toca el botón para crear tu perfil gratis en 1 minuto. Así tu taller quedará visible para todos los vecinos.`,
       tipo: 'conversacion',
       sugerencias: ['Crear negocio para publicar', 'Ver oficios cercanos', '¿Cómo funciona el Trato Seguro?'],
     }
   }
 
-  // 5. Trato Seguro
-  if (texto.includes('trato seguro') || texto.includes('anticipo') || texto.includes('garantia') || texto.includes('50%')) {
+  // 10. Trato Seguro / Anticipo
+  if (
+    texto.includes('trato seguro') ||
+    texto.includes('anticipo') ||
+    texto.includes('garantia') ||
+    texto.includes('garantía') ||
+    texto.includes('50%')
+  ) {
     return {
       mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. Todo queda registrado por escrito con código de verificación oficial.\n3. Si surge algún desacuerdo, cuentas con mediación vecinal comunitaria antes de cualquier conflicto.`,
       tipo: 'conversacion',
-      sugerencias: ['¿Cómo pedir un servicio?', '¿Qué es el facilitador?', 'Ver oficios cercanos'],
+      sugerencias: ['¿Cómo pedir un servicio?', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
     }
   }
 
-  // 6. Facilitador Comunitario
-  if (texto.includes('facilitador') || texto.includes('apadrinar') || texto.includes('nieto') || texto.includes('ayuda digital')) {
+  // 11. Desacuerdos / Mediación
+  if (
+    texto.includes('desacuerdo') ||
+    texto.includes('problema') ||
+    texto.includes('mediación') ||
+    texto.includes('mediacion')
+  ) {
+    return {
+      mensaje: `Si surge algún inconveniente o retraso con un trabajo, ConectaComuna promueve la mediación comunitaria a través de los líderes de la Junta de Acción Comunal (JAC) y los facilitadores del barrio, buscando siempre un acuerdo amistoso y justo.`,
+      tipo: 'conversacion',
+      sugerencias: ['¿Cómo funciona el Trato Seguro?', '¿Qué es el facilitador?', 'Ver oficios cercanos'],
+    }
+  }
+
+  // 12. Facilitador Comunitario
+  if (
+    texto.includes('facilitador') ||
+    texto.includes('apadrinar') ||
+    texto.includes('nieto') ||
+    texto.includes('ayuda digital') ||
+    texto.includes('adulto mayor')
+  ) {
     return {
       mensaje: `El Facilitador Comunitario es un familiar o vecino joven de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 6 letras para vincularlo de inmediato.`,
       tipo: 'conversacion',
-      sugerencias: ['¿Cómo registrarme?', '¿Cómo funciona el Trato Seguro?'],
+      sugerencias: ['Crear negocio para publicar', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
     }
   }
 
-  // 7. Dictado real de un oficio
+  // 13. Dictado real de un oficio
   const contieneAccionOficio =
     texto.includes('vendo') ||
     texto.includes('hago') ||
@@ -206,11 +325,11 @@ function generarRespuestaLocal(mensaje: string, barrio: string, historial: Mensa
     }
   }
 
-  // 8. Saludo o mensaje general de orientación
+  // 14. Saludo o mensaje general de orientación
   return {
     mensaje: `¡Hola vecino! Soy tu Asistente Comunal para ${descUbi.enBarrio}. Estoy aquí para ayudarte a:\n• 📍 Encontrar oficios de confianza cerca de tu ubicación actual.\n• 🎙️ Dictar y publicar tus servicios con la voz para tu catálogo.\n• 🛡️ Explicarte el Trato Seguro y las garantías vecinales.\n\n¿En qué te colaboro hoy?`,
     tipo: 'conversacion',
-    sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', '¿Cómo funciona el Trato Seguro?'],
+    sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', 'Ver en el mapa'],
   }
 }
 

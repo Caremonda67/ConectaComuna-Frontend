@@ -591,22 +591,54 @@ export function AsistenteComunalModal() {
                     </div>
                   )}
 
-                  {/* Tarjeta de navegación rápida */}
-                  {estructurada && estructurada.tipo === 'navegacion' && estructurada.rutaNavegacion && (
-                    <div className="mt-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigate(estructurada.rutaNavegacion!)
-                          cerrarAsistente()
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors shadow-xs"
-                      >
-                        <UI_ICONS.compass size={16} />
-                        Ir a la sección
-                      </button>
-                    </div>
-                  )}
+                  {/* Tarjeta de navegación rápida enriquecida */}
+                  {estructurada && estructurada.tipo === 'navegacion' && estructurada.rutaNavegacion && (() => {
+                    const esMapa = estructurada.rutaNavegacion.startsWith('/mapa')
+                    const esExplorar = estructurada.rutaNavegacion.startsWith('/explorar')
+                    const esRegistro = estructurada.rutaNavegacion.startsWith('/registro')
+
+                    const IconoNav = esMapa ? UI_ICONS.map : esExplorar ? UI_ICONS.search : esRegistro ? UI_ICONS.store : UI_ICONS.compass
+                    const tituloNav = esMapa ? 'Mapa Comunal Interactivo' : esExplorar ? 'Directorio de Oficios' : esRegistro ? 'Registro de Emprendedor' : 'Sección recomendada'
+                    const descNav = esMapa
+                      ? 'Ubica talleres, modisterías y cerrajerías geolocalizados cerca de tu barrio'
+                      : esExplorar
+                        ? 'Explora todas las categorías y emprendedores de la comuna'
+                        : esRegistro
+                          ? 'Publica tu taller u oficio gratis en 2 minutos sin intermediarios'
+                          : 'Toca el botón para abrir esta sección directamente'
+                    const botonTexto = esMapa ? 'Abrir mapa comunal' : esExplorar ? 'Explorar directorio' : esRegistro ? 'Crear perfil gratis' : 'Ir a la sección'
+
+                    return (
+                      <div className="mt-3 w-full max-w-[95%] card-soft p-3.5 border border-brand-300 dark:border-brand-500/40 rounded-2xl shadow-xs">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 flex items-center justify-center shrink-0">
+                            <IconoNav size={20} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-bold text-ink-900">
+                              {tituloNav}
+                            </div>
+                            <p className="text-[11px] text-ink-600 mt-0.5 leading-snug">
+                              {descNav}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            detenerLecturaVoz()
+                            navigate(estructurada.rutaNavegacion!)
+                            cerrarAsistente()
+                          }}
+                          className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors shadow-xs"
+                        >
+                          <span>{botonTexto}</span>
+                          <UI_ICONS.chevronRight size={14} />
+                        </button>
+                      </div>
+                    )
+                  })()}
 
                   {/* Chips sugeridos dentro de la respuesta */}
                   {estructurada && estructurada.sugerencias && estructurada.sugerencias.length > 0 && (
