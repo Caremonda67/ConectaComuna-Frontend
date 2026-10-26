@@ -478,6 +478,35 @@ export const orderService = {
     }
 
     // 4. Semillas estáticas de demostración para jurados (disponibles en cualquier dispositivo sin caché)
+    if (clean === 'demo2026' || clean === 'demo' || clean === 'demo-2026-acuerdo-comunal') {
+      return {
+        codigo: 'CC-DEMO2026',
+        order_id: 'demo-2026-acuerdo-comunal',
+        status: 'in_progress',
+        created_at: '2026-10-25T10:30:00Z',
+        scheduled_for: '2026-10-28T16:00:00Z',
+        title: 'Restauración de comedor de madera y cambio de tapizado',
+        description: 'Lijado fino, barniz mate impermeable y retapizado en lino antifluidos para 4 sillas de comedor.',
+        service_location_type: 'workshop',
+        delivery_address: 'Calle 44 # 39B-18, Taller La Esperanza',
+        business: {
+          id: 'biz-demo-ebanisteria',
+          name: 'Ebanistería y Restauración Don Carlos',
+          category: 'arreglos',
+          phone: '3187654321',
+          barrio: 'Antonio Nariño, Comuna 16, Cali',
+          is_verified: true,
+        },
+        client: { name: 'Esperanza Gómez (Vecina)', phone_masked: '...6543' },
+        precio_total: 160000,
+        anticipo: 80000,
+        saldo_contra_entrega: 80000,
+        porcentaje_anticipo: 50,
+        clausula_mediacion:
+          'Pacto protegido bajo el Trato Seguro Comunal con mediación en equidad de la Junta de Acción Comunal (JAC) conforme a la Ley 2166 de 2021.',
+      }
+    }
+
     if (clean === 'ord-1' || clean === 'ord-1-demostracion') {
       return {
         codigo: 'CC-ORD-1',
