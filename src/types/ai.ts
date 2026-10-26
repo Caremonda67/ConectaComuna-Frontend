@@ -4,6 +4,7 @@ export type TipoRespuestaAi =
   | 'servicio_catalogo'
   | 'acuerdo_trato_seguro'
   | 'navegacion'
+  | 'confirmacion_accion'
 
 export interface NegocioSugeridoAi {
   id: string
@@ -22,6 +23,21 @@ export interface ServicioSugeridoAi {
   categoria: string
 }
 
+export type TipoAccionPendiente =
+  | 'activar_negocio'
+  | 'guardar_servicio'
+  | 'vincular_facilitador'
+  | 'crear_trato_seguro'
+
+export interface AccionPendienteAi {
+  tipo: TipoAccionPendiente
+  titulo: string
+  descripcion: string
+  payload?: Record<string, unknown>
+  botonConfirmar: string
+  botonCancelar: string
+}
+
 export interface RespuestaAi {
   mensaje: string
   tipo: TipoRespuestaAi
@@ -29,6 +45,36 @@ export interface RespuestaAi {
   servicio?: ServicioSugeridoAi
   rutaNavegacion?: string
   sugerencias?: string[]
+  accionPendiente?: AccionPendienteAi
+}
+
+export interface ContextoUsuarioCopiloto {
+  autenticado: boolean
+  userId?: string | null
+  nombre?: string | null
+  email?: string | null
+  tipoCuenta?: 'client' | 'business' | 'facilitador' | 'admin'
+  rolActivo?: string
+  telefono?: string | null
+  barrio?: string | null
+  negocioPropio?: {
+    tieneNegocio: boolean
+    id?: string | null
+    nombre?: string | null
+    categoria?: string | null
+    serviciosCount?: number
+    verificado?: boolean
+  } | null
+  pantallaActual?: {
+    ruta: string
+    negocioId?: string | null
+    negocioNombre?: string | null
+  }
+  ubicacion?: {
+    barrio: string
+    lat: number
+    lng: number
+  }
 }
 
 export interface MensajeChat {

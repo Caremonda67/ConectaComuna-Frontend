@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { useAsistente } from '@/hooks/useAsistente'
 import { useAuth } from '@/hooks/useAuth'
@@ -7,7 +7,8 @@ import { leerUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { businessService } from '@/services/businessService'
-import type { MensajeChat, NegocioSugeridoAi, ServicioSugeridoAi } from '@/types/ai'
+import { profileService } from '@/services/profileService'
+import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, ServicioSugeridoAi } from '@/types/ai'
 import type { ServiceCatalogItem } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -62,8 +63,9 @@ Puedo colaborarte para:
 
 export function AsistenteComunalModal() {
   const { isOpen, cerrarAsistente, mensajeInicial } = useAsistente()
-  const { business, refresh } = useAuth()
+  const { userId, email, profile, business, activeRole, refresh } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const prefersReduced = useReducedMotion()
 
   const ubicacion = leerUbicacion()
@@ -87,6 +89,7 @@ export function AsistenteComunalModal() {
   const [guardandoServicioId, setGuardandoServicioId] = useState<string | null>(null)
   const [servicioGuardadoId, setServicioGuardadoId] = useState<string | null>(null)
   const [errorVoz, setErrorVoz] = useState<string | null>(null)
+  const [ejecutandoAccion, setEjecutandoAccion] = useState(false)
 
   const reconocimientoRef = useRef<IWindowSpeechRecognition | null>(null)
   const finalScrollRef = useRef<HTMLDivElement | null>(null)
@@ -158,7 +161,40 @@ export function AsistenteComunalModal() {
       setCargando(true)
 
       try {
-        const respuestaAi = await enviarMensajeAsistente(texto, [...mensajes, nuevoMensajeUsuario])
+        const contexto: ContextoUsuarioCopiloto = {
+          autenticado: !!userId,
+          userId,
+          nombre: profile?.full_name || null,
+          email: email || null,
+          tipoCuenta: profile?.account_type || (userId ? 'client' : undefined),
+          rolActivo: activeRole,
+          telefono: profile?.phone || null,
+          barrio: profile?.neighborhood || barrioActivo,
+          negocioPropio: business
+            ? {
+                tieneNegocio: true,
+                id: business.id,
+                nombre: business.name,
+                categoria: business.category,
+                serviciosCount: business.services_catalog?.length || 0,
+                verificado: business.verification_status === 'verified',
+              }
+            : { tieneNegocio: false },
+          pantallaActual: {
+            ruta: location.pathname,
+          },
+          ubicacion: {
+            barrio: barrioActivo,
+            lat: ubicacion?.center.lat || 3.4372,
+            lng: ubicacion?.center.lng || -76.5225,
+          },
+        }
+
+        const respuestaAi = await enviarMensajeAsistente(
+          texto,
+          [...mensajes, nuevoMensajeUsuario],
+          contexto
+        )
 
         const idRespuesta = `ai-${Date.now()}`
         const nuevoMensajeAi: MensajeChat = {
@@ -187,7 +223,7 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, ubicacion]
   )
 
   // Procesar mensaje inicial si fue invocado externamente
@@ -218,6 +254,26 @@ export function AsistenteComunalModal() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, cerrarAsistente, detenerLecturaVoz])
+
+  // Ejecutar acción de mutación confirmada por el usuario
+  const ejecutarAccionConfirmada = async (accion?: AccionPendienteAi) => {
+    setEjecutandoAccion(true)
+    try {
+      if (accion?.tipo === 'activar_negocio' || !accion) {
+        if (userId) {
+          await profileService.update(userId, { account_type: 'business' })
+          await refresh()
+        }
+        detenerLecturaVoz()
+        cerrarAsistente()
+        navigate('/panel/negocio')
+      }
+    } catch (err) {
+      console.error('Error al ejecutar acción confirmada:', err)
+    } finally {
+      setEjecutandoAccion(false)
+    }
+  }
 
   // Guardar preferencia de TTS
   const toggleTts = () => {
@@ -289,8 +345,15 @@ export function AsistenteComunalModal() {
   // Guardar servicio estructurado en el catálogo del negocio del usuario
   const guardarEnCatalogo = async (servicio: ServicioSugeridoAi, mensajeId: string) => {
     if (!business) {
-      navigate('/registro?tipo=business')
-      cerrarAsistente()
+      if (userId) {
+        detenerLecturaVoz()
+        cerrarAsistente()
+        navigate('/panel/negocio')
+      } else {
+        detenerLecturaVoz()
+        cerrarAsistente()
+        navigate('/registro?tipo=business')
+      }
       return
     }
 
@@ -314,6 +377,19 @@ export function AsistenteComunalModal() {
 
       await refresh()
       setServicioGuardadoId(mensajeId)
+
+      const msgExito: MensajeChat = {
+        id: `exito-${mensajeId}`,
+        emisor: 'asistente',
+        texto: `¡Excelente, vecino! El servicio "${servicio.titulo}" con tarifa de ${servicio.precioSugerido?.toLocaleString('es-CO')} COP ya quedó guardado en el catálogo público de tu negocio "${business.name}".`,
+        fecha: new Date(),
+        respuestaEstructurada: {
+          mensaje: '',
+          tipo: 'conversacion',
+          sugerencias: ['🎙️ Dictar otro servicio', 'Ir al panel de mi negocio', 'Ver en el mapa'],
+        },
+      }
+      setMensajes((prev) => [...prev, msgExito])
     } catch (err) {
       console.error('Error al guardar servicio en catálogo:', err)
     } finally {
@@ -587,6 +663,56 @@ export function AsistenteComunalModal() {
                             {business ? 'Guardar directamente en mi catálogo' : 'Crear negocio para publicar este servicio'}
                           </button>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tarjeta de Confirmación de Acción Explícita */}
+                  {estructurada && estructurada.tipo === 'confirmacion_accion' && (
+                    <div className="mt-3 w-full max-w-[95%] card-soft p-3.5 border-2 border-amber-400/80 dark:border-amber-500/60 rounded-2xl shadow-xs">
+                      <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">
+                        <UI_ICONS.alert size={15} />
+                        Confirmación requerida
+                      </div>
+                      <div className="text-xs font-bold text-ink-900">
+                        {estructurada.accionPendiente?.titulo || 'Confirmar acción'}
+                      </div>
+                      <p className="text-[11px] text-ink-700 mt-1 leading-snug">
+                        {estructurada.accionPendiente?.descripcion ||
+                          'Para continuar, confirma si deseas realizar este cambio en tu perfil.'}
+                      </p>
+
+                      <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={ejecutandoAccion}
+                          onClick={() => ejecutarAccionConfirmada(estructurada.accionPendiente)}
+                          className="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-center transition-colors shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          {ejecutandoAccion ? (
+                            <UI_ICONS.loader size={14} className="animate-spin" />
+                          ) : (
+                            <UI_ICONS.checkCircle size={14} />
+                          )}
+                          <span>
+                            {estructurada.accionPendiente?.botonConfirmar || '✅ Sí, activar mi negocio'}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={ejecutandoAccion}
+                          onClick={() =>
+                            manejarEnvio(
+                              estructurada.accionPendiente?.botonCancelar || '❌ No por ahora'
+                            )
+                          }
+                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-800 text-center transition-colors border border-ink-200"
+                        >
+                          <span>
+                            {estructurada.accionPendiente?.botonCancelar || '❌ No por ahora'}
+                          </span>
+                        </button>
                       </div>
                     </div>
                   )}
