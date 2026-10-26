@@ -117,10 +117,10 @@ export const CATEGORIES: Category[] = [
     name: 'Otros oficios',
     icon: CATEGORY_ICONS.otros,
     style: {
-      iconBg: 'bg-brand-100 text-brand-700 dark:bg-brand-950/70 dark:text-brand-300 group-hover:bg-brand-600 group-hover:text-white',
+      iconBg: 'bg-brand-100 text-brand-700 dark:bg-brand-950/70 dark:text-emerald-400 group-hover:bg-brand-600 group-hover:text-white',
       hoverBorder: 'hover:border-brand-300 dark:hover:border-brand-700',
       hoverBg: 'hover:bg-brand-50/50 dark:hover:bg-brand-950/20',
-      hoverText: 'group-hover:text-brand-900 dark:group-hover:text-brand-200',
+      hoverText: 'group-hover:text-brand-900 dark:group-hover:text-emerald-300',
     },
   },
 ]

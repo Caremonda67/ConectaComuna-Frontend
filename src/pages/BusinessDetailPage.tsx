@@ -204,7 +204,7 @@ export default function BusinessDetailPage() {
         )}
 
         {business.wholesale_enabled && (
-          <div className="mt-3.5 rounded-xl border border-brand-200 dark:border-brand-400/35 bg-brand-50/80 dark:bg-[#18281d] p-3.5 text-xs text-brand-950 dark:text-ink-100 shadow-2xs">
+          <div className="mt-3.5 rounded-xl border border-brand-200 dark:border-brand-400/35 bg-brand-50/80 dark:bg-[#18281d] p-3.5 text-xs text-brand-950 dark:text-ink-800 shadow-2xs">
             <div className="flex items-start gap-2.5">
               <UI_ICONS.package size={20} className="text-brand-600 dark:text-brand-400 shrink-0 mt-0.5" />
               <div className="space-y-1.5 flex-1">

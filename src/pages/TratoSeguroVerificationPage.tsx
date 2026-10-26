@@ -195,25 +195,25 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
         </form>
 
         <div className="pt-3 border-t border-ink-200 dark:border-ink-700 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-400">
-          <span className="font-medium text-ink-700 dark:text-ink-300">Códigos de prueba para jurados y vecinos:</span>
+          <span className="font-medium text-ink-700 dark:text-ink-700">Códigos de prueba para jurados y vecinos:</span>
           <button
             type="button"
             onClick={() => { setCodigoBuscado('CC-93E416F2'); navigate('/trato-seguro/verificar/CC-93E416F2') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-cream-200 dark:bg-cream-300 hover:bg-brand-50 dark:hover:bg-brand-900/60 text-ink-900 dark:text-white font-mono font-bold border border-ink-300 dark:border-ink-500 transition-colors cursor-pointer text-xs"
           >
             CC-93E416F2
           </button>
           <button
             type="button"
             onClick={() => { setCodigoBuscado('CC-E9894D7D'); navigate('/trato-seguro/verificar/CC-E9894D7D') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-cream-200 dark:bg-cream-300 hover:bg-brand-50 dark:hover:bg-brand-900/60 text-ink-900 dark:text-white font-mono font-bold border border-ink-300 dark:border-ink-500 transition-colors cursor-pointer text-xs"
           >
             CC-E9894D7D
           </button>
           <button
             type="button"
             onClick={() => { setCodigoBuscado('CC-ORD-1'); navigate('/trato-seguro/verificar/CC-ORD-1') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
+            className="px-2.5 py-1.5 rounded-lg bg-cream-200 dark:bg-cream-300 hover:bg-brand-50 dark:hover:bg-brand-900/60 text-ink-900 dark:text-white font-mono font-bold border border-ink-300 dark:border-ink-500 transition-colors cursor-pointer text-xs"
           >
             CC-ORD-1
           </button>
@@ -427,7 +427,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
             </section>
 
             {/* Código QR Verificable y Enlace Directo */}
-            <div className="rounded-2xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-100 p-5 flex flex-col sm:flex-row items-center gap-5">
+            <div className="rounded-2xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-200 p-5 flex flex-col sm:flex-row items-center gap-5">
               <div className="p-3 bg-white rounded-xl shadow-xs border border-ink-200 shrink-0">
                 <img
                   src={urlQr}
@@ -439,10 +439,10 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 />
               </div>
               <div className="space-y-2 text-center sm:text-left flex-1">
-                <h4 className="text-sm font-bold text-ink-900 dark:text-ink-100">
+                <h4 className="text-base font-bold text-ink-900 dark:text-white">
                   Código QR de Verificación Pública
                 </h4>
-                <p className="text-xs text-ink-600 dark:text-ink-300 leading-relaxed">
+                <p className="text-xs sm:text-sm text-ink-600 dark:text-ink-700 leading-relaxed">
                   Cualquier vecino, cliente o líder de la JAC puede escanear este código con su teléfono para corroborar en tiempo real que este acuerdo es auténtico y está protegido por ConectaComuna.
                 </p>
                 <div className="pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
@@ -451,7 +451,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                     variant="secondary"
                     size="sm"
                     onClick={copiarEnlace}
-                    className="text-xs"
+                    className="text-xs min-h-[38px] w-full sm:w-auto justify-center"
                   >
                     <UI_ICONS.copy size={14} />
                     {copiado ? '¡Enlace copiado!' : 'Copiar enlace directo'}
@@ -462,23 +462,24 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
           </div>
 
           {/* Barra de Acciones */}
-          <div className="p-5 bg-cream-50 dark:bg-cream-100 border-t border-ink-200 flex flex-wrap items-center justify-between gap-3 print:hidden">
+          <div className="p-5 bg-cream-50 dark:bg-cream-100 border-t border-ink-200 dark:border-ink-700 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
             <Button
               type="button"
               variant="secondary"
               size="md"
               onClick={() => window.print()}
+              className="w-full sm:w-auto justify-center min-h-[42px]"
             >
               Imprimir o Guardar PDF
             </Button>
 
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
               {pactoActivo.business.phone && (
                 <a
                   href={`https://wa.me/57${pactoActivo.business.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola, te escribo por el Pacto de Trato Seguro #${pactoActivo.codigo} de ConectaComuna.`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-ink-200 bg-white dark:bg-cream-50 text-ink-900 hover:bg-cream-100 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-200 text-ink-900 dark:text-white hover:bg-cream-100 dark:hover:bg-cream-300 transition-colors w-full sm:w-auto min-h-[42px]"
                 >
                   <UI_ICONS.whatsapp size={16} className="text-emerald-600" />
                   Escribir al taller
@@ -489,7 +490,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 type="button"
                 size="md"
                 onClick={compartirWhatsApp}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-auto justify-center min-h-[42px]"
               >
                 <UI_ICONS.whatsapp size={16} />
                 Compartir por WhatsApp

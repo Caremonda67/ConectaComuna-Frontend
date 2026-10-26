@@ -164,7 +164,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
           <Link
             to={`/trato-seguro/verificar/${codigoAcuerdo}`}
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-brand-300 hover:underline mr-auto"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-700 dark:text-emerald-400 hover:underline mr-auto"
           >
             <UI_ICONS.shieldCheck size={15} />
             Ver pacto público con QR

@@ -41,7 +41,7 @@ const ACUERDOS = [
     detalle:
       'El compromiso del trabajador es entregar a tiempo y con calidad. Pero los imprevistos pasan en cualquier taller: si surge una demora, avisar al cliente con anticipación demuestra seriedad y respeto por el tiempo del vecino.',
     icon: UI_ICONS.calendar,
-    badgeColor: 'bg-brand-100 dark:bg-brand-950/60 text-brand-800 dark:text-brand-300 border-brand-300 dark:border-brand-800/60',
+    badgeColor: 'bg-brand-100 dark:bg-emerald-950/80 text-brand-800 dark:text-emerald-300 border-brand-300 dark:border-emerald-700/60',
   },
   {
     numero: 5,
@@ -135,7 +135,7 @@ export default function TratoSeguroPage() {
       <section aria-labelledby="verificador-rapido" className="card p-5 sm:p-6 border-brand-300 dark:border-brand-800 bg-brand-50/70 dark:bg-brand-950/40 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-brand-800 dark:text-brand-300 inline-flex items-center gap-1.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-brand-800 dark:text-emerald-400 inline-flex items-center gap-1.5">
               <UI_ICONS.shieldCheck size={16} />
               Verificador Oficial de Trato Seguro
             </span>

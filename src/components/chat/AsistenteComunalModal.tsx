@@ -603,31 +603,31 @@ export function AsistenteComunalModal() {
           className="pointer-events-auto relative flex flex-col w-full sm:w-[440px] h-[85vh] sm:h-[650px] max-h-[92vh] bg-cream-100 border border-ink-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Encabezado */}
-          <header className="flex items-center justify-between px-4 py-3.5 border-b border-ink-200 bg-cream-200/70">
-            <div className="flex items-center gap-3">
-              <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-900/20">
-                <UI_ICONS.bot size={22} className="stroke-[2.2] text-amber-300" />
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-cream-100" />
+          <header className="flex items-center justify-between px-3.5 sm:px-4 py-3 border-b border-ink-200 dark:border-ink-700 bg-cream-200/70 dark:bg-cream-100">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-900/20 shrink-0">
+                <UI_ICONS.bot size={20} className="stroke-[2.2] text-amber-300 sm:w-[22px] sm:h-[22px]" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border-2 border-cream-100" />
               </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <h2 className="text-sm font-bold text-ink-900 leading-tight">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-nowrap">
+                  <h2 className="text-sm font-bold text-ink-900 leading-tight truncate">
                     Asistente Comunal
                   </h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-brand-100 text-brand-800 dark:bg-brand-100 dark:text-brand-300">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-100 text-brand-900 dark:bg-emerald-950/90 dark:text-emerald-300 border border-brand-200 dark:border-emerald-700/60 shrink-0">
                     IA Vecinal
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-[11px] text-ink-600">
                   <UI_ICONS.map size={12} className="text-brand-600 dark:text-brand-400 shrink-0" />
-                  <span className="truncate max-w-[200px]">
+                  <span className="truncate max-w-[150px] sm:max-w-[200px]">
                     {descUbi.etiquetaCorta} (Cali)
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 ml-1">
               {/* Toggle lectura de voz (TTS) */}
               <button
                 type="button"
@@ -636,8 +636,8 @@ export function AsistenteComunalModal() {
                 className={cn(
                   'p-2 rounded-xl transition-colors',
                   ttsActivo
-                    ? 'bg-brand-200 dark:bg-brand-800/60 text-brand-900 dark:text-brand-100'
-                    : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200'
+                    ? 'bg-brand-200 dark:bg-emerald-950/80 text-brand-900 dark:text-emerald-300 border border-brand-300 dark:border-emerald-700/60'
+                    : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:hover:bg-cream-200'
                 )}
                 aria-label={ttsActivo ? 'Silenciar lectura de voz' : 'Activar lectura de voz'}
               >
@@ -686,7 +686,7 @@ export function AsistenteComunalModal() {
                       'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed',
                       esUsuario
                         ? 'bg-brand-600 text-white rounded-tr-none shadow-xs'
-                        : 'bg-cream-50 border border-ink-200 text-ink-900 rounded-tl-none shadow-xs'
+                        : 'bg-white dark:bg-cream-200 border border-ink-200 dark:border-ink-700 text-ink-900 rounded-tl-none shadow-xs'
                     )}
                   >
                     <FormatoTextoMensaje texto={m.texto} />
@@ -697,7 +697,7 @@ export function AsistenteComunalModal() {
                         <button
                           type="button"
                           onClick={() => leerTextoEnVozAlta(m.texto, m.id)}
-                          className="flex items-center gap-1.5 text-xs text-brand-700 dark:text-brand-400 font-semibold hover:underline focus:outline-none"
+                          className="flex items-center gap-1.5 text-xs text-brand-700 dark:text-emerald-400 font-semibold hover:underline focus:outline-none"
                         >
                           <UI_ICONS.volume size={14} />
                           {hablandoId === m.id ? 'Pausar audio' : 'Escuchar respuesta'}
@@ -724,7 +724,7 @@ export function AsistenteComunalModal() {
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-xl bg-brand-100 text-brand-800 dark:bg-brand-100 dark:text-brand-300">
+                                <div className="p-2 rounded-xl bg-brand-100 text-brand-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-transparent dark:border-emerald-700/50">
                                   <CategoryIcon size={18} />
                                 </div>
                                 <div>
@@ -793,7 +793,7 @@ export function AsistenteComunalModal() {
                   {/* Tarjeta de servicio estructurado (Emprendedor dictando servicio) */}
                   {estructurada && estructurada.tipo === 'servicio_catalogo' && estructurada.servicio && (
                     <div className="mt-3 w-full max-w-[95%] card-soft p-4 border-2 border-brand-300 dark:border-brand-500/50 rounded-2xl shadow-xs">
-                      <div className="flex items-center gap-2 text-xs font-bold text-brand-800 dark:text-brand-300 uppercase tracking-wider mb-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-brand-800 dark:text-emerald-400 uppercase tracking-wider mb-2">
                         <UI_ICONS.checkCircle size={15} />
                         Servicio identificado para tu catálogo
                       </div>
@@ -808,7 +808,7 @@ export function AsistenteComunalModal() {
 
                       <div className="mt-3 flex items-center justify-between">
                         <span className="text-xs text-ink-600 font-medium">Precio estimado:</span>
-                        <span className="text-sm font-extrabold text-brand-700 dark:text-brand-300">
+                        <span className="text-sm font-extrabold text-brand-700 dark:text-emerald-400">
                           ${estructurada.servicio.precioSugerido.toLocaleString('es-CO')} COP
                         </span>
                       </div>
@@ -1032,7 +1032,7 @@ export function AsistenteComunalModal() {
                               'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
                               esVerificarTrato
                                 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-                                : 'bg-brand-100 dark:bg-brand-100 text-brand-800 dark:text-brand-300'
+                                : 'bg-brand-100 text-brand-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-transparent dark:border-emerald-700/50'
                             )}
                           >
                             <IconoNav size={20} />
@@ -1076,7 +1076,7 @@ export function AsistenteComunalModal() {
                           key={idx}
                           type="button"
                           onClick={() => manejarClickChip(chip)}
-                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 bg-cream-50 text-ink-800 hover:border-brand-500 hover:text-brand-700 transition-colors shadow-2xs"
+                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 dark:border-ink-600 bg-cream-50 dark:bg-cream-200 text-ink-800 dark:text-ink-800 hover:border-brand-500 hover:text-brand-700 dark:hover:border-emerald-400 dark:hover:text-emerald-300 transition-colors shadow-2xs"
                         >
                           {chip}
                         </button>

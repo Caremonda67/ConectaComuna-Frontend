@@ -176,7 +176,7 @@ export function AppLayout() {
                 'min-h-7 min-w-7 sm:min-h-8 sm:min-w-8 px-1 sm:px-1.5 rounded-full border text-[10px] sm:text-xs font-bold cursor-pointer flex items-center justify-center select-none',
                 'transition-all duration-200 ease-out hover:-translate-y-0.5 hover:scale-105 active:scale-90 active:translate-y-0',
                 largeText
-                  ? 'border-brand-500 bg-brand-100 dark:bg-brand-900/60 text-brand-900 dark:text-brand-200 shadow-xs ring-1 ring-brand-400/50'
+                  ? 'border-brand-500 bg-brand-100 dark:bg-emerald-950/80 text-brand-900 dark:text-emerald-300 shadow-xs ring-1 ring-brand-400/50'
                   : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-600 hover:bg-cream-200 dark:hover:bg-cream-200 hover:border-brand-400',
               )}
             >
@@ -367,7 +367,7 @@ export function AppLayout() {
                       cn(
                         'group relative flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-150 active:scale-95 select-none',
                         isActive
-                          ? 'text-brand-700 dark:text-brand-300 font-semibold'
+                          ? 'text-brand-700 dark:text-emerald-400 font-semibold'
                           : 'text-ink-500 dark:text-ink-600 hover:text-ink-900',
                       )
                     }
