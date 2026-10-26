@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { orderService } from '@/services/orderService'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, formatDate, cn } from '@/lib/utils'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { PactoVerificado } from '@/types'
 import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
@@ -17,6 +17,7 @@ export default function TratoSeguroVerificationPage() {
   const [cargando, setCargando] = useState(false)
   const [errorBusqueda, setErrorBusqueda] = useState<string | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const [copiadoCount, setCopiadoCount] = useState(0)
 
   const pactoActivo = codigo ? pacto : null
   const errorActivo = codigo ? errorBusqueda : null
@@ -100,8 +101,35 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
   }
 
   const copiarEnlace = async () => {
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      await navigator.clipboard.writeText(urlActual)
+    setCopiadoCount((prev) => prev + 1)
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(urlActual)
+      } else {
+        const ta = document.createElement('textarea')
+        ta.value = urlActual
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      }
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2500)
+    } catch {
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = urlActual
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        // Silencioso
+      }
       setCopiado(true)
       setTimeout(() => setCopiado(false), 2500)
     }
@@ -455,17 +483,22 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                   Cualquier vecino, cliente o líder de la JAC puede escanear este código con su teléfono para corroborar en tiempo real que este acuerdo es auténtico y está protegido por ConectaComuna.
                 </p>
                 <div className="relative pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
-                  <SparkleCelebration active={copiado} />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={copiarEnlace}
-                    className="text-xs min-h-[38px] w-full sm:w-auto justify-center"
-                  >
-                    <UI_ICONS.copy size={14} />
-                    {copiado ? '¡Enlace copiado!' : 'Copiar enlace directo'}
-                  </Button>
+                  <div className="relative inline-flex w-full sm:w-auto">
+                    <SparkleCelebration active={copiado} key={copiadoCount} />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={copiarEnlace}
+                      className={cn(
+                        'text-xs min-h-[38px] w-full sm:w-auto justify-center transition-all duration-200',
+                        copiado && 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 shadow-xs scale-102',
+                      )}
+                    >
+                      <UI_ICONS.copy size={14} />
+                      {copiado ? '¡Enlace copiado!' : 'Copiar enlace directo'}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
