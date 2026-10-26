@@ -82,6 +82,99 @@ function generarRespuestaLocal(
     }
   }
 
+  // 2b. Detección directa de código oficial de Trato Seguro (ej: CC-93E416, CC-ORD-1)
+  const matchCodigo = texto.match(/\b(CC-[A-Z0-9]{4,10})\b/i)
+  if (matchCodigo) {
+    const cod = matchCodigo[1].toUpperCase()
+    const pedidoRelacionado = (contexto?.pedidosActivos || []).find(
+      (p) => p.codigo.toUpperCase() === cod || (p.id && p.id.toUpperCase().startsWith(cod.replace('CC-', '')))
+    )
+
+    let detalle = `¡He ubicado el acuerdo **${cod}** en el registro comunal!`
+    if (pedidoRelacionado) {
+      const est =
+        pedidoRelacionado.estado === 'pending'
+          ? 'Pendiente de inicio'
+          : pedidoRelacionado.estado === 'accepted'
+          ? 'Pacto aceptado por el taller'
+          : pedidoRelacionado.estado === 'in_progress'
+          ? 'Trabajo en ejecución'
+          : pedidoRelacionado.estado === 'completed'
+          ? 'Finalizado y entregado'
+          : pedidoRelacionado.estado
+      const contra = pedidoRelacionado.rol === 'comerciante' ? `Cliente: ${pedidoRelacionado.contraparte}` : `Taller: ${pedidoRelacionado.contraparte}`
+      detalle += `\n• **Trabajo:** ${pedidoRelacionado.titulo}\n• **${contra}**\n• **Estado:** ${est}\n• **Valor:** $ ${Number(pedidoRelacionado.monto).toLocaleString('es-CO')} COP`
+    }
+
+    return {
+      mensaje: `${detalle}\n\nToca el botón para consultar el comprobante oficial con código QR y verificación en tiempo real:`,
+      tipo: 'navegacion',
+      rutaNavegacion: `/trato-seguro/verificar/${cod}`,
+      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos activos', 'Ver oficios cercanos'],
+    }
+  }
+
+  // 2c. Consulta de pedidos o acuerdos del usuario ("mis pedidos", "cómo va mi pedido", etc.)
+  const esConsultaMisPedidos =
+    texto.includes('mis pedidos') ||
+    texto.includes('mi pedido') ||
+    texto.includes('mis acuerdos') ||
+    texto.includes('mis tratos') ||
+    texto.includes('mis pactos') ||
+    texto.includes('cómo va mi') ||
+    texto.includes('como va mi') ||
+    texto.includes('estado de mi') ||
+    texto.includes('trabajos en curso')
+
+  if (esConsultaMisPedidos) {
+    if (!esAutenticado) {
+      return {
+        mensaje: `Para consultar el estado de tus pedidos y acuerdos de Trato Seguro, por favor ingresa a tu cuenta vecinal:`,
+        tipo: 'navegacion',
+        rutaNavegacion: '/entrar',
+        sugerencias: ['Ingresar a mi cuenta', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
+      }
+    }
+
+    const pedidos = Array.isArray(contexto?.pedidosActivos) ? contexto.pedidosActivos : []
+    if (pedidos.length > 0) {
+      const primerPedido = pedidos[0]
+      const detallePedidos = pedidos
+        .map((p, idx) => {
+          const est =
+            p.estado === 'pending'
+              ? 'Pendiente de inicio'
+              : p.estado === 'accepted'
+              ? 'Aceptado por el taller'
+              : p.estado === 'in_progress'
+              ? 'En curso'
+              : p.estado === 'completed'
+              ? 'Finalizado'
+              : p.estado
+          const contra = p.rol === 'comerciante' ? `Cliente: ${p.contraparte}` : `Taller: ${p.contraparte}`
+          return `${idx + 1}. **#${p.codigo}** — "${p.titulo}" (${contra}) • **Estado:** ${est} • **Valor:** $ ${Number(p.monto).toLocaleString('es-CO')}`
+        })
+        .join('\n')
+
+      return {
+        mensaje: `¡Hola ${nombreUsuario}! Tienes ${pedidos.length} acuerdo(s) en la comuna:\n\n${detallePedidos}\n\nPuedes consultar el comprobante oficial con código QR o ir a tu panel:`,
+        tipo: 'navegacion',
+        rutaNavegacion: `/trato-seguro/verificar/${primerPedido.codigo}`,
+        sugerencias: [
+          `Verificar ${primerPedido.codigo}`,
+          esEmprendedor ? 'Ir al panel de mi negocio' : 'Ver mis pedidos en el panel',
+          '¿Cómo funciona el Trato Seguro?',
+        ],
+      }
+    }
+
+    return {
+      mensaje: `Vecino ${nombreUsuario}, en este momento no tienes pedidos ni pactos activos registrados. Cuando solicites un servicio a un taller del barrio o recibas un encargo, aparecerá aquí con código verificable y tope de anticipo protegido.`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', 'Ver en el mapa', '¿Cómo funciona el Trato Seguro?'],
+    }
+  }
+
   // 3. Navegación al mapa comunal
   if (
     texto === 'ver en el mapa' ||

@@ -8,8 +8,9 @@ import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
-import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, ServicioSugeridoAi } from '@/types/ai'
-import type { ServiceCatalogItem } from '@/types'
+import { orderService } from '@/services/orderService'
+import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
+import type { Order, ServiceCatalogItem } from '@/types'
 import { cn, formatCurrency } from '@/lib/utils'
 
 // Web Speech API interfaces
@@ -90,10 +91,76 @@ export function AsistenteComunalModal() {
   const [servicioGuardadoId, setServicioGuardadoId] = useState<string | null>(null)
   const [errorVoz, setErrorVoz] = useState<string | null>(null)
   const [ejecutandoAccion, setEjecutandoAccion] = useState(false)
+  const [pedidosUsuario, setPedidosUsuario] = useState<PedidoActivoCopiloto[]>([])
 
   const reconocimientoRef = useRef<IWindowSpeechRecognition | null>(null)
   const finalScrollRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+
+  // Cargar pedidos y pactos activos para que el copiloto tenga contexto real
+  useEffect(() => {
+    if (!isOpen || !userId) return
+    let cancelado = false
+
+    const cargarPedidos = async () => {
+      try {
+        let orders: Order[] = []
+        if (business?.id) {
+          orders = await orderService.listAsBusiness(business.id)
+        } else {
+          orders = await orderService.listAsClient(userId)
+        }
+        if (cancelado) return
+
+        const filtrados: PedidoActivoCopiloto[] = orders
+          .filter((o) => ['pending', 'accepted', 'in_progress'].includes(o.status))
+          .slice(0, 5)
+          .map((o) => ({
+            id: o.id,
+            codigo: `CC-${o.id.slice(0, 8).toUpperCase()}`,
+            titulo: o.title,
+            estado: o.status,
+            monto: o.final_price || o.price_estimate || 0,
+            anticipo: o.advance_payment || 0,
+            contraparte: business?.id ? (o.client?.full_name || 'Vecino solicitante') : (o.business?.name || 'Taller del barrio'),
+            rol: (business?.id ? 'comerciante' : 'cliente') as 'comerciante' | 'cliente',
+          }))
+
+        setPedidosUsuario(filtrados)
+
+        // Si el usuario tiene pactos activos, enriquecer las sugerencias del saludo inicial
+        if (filtrados.length > 0) {
+          const primerPacto = filtrados[0]
+          setMensajes((prev) => {
+            if (prev.length === 1 && prev[0].id === 'bienvenida') {
+              return [
+                {
+                  ...prev[0],
+                  respuestaEstructurada: {
+                    ...prev[0].respuestaEstructurada!,
+                    sugerencias: [
+                      `🛡️ Mi pacto #${primerPacto.codigo}`,
+                      '📦 Mis pedidos activos',
+                      '🛡️ ¿Cómo funciona el Trato Seguro?',
+                      '📍 Negocios más cercanos',
+                    ],
+                  },
+                },
+              ]
+            }
+            return prev
+          })
+        }
+      } catch (err) {
+        console.warn('No se pudieron precargar pedidos para el copiloto:', err)
+      }
+    }
+
+    void cargarPedidos()
+    return () => {
+      cancelado = true
+    }
+  }, [isOpen, userId, business?.id])
 
   // Detener lectura de voz en curso
   const detenerLecturaVoz = useCallback(() => {
@@ -180,6 +247,7 @@ export function AsistenteComunalModal() {
                 verificado: business.verification_status === 'verified',
               }
             : { tieneNegocio: false },
+          pedidosActivos: pedidosUsuario,
           pantallaActual: {
             ruta: location.pathname,
           },
@@ -223,7 +291,7 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, ubicacion]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, ubicacion, pedidosUsuario]
   )
 
   // Procesar mensaje inicial si fue invocado externamente
@@ -443,7 +511,7 @@ export function AsistenteComunalModal() {
                   <h2 className="text-sm font-bold text-ink-900 leading-tight">
                     Asistente Comunal
                   </h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-300">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-brand-100 text-brand-800 dark:bg-brand-100 dark:text-brand-300">
                     IA Vecinal
                   </span>
                 </div>
@@ -553,7 +621,7 @@ export function AsistenteComunalModal() {
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-xl bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-300">
+                                <div className="p-2 rounded-xl bg-brand-100 text-brand-800 dark:bg-brand-100 dark:text-brand-300">
                                   <CategoryIcon size={18} />
                                 </div>
                                 <div>
@@ -793,29 +861,84 @@ export function AsistenteComunalModal() {
                     const esMapa = estructurada.rutaNavegacion.startsWith('/mapa')
                     const esExplorar = estructurada.rutaNavegacion.startsWith('/explorar')
                     const esRegistro = estructurada.rutaNavegacion.startsWith('/registro')
+                    const esVerificarTrato =
+                      estructurada.rutaNavegacion.includes('verificar') ||
+                      estructurada.rutaNavegacion.startsWith('/trato-seguro')
+                    const esPanel = estructurada.rutaNavegacion.startsWith('/panel')
 
-                    const IconoNav = esMapa ? UI_ICONS.map : esExplorar ? UI_ICONS.search : esRegistro ? UI_ICONS.store : UI_ICONS.compass
-                    const tituloNav = esMapa ? 'Mapa Comunal Interactivo' : esExplorar ? 'Directorio de Oficios' : esRegistro ? 'Registro de Emprendedor' : 'Sección recomendada'
-                    const descNav = esMapa
+                    const IconoNav = esVerificarTrato
+                      ? UI_ICONS.shieldCheck
+                      : esPanel
+                      ? UI_ICONS.store
+                      : esMapa
+                      ? UI_ICONS.map
+                      : esExplorar
+                      ? UI_ICONS.search
+                      : esRegistro
+                      ? UI_ICONS.store
+                      : UI_ICONS.compass
+
+                    const tituloNav = esVerificarTrato
+                      ? 'Verificador Oficial de Trato Seguro'
+                      : esPanel
+                      ? 'Panel de Control Vecinal'
+                      : esMapa
+                      ? 'Mapa Comunal Interactivo'
+                      : esExplorar
+                      ? 'Directorio de Oficios'
+                      : esRegistro
+                      ? 'Registro de Emprendedor'
+                      : 'Sección recomendada'
+
+                    const descNav = esVerificarTrato
+                      ? 'Comprueba el tope de anticipo del 50%, el código QR oficial y el respaldo de mediación de la JAC en tiempo real'
+                      : esPanel
+                      ? 'Administra tus solicitudes de servicio, acuerdos en curso y catálogo de oficio'
+                      : esMapa
                       ? 'Ubica talleres, modisterías y cerrajerías geolocalizados cerca de tu barrio'
                       : esExplorar
-                        ? 'Explora todas las categorías y emprendedores de la comuna'
-                        : esRegistro
-                          ? 'Publica tu taller u oficio gratis en 2 minutos sin intermediarios'
-                          : 'Toca el botón para abrir esta sección directamente'
-                    const botonTexto = esMapa ? 'Abrir mapa comunal' : esExplorar ? 'Explorar directorio' : esRegistro ? 'Crear perfil gratis' : 'Ir a la sección'
+                      ? 'Explora todas las categorías y emprendedores de la comuna'
+                      : esRegistro
+                      ? 'Publica tu taller u oficio gratis en 2 minutos sin intermediarios'
+                      : 'Toca el botón para abrir esta sección directamente'
+
+                    const botonTexto = esVerificarTrato
+                      ? 'Abrir comprobante verificable con QR'
+                      : esPanel
+                      ? 'Ir a mi panel'
+                      : esMapa
+                      ? 'Abrir mapa comunal'
+                      : esExplorar
+                      ? 'Explorar directorio'
+                      : esRegistro
+                      ? 'Crear perfil gratis'
+                      : 'Ir a la sección'
 
                     return (
-                      <div className="mt-3 w-full max-w-[95%] card-soft p-3.5 border border-brand-300 dark:border-brand-500/40 rounded-2xl shadow-xs">
+                      <div
+                        className={cn(
+                          'mt-3 w-full max-w-[95%] p-3.5 rounded-2xl shadow-xs border',
+                          esVerificarTrato
+                            ? 'bg-cream-50 dark:bg-cream-100 border-emerald-400 dark:border-emerald-600/70'
+                            : 'card-soft border-brand-300 dark:border-brand-500/40'
+                        )}
+                      >
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-700 dark:text-brand-300 flex items-center justify-center shrink-0">
+                          <div
+                            className={cn(
+                              'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                              esVerificarTrato
+                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
+                                : 'bg-brand-100 dark:bg-brand-100 text-brand-800 dark:text-brand-300'
+                            )}
+                          >
                             <IconoNav size={20} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-xs font-bold text-ink-900">
                               {tituloNav}
                             </div>
-                            <p className="text-[11px] text-ink-600 mt-0.5 leading-snug">
+                            <p className="text-[11px] text-ink-600 dark:text-ink-400 mt-0.5 leading-snug">
                               {descNav}
                             </p>
                           </div>
@@ -828,7 +951,12 @@ export function AsistenteComunalModal() {
                             navigate(estructurada.rutaNavegacion!)
                             cerrarAsistente()
                           }}
-                          className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white transition-colors shadow-xs"
+                          className={cn(
+                            'mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl text-white transition-colors shadow-xs',
+                            esVerificarTrato
+                              ? 'bg-emerald-600 hover:bg-emerald-700'
+                              : 'bg-brand-600 hover:bg-brand-700'
+                          )}
                         >
                           <span>{botonTexto}</span>
                           <UI_ICONS.chevronRight size={14} />

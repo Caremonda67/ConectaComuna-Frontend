@@ -60,6 +60,17 @@ export interface RespuestaAi {
   accionPendiente?: AccionPendienteAi
 }
 
+export interface PedidoActivoCopiloto {
+  id: string
+  codigo: string
+  titulo: string
+  estado: string
+  monto: number
+  anticipo?: number
+  contraparte: string
+  rol: 'cliente' | 'comerciante'
+}
+
 export interface ContextoUsuarioCopiloto {
   autenticado: boolean
   userId?: string | null
@@ -77,6 +88,7 @@ export interface ContextoUsuarioCopiloto {
     serviciosCount?: number
     verificado?: boolean
   } | null
+  pedidosActivos?: PedidoActivoCopiloto[]
   pantallaActual?: {
     ruta: string
     negocioId?: string | null
