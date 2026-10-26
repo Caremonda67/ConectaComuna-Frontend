@@ -95,7 +95,7 @@ export function SelloOficialComunal({
           letterSpacing="1"
           className="fill-emerald-100 dark:fill-emerald-200 uppercase"
         >
-          <textPath href="#curve-seal-top" startOffset="50%" text-anchor="middle">
+          <textPath href="#curve-seal-top" startOffset="50%" textAnchor="middle">
             • CONECTA COMUNA •
           </textPath>
         </text>
@@ -143,7 +143,7 @@ export function SelloOficialComunal({
           letterSpacing="0.5"
           className="fill-emerald-200 dark:fill-emerald-300 uppercase"
         >
-          <textPath href="#curve-seal-bottom" startOffset="50%" text-anchor="middle">
+          <textPath href="#curve-seal-bottom" startOffset="50%" textAnchor="middle">
             TRATO SEGURO COMUNAL
           </textPath>
         </text>
