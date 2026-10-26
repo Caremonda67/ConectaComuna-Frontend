@@ -49,6 +49,12 @@ export interface AcuerdoTratoSeguroAi {
   modalidad?: 'workshop' | 'home_delivery'
 }
 
+export interface UbicacionDetectadaAi {
+  barrio: string
+  lat: number
+  lng: number
+}
+
 export interface RespuestaAi {
   mensaje: string
   tipo: TipoRespuestaAi
@@ -58,6 +64,7 @@ export interface RespuestaAi {
   rutaNavegacion?: string
   sugerencias?: string[]
   accionPendiente?: AccionPendienteAi
+  ubicacionDetectada?: UbicacionDetectadaAi
 }
 
 export interface PedidoActivoCopiloto {
@@ -95,9 +102,10 @@ export interface ContextoUsuarioCopiloto {
     negocioNombre?: string | null
   }
   ubicacion?: {
-    barrio: string
-    lat: number
-    lng: number
+    barrio?: string | null
+    lat?: number | null
+    lng?: number | null
+    esDefinida?: boolean
   }
 }
 

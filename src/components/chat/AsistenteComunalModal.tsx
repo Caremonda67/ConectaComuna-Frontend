@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react'
 import { useAsistente } from '@/hooks/useAsistente'
 import { useAuth } from '@/hooks/useAuth'
-import { leerUbicacion } from '@/lib/ubicacion'
+import { leerUbicacion, guardarUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { businessService } from '@/services/businessService'
@@ -78,15 +78,17 @@ function FormatoTextoMensaje({ texto }: { texto: string }) {
   )
 }
 
-function crearSaludoInicial(barrio: string): MensajeChat {
-  const descUbi = describirUbicacion(barrio)
+function crearSaludoInicial(barrio?: string | null, esDefinida = false): MensajeChat {
+  const descUbi = describirUbicacion(barrio, esDefinida)
+  const saludoZona = esDefinida ? descUbi.enBarrio : 'toda nuestra comuna'
+  const cercaDeTexto = esDefinida ? descUbi.cercaDe : 'en tu zona de la comuna'
   return {
     id: 'bienvenida',
     emisor: 'asistente',
     fecha: new Date(),
-    texto: `¡Hola vecino! Soy tu Asistente Comunal para ${descUbi.enBarrio}.
+    texto: `¡Hola vecino! Soy tu Asistente Comunal para ${saludoZona}.
 Puedo colaborarte para:
-• 📍 Encontrar oficios de confianza ${descUbi.cercaDe}.
+• 📍 Encontrar oficios de confianza ${cercaDeTexto}.
 • 🎙️ Dictar tus servicios con la voz para tu catálogo si no puedes escribir rápido.
 • 🛡️ Entender cómo te protege el Trato Seguro y la regla del 50% de anticipo.
 
@@ -107,11 +109,12 @@ export function AsistenteComunalModal() {
   const prefersReduced = useReducedMotion()
 
   const ubicacion = leerUbicacion()
-  const barrioActivo = ubicacion?.etiqueta || 'Antonio Nariño'
-  const descUbi = describirUbicacion(barrioActivo)
+  const tieneUbicacionDefinida = !!(ubicacion?.etiqueta || profile?.neighborhood)
+  const barrioActivo = ubicacion?.etiqueta || profile?.neighborhood || null
+  const descUbi = describirUbicacion(barrioActivo, tieneUbicacionDefinida)
 
   const [mensajes, setMensajes] = useState<MensajeChat[]>(() => [
-    crearSaludoInicial(barrioActivo),
+    crearSaludoInicial(barrioActivo, tieneUbicacionDefinida),
   ])
   const [textoEntrada, setTextoEntrada] = useState('')
   const [cargando, setCargando] = useState(false)
@@ -290,8 +293,9 @@ export function AsistenteComunalModal() {
           },
           ubicacion: {
             barrio: barrioActivo,
-            lat: ubicacion?.center.lat || 3.4372,
-            lng: ubicacion?.center.lng || -76.5225,
+            lat: ubicacion?.center.lat || null,
+            lng: ubicacion?.center.lng || null,
+            esDefinida: tieneUbicacionDefinida,
           },
         }
 
@@ -308,6 +312,17 @@ export function AsistenteComunalModal() {
           texto: respuestaAi.mensaje,
           fecha: new Date(),
           respuestaEstructurada: respuestaAi,
+        }
+
+        if (respuestaAi.ubicacionDetectada) {
+          guardarUbicacion({
+            etiqueta: respuestaAi.ubicacionDetectada.barrio,
+            center: {
+              lat: respuestaAi.ubicacionDetectada.lat,
+              lng: respuestaAi.ubicacionDetectada.lng,
+            },
+            origen: 'busqueda',
+          })
         }
 
         setMensajes((prev) => [...prev, nuevoMensajeAi])
@@ -328,7 +343,58 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, ubicacion, pedidosUsuario]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario]
+  )
+
+  const solicitarUbicacionGps = useCallback(() => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      void manejarEnvio('Mi dispositivo no soporta geolocalización GPS')
+      return
+    }
+
+    setCargando(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        guardarUbicacion({
+          etiqueta: 'Mi ubicación actual',
+          center: coords,
+          origen: 'gps',
+        })
+        setCargando(false)
+        void manejarEnvio('He compartido mi ubicación GPS')
+      },
+      () => {
+        setCargando(false)
+        setMensajes((prev) => [
+          ...prev,
+          {
+            id: `gps-err-${Date.now()}`,
+            emisor: 'asistente',
+            texto:
+              'Vecino, no se pudo acceder al GPS del dispositivo (revisa los permisos en tu navegador). Puedes indicarme en qué barrio te encuentras escribiéndolo directamente (por ejemplo: Antonio Nariño, El Rodeo, Nueva Floresta, Vallado):',
+            fecha: new Date(),
+            respuestaEstructurada: {
+              mensaje: '',
+              tipo: 'conversacion',
+              sugerencias: ['Estoy en Antonio Nariño', 'Estoy en El Rodeo', 'Estoy en Nueva Floresta'],
+            },
+          },
+        ])
+      },
+      { timeout: 7000, enableHighAccuracy: false }
+    )
+  }, [manejarEnvio])
+
+  const manejarClickChip = useCallback(
+    (chip: string) => {
+      if (chip.includes('Usar mi ubicación actual') || chip.includes('Activar mi ubicación')) {
+        solicitarUbicacionGps()
+        return
+      }
+      void manejarEnvio(chip)
+    },
+    [solicitarUbicacionGps, manejarEnvio]
   )
 
   // Procesar mensaje inicial si fue invocado externamente
@@ -1009,7 +1075,7 @@ export function AsistenteComunalModal() {
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => manejarEnvio(chip)}
+                          onClick={() => manejarClickChip(chip)}
                           className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 bg-cream-50 text-ink-800 hover:border-brand-500 hover:text-brand-700 transition-colors shadow-2xs"
                         >
                           {chip}

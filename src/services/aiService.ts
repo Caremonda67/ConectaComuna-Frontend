@@ -2,24 +2,41 @@ import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
 import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
 
-const BARRIO_POR_DEFECTO = 'Antonio Nariño'
-const COORDENADAS_POR_DEFECTO = { lat: 3.4372, lng: -76.5225 }
+export const BARRIOS_COORDENADAS: Record<string, { barrio: string; lat: number; lng: number }> = {
+  'antonio nariño': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
+  'antonio narino': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
+  'el rodeo': { barrio: 'El Rodeo', lat: 3.4401, lng: -76.5209 },
+  'nueva floresta': { barrio: 'Nueva Floresta', lat: 3.4342, lng: -76.5281 },
+  'vallado': { barrio: 'Vallado', lat: 3.4140, lng: -76.5050 },
+  'san judas': { barrio: 'San Judas', lat: 3.4215, lng: -76.5120 },
+  'ciudad córdoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
+  'ciudad cordoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
+  'mariano ramos': { barrio: 'Mariano Ramos', lat: 3.4130, lng: -76.5160 },
+  'república de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
+  'republica de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
+}
+
+export function detectarBarrioEnTexto(texto?: string): { barrio: string; lat: number; lng: number } | null {
+  if (!texto) return null
+  const t = texto.toLowerCase()
+  for (const [clave, datos] of Object.entries(BARRIOS_COORDENADAS)) {
+    if (t.includes(clave)) {
+      return datos
+    }
+  }
+  return null
+}
 
 /**
  * Traduce la etiqueta de ubicación para que suene 100% natural y humana.
  */
-export function describirUbicacion(barrio: string) {
-  const esGenerica =
-    !barrio ||
-    barrio.toLowerCase().includes('mi ubicación') ||
-    barrio.toLowerCase().includes('mi ubicacion') ||
-    barrio.toLowerCase().includes('actual')
-
-  if (esGenerica) {
+export function describirUbicacion(barrio?: string | null, esDefinida = true) {
+  if (!esDefinida || !barrio || barrio === 'Comuna' || barrio === 'Cali' || barrio.toLowerCase().includes('mi ubicación') || barrio.toLowerCase().includes('mi ubicacion')) {
     return {
-      cercaDe: 'cerca de tu ubicación actual en la comuna',
-      enBarrio: 'tu zona en la comuna',
-      etiquetaCorta: 'Cerca de ti',
+      cercaDe: 'en nuestra comuna',
+      enBarrio: 'toda nuestra comuna',
+      etiquetaCorta: 'Comuna',
+      esDefinida: false,
     }
   }
 
@@ -27,6 +44,7 @@ export function describirUbicacion(barrio: string) {
     cercaDe: `cerca del barrio ${barrio}`,
     enBarrio: `el barrio ${barrio}`,
     etiquetaCorta: `Barrio ${barrio}`,
+    esDefinida: true,
   }
 }
 
@@ -36,12 +54,109 @@ export function describirUbicacion(barrio: string) {
  */
 function generarRespuestaLocal(
   mensaje: string,
-  barrio: string,
+  barrioParam?: string | null,
   historial: MensajeChat[] = [],
   contexto?: ContextoUsuarioCopiloto
 ): RespuestaAi {
   const texto = mensaje.toLowerCase().trim()
-  const descUbi = describirUbicacion(barrio)
+  const barrioDetectado = detectarBarrioEnTexto(texto)
+  const tieneUbicacionExplicita = !!(
+    barrioDetectado ||
+    (contexto?.ubicacion?.esDefinida && contexto?.ubicacion?.barrio && contexto.ubicacion.barrio !== 'Comuna' && contexto.ubicacion.barrio !== 'Cali') ||
+    (barrioParam && barrioParam !== 'Comuna' && barrioParam !== 'Cali')
+  )
+
+  const barrio = barrioDetectado?.barrio || (tieneUbicacionExplicita ? (barrioParam || contexto?.ubicacion?.barrio || null) : null)
+  const descUbi = describirUbicacion(barrio, tieneUbicacionExplicita)
+
+  // 0a. Detección y confirmación explícita al indicar barrio por texto
+  if (barrioDetectado && (texto.includes('estoy') || texto.includes('vivo') || texto.includes('barrio') || texto.startsWith('en ') || texto === barrioDetectado.barrio.toLowerCase())) {
+    return {
+      mensaje: `¡Listo vecino! He fijado tu ubicación en el barrio ${barrioDetectado.barrio}. Estos son los oficios más cercanos a tu zona:`,
+      tipo: 'negocios',
+      ubicacionDetectada: {
+        barrio: barrioDetectado.barrio,
+        lat: barrioDetectado.lat,
+        lng: barrioDetectado.lng,
+      },
+      negociosSugeridos: [
+        {
+          id: 'biz-1',
+          nombre: 'Costuras Doña Marta',
+          categoria: 'costura',
+          barrio: 'Antonio Nariño',
+          whatsapp: '3009876543',
+          distanciaMetros: 420,
+          verificado: true,
+        },
+        {
+          id: 'biz-2',
+          nombre: 'Carpintería y Muebles Don Jaime',
+          categoria: 'carpinteria',
+          barrio: 'Antonio Nariño',
+          whatsapp: '3157778899',
+          distanciaMetros: 480,
+          verificado: true,
+        },
+      ],
+      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
+    }
+  }
+
+  // 0b. Pregunta por cercanía ("cuál es el comercio más cercano") cuando la ubicación aún no está definida
+  const esPreguntaCercania =
+    texto.includes('más cercano') ||
+    texto.includes('mas cercano') ||
+    texto.includes('cerca de mí') ||
+    texto.includes('cerca de mi') ||
+    texto.includes('más cerca') ||
+    texto.includes('mas cerca') ||
+    texto === 'oficios cerca' ||
+    texto === 'oficios cercanos' ||
+    texto.includes('comercio más cercano') ||
+    texto.includes('comercio mas cercano')
+
+  if (esPreguntaCercania && !tieneUbicacionExplicita) {
+    return {
+      mensaje: `Vecino, aún no conozco tu barrio o ubicación exacta en la comuna para calcularte distancias precisas. Puedes activar tu ubicación con el botón de GPS o indicarme en qué barrio te encuentras (por ejemplo: Antonio Nariño, El Rodeo, Nueva Floresta, Vallado).\n\nMientras tanto, aquí tienes algunos oficios y talleres destacados de la comuna:`,
+      tipo: 'negocios',
+      negociosSugeridos: [
+        {
+          id: 'biz-1',
+          nombre: 'Uñas de Kelly',
+          categoria: 'manicure',
+          barrio: 'El Rodeo',
+          whatsapp: '3145558899',
+          distanciaMetros: null,
+          verificado: false,
+        },
+        {
+          id: 'biz-2',
+          nombre: 'Costuras Doña Marta',
+          categoria: 'costura',
+          barrio: 'Antonio Nariño',
+          whatsapp: '3009876543',
+          distanciaMetros: null,
+          verificado: true,
+        },
+        {
+          id: 'biz-3',
+          nombre: 'TecnoFix Celulares',
+          categoria: 'tecnologia',
+          barrio: 'Nueva Floresta',
+          whatsapp: '3129990011',
+          distanciaMetros: null,
+          verificado: false,
+        },
+      ],
+      sugerencias: [
+        '📍 Usar mi ubicación actual',
+        'Estoy en El Rodeo',
+        'Estoy en Antonio Nariño',
+        'Estoy en Nueva Floresta',
+      ],
+    }
+  }
 
   const mensajesBot = historial.filter((m) => m.emisor === 'asistente')
   const ultimoMensajeBot = mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].texto.toLowerCase() : ''
@@ -635,9 +750,16 @@ export async function enviarMensajeAsistente(
   contexto?: ContextoUsuarioCopiloto
 ): Promise<RespuestaAi> {
   const ubicacionElegida = leerUbicacion()
-  const barrio = contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || BARRIO_POR_DEFECTO
-  const lat = contexto?.ubicacion?.lat || ubicacionElegida?.center.lat || COORDENADAS_POR_DEFECTO.lat
-  const lng = contexto?.ubicacion?.lng || ubicacionElegida?.center.lng || COORDENADAS_POR_DEFECTO.lng
+  const barrioDetectado = detectarBarrioEnTexto(mensaje)
+  const esDefinida = !!(
+    barrioDetectado ||
+    contexto?.ubicacion?.esDefinida ||
+    ubicacionElegida?.etiqueta
+  )
+
+  const barrio = barrioDetectado?.barrio || contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
+  const lat = barrioDetectado?.lat || contexto?.ubicacion?.lat || ubicacionElegida?.center.lat || null
+  const lng = barrioDetectado?.lng || contexto?.ubicacion?.lng || ubicacionElegida?.center.lng || null
 
   const historialFormateado = historial.slice(-6).map((m) => ({
     rol: m.emisor === 'usuario' ? 'user' : 'model',
@@ -650,7 +772,7 @@ export async function enviarMensajeAsistente(
       body: JSON.stringify({
         mensaje,
         historial: historialFormateado,
-        ubicacion: { barrio, lat, lng },
+        ubicacion: { barrio, lat, lng, esDefinida },
         contexto,
       }),
     })

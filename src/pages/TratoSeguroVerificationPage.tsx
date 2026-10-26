@@ -64,7 +64,16 @@ export default function TratoSeguroVerificationPage() {
   }
 
   const urlActual = typeof window !== 'undefined' ? window.location.href : ''
-  const urlQr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(urlActual)}`
+  // Si se visualiza desde la PC en localhost durante el desarrollo,
+  // el código QR codifica la IP de red local para que al escanear con la cámara del celular
+  // el dispositivo móvil ingrese directamente a la IP accesible en la LAN (puerto 5173)
+  const urlParaQr =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? window.location.href.replace(/https?:\/\/(localhost|127\.0\.0\.1):5173/, 'http://192.168.101.91:5173')
+      : urlActual
+
+  const urlQr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(urlParaQr)}`
 
   const mensajeWhatsApp = pactoActivo
     ? `🤝 *Comprobante de Trato Seguro Verificado - ConectaComuna*
@@ -185,28 +194,28 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
           </Button>
         </form>
 
-        <div className="pt-3 border-t border-ink-200 flex flex-wrap items-center gap-2 text-xs text-ink-600">
-          <span className="font-medium">Códigos de prueba para jurados y vecinos:</span>
+        <div className="pt-3 border-t border-ink-200 dark:border-ink-700 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-400">
+          <span className="font-medium text-ink-700 dark:text-ink-300">Códigos de prueba para jurados y vecinos:</span>
+          <button
+            type="button"
+            onClick={() => { setCodigoBuscado('CC-93E416F2'); navigate('/trato-seguro/verificar/CC-93E416F2') }}
+            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
+          >
+            CC-93E416F2
+          </button>
           <button
             type="button"
             onClick={() => { setCodigoBuscado('CC-E9894D7D'); navigate('/trato-seguro/verificar/CC-E9894D7D') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 hover:bg-brand-50 dark:hover:bg-brand-100 text-ink-900 font-mono font-bold border border-ink-200 transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
           >
             CC-E9894D7D
           </button>
           <button
             type="button"
             onClick={() => { setCodigoBuscado('CC-ORD-1'); navigate('/trato-seguro/verificar/CC-ORD-1') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 hover:bg-brand-50 dark:hover:bg-brand-100 text-ink-900 font-mono font-bold border border-ink-200 transition-colors cursor-pointer"
+            className="px-2.5 py-1 rounded-lg bg-cream-200 dark:bg-ink-800 hover:bg-brand-50 dark:hover:bg-brand-900/40 text-ink-900 dark:text-ink-100 font-mono font-bold border border-ink-200 dark:border-ink-600 transition-colors cursor-pointer"
           >
             CC-ORD-1
-          </button>
-          <button
-            type="button"
-            onClick={() => { setCodigoBuscado('CC-ORD-2'); navigate('/trato-seguro/verificar/CC-ORD-2') }}
-            className="px-2.5 py-1 rounded-lg bg-cream-200 hover:bg-brand-50 dark:hover:bg-brand-100 text-ink-900 font-mono font-bold border border-ink-200 transition-colors cursor-pointer"
-          >
-            CC-ORD-2
           </button>
         </div>
       </div>
@@ -418,7 +427,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
             </section>
 
             {/* Código QR Verificable y Enlace Directo */}
-            <div className="rounded-2xl border border-ink-200 bg-cream-50 dark:bg-cream-100 p-5 flex flex-col sm:flex-row items-center gap-5">
+            <div className="rounded-2xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-100 p-5 flex flex-col sm:flex-row items-center gap-5">
               <div className="p-3 bg-white rounded-xl shadow-xs border border-ink-200 shrink-0">
                 <img
                   src={urlQr}
@@ -430,10 +439,10 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 />
               </div>
               <div className="space-y-2 text-center sm:text-left flex-1">
-                <h4 className="text-sm font-bold text-ink-900">
+                <h4 className="text-sm font-bold text-ink-900 dark:text-ink-100">
                   Código QR de Verificación Pública
                 </h4>
-                <p className="text-xs text-ink-600 leading-relaxed">
+                <p className="text-xs text-ink-600 dark:text-ink-300 leading-relaxed">
                   Cualquier vecino, cliente o líder de la JAC puede escanear este código con su teléfono para corroborar en tiempo real que este acuerdo es auténtico y está protegido por ConectaComuna.
                 </p>
                 <div className="pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
