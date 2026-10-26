@@ -90,7 +90,7 @@ function generarRespuestaLocal(
       (p) => p.codigo.toUpperCase() === cod || (p.id && p.id.toUpperCase().startsWith(cod.replace('CC-', '')))
     )
 
-    let detalle = `¡He ubicado el acuerdo **${cod}** en el registro comunal!`
+    let detalle = `¡He ubicado el acuerdo ${cod} en el registro comunal!`
     if (pedidoRelacionado) {
       const est =
         pedidoRelacionado.estado === 'pending'
@@ -103,7 +103,7 @@ function generarRespuestaLocal(
           ? 'Finalizado y entregado'
           : pedidoRelacionado.estado
       const contra = pedidoRelacionado.rol === 'comerciante' ? `Cliente: ${pedidoRelacionado.contraparte}` : `Taller: ${pedidoRelacionado.contraparte}`
-      detalle += `\n• **Trabajo:** ${pedidoRelacionado.titulo}\n• **${contra}**\n• **Estado:** ${est}\n• **Valor:** $ ${Number(pedidoRelacionado.monto).toLocaleString('es-CO')} COP`
+      detalle += `\n• Trabajo: ${pedidoRelacionado.titulo}\n• ${contra}\n• Estado: ${est}\n• Valor: $ ${Number(pedidoRelacionado.monto).toLocaleString('es-CO')} COP`
     }
 
     return {
@@ -152,7 +152,7 @@ function generarRespuestaLocal(
               ? 'Finalizado'
               : p.estado
           const contra = p.rol === 'comerciante' ? `Cliente: ${p.contraparte}` : `Taller: ${p.contraparte}`
-          return `${idx + 1}. **#${p.codigo}** — "${p.titulo}" (${contra}) • **Estado:** ${est} • **Valor:** $ ${Number(p.monto).toLocaleString('es-CO')}`
+          return `${idx + 1}. #${p.codigo} — "${p.titulo}" (${contra}) • Estado: ${est} • Valor: $ ${Number(p.monto).toLocaleString('es-CO')} COP`
         })
         .join('\n')
 

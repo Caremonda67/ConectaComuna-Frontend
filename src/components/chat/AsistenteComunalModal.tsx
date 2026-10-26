@@ -41,6 +41,43 @@ const CHIPS_SUGERIDOS = [
   '📍 Negocios más cercanos',
 ]
 
+/**
+ * Renderiza el texto de los mensajes convirtiendo formato Markdown simple (**negrita**)
+ * en elementos semánticos sin mostrar asteriscos crudos en pantalla.
+ */
+function FormatoTextoMensaje({ texto }: { texto: string }) {
+  if (!texto) return null
+  const lineas = texto.split('\n')
+
+  return (
+    <div className="space-y-1">
+      {lineas.map((linea, lIdx) => {
+        if (!linea.trim()) {
+          return <div key={lIdx} className="h-1.5" />
+        }
+
+        const partes = linea.split(/(\*\*[^*]+\*\*)/gu)
+
+        return (
+          <p key={lIdx} className="leading-relaxed">
+            {partes.map((parte, pIdx) => {
+              if (parte.startsWith('**') && parte.endsWith('**') && parte.length > 4) {
+                const contenidoNegrita = parte.slice(2, -2)
+                return (
+                  <strong key={pIdx} className="font-bold text-ink-950 dark:text-white">
+                    {contenidoNegrita}
+                  </strong>
+                )
+              }
+              return parte
+            })}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
+
 function crearSaludoInicial(barrio: string): MensajeChat {
   const descUbi = describirUbicacion(barrio)
   return {
@@ -580,13 +617,13 @@ export function AsistenteComunalModal() {
                 >
                   <div
                     className={cn(
-                      'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed whitespace-pre-wrap',
+                      'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed',
                       esUsuario
                         ? 'bg-brand-600 text-white rounded-tr-none shadow-xs'
                         : 'bg-cream-50 border border-ink-200 text-ink-900 rounded-tl-none shadow-xs'
                     )}
                   >
-                    {m.texto}
+                    <FormatoTextoMensaje texto={m.texto} />
 
                     {/* Botón de reproducción de audio para mensajes del asistente */}
                     {!esUsuario && m.texto && (
