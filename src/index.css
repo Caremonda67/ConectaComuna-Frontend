@@ -340,3 +340,93 @@ html.dark .leaflet-bar a:hover {
   will-change: transform, opacity;
 }
 
+
+/* Visualizador de ondas sonoras para Asistente Comunal (TTS y Micrófono) */
+@keyframes audio-wave-bar {
+  0%, 100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-wave-1 {
+  animation: audio-wave-bar 0.9s ease-in-out infinite 0s;
+  transform-origin: bottom;
+}
+.animate-wave-2 {
+  animation: audio-wave-bar 0.75s ease-in-out infinite 0.18s;
+  transform-origin: bottom;
+}
+.animate-wave-3 {
+  animation: audio-wave-bar 0.85s ease-in-out infinite 0.32s;
+  transform-origin: bottom;
+}
+.animate-wave-4 {
+  animation: audio-wave-bar 0.7s ease-in-out infinite 0.12s;
+  transform-origin: bottom;
+}
+
+/* Sello Comunal Oficial con estampación elástica */
+@keyframes stamp-in {
+  0% {
+    transform: scale(1.35) rotate(-15deg);
+    opacity: 0;
+  }
+  65% {
+    transform: scale(0.96) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(-3.5deg);
+    opacity: 1;
+  }
+}
+
+.animate-stamp-in {
+  animation: stamp-in 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  will-change: transform, opacity;
+}
+
+/* Muescas de troquelado de talonario de recibo vecinal */
+.ticket-notch-l {
+  position: absolute;
+  left: -0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-cream-100);
+  border: 1px solid var(--color-ink-200);
+}
+
+.ticket-notch-r {
+  position: absolute;
+  right: -0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background-color: var(--color-cream-100);
+  border: 1px solid var(--color-ink-200);
+}
+
+/* Sombras cálidas entintadas que dan volumen natural a tarjetas */
+.shadow-warm-sm {
+  box-shadow: 0 2px 8px -1px rgba(37, 64, 28, 0.07), 0 1px 3px -1px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-warm-md {
+  box-shadow: 0 6px 20px -3px rgba(37, 64, 28, 0.09), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-warm-lg {
+  box-shadow: 0 12px 32px -4px rgba(37, 64, 28, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+html.dark .shadow-warm-md {
+  box-shadow: 0 8px 24px -3px rgba(0, 0, 0, 0.65), 0 2px 6px -1px rgba(111, 178, 87, 0.05);
+}

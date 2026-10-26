@@ -89,7 +89,7 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
 
   if (layout === 'tile') {
     return (
-      <article className="card h-full overflow-hidden transition-all duration-200 hover:border-brand-300 sm:hover:-translate-y-0.5 sm:hover:shadow-sm">
+      <article className="card h-full overflow-hidden rounded-2xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 shadow-warm-sm hover:shadow-warm-md hover:border-brand-400 transition-all duration-200 hover:-translate-y-0.5">
         <Link to={`/negocio/${business.id}`} className="block">
           {cover ? (
             <img
@@ -114,7 +114,7 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
   }
 
   return (
-    <article className="card p-3 transition-all duration-200 hover:border-brand-300 sm:hover:-translate-y-0.5 sm:hover:shadow-sm min-w-0">
+    <article className="card p-3 sm:p-3.5 rounded-2xl border border-ink-200 dark:border-ink-700 bg-white dark:bg-cream-50 shadow-warm-sm hover:shadow-warm-md hover:border-brand-400 transition-all duration-200 hover:-translate-y-0.5 min-w-0">
       <Link to={`/negocio/${business.id}`} className="flex gap-3 min-w-0">
         {cover ? (
           <img

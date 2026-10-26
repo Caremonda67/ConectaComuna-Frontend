@@ -5,6 +5,7 @@ import { useAsistente } from '@/hooks/useAsistente'
 import { useAuth } from '@/hooks/useAuth'
 import { leerUbicacion, guardarUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
+import { AudioWaveVisualizer } from '@/components/ui/AudioWaveVisualizer'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
@@ -700,7 +701,12 @@ export function AsistenteComunalModal() {
                           className="flex items-center gap-1.5 text-xs text-brand-700 dark:text-emerald-400 font-semibold hover:underline focus:outline-none"
                         >
                           <UI_ICONS.volume size={14} />
-                          {hablandoId === m.id ? 'Pausar audio' : 'Escuchar respuesta'}
+                          {hablandoId === m.id ? (
+                            <span className="inline-flex items-center gap-1.5 text-brand-700 dark:text-emerald-400">
+                              <AudioWaveVisualizer active className="scale-75" />
+                              Pausar audio
+                            </span>
+                          ) : 'Escuchar respuesta'}
                         </button>
                       </div>
                     )}

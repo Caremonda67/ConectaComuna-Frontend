@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import { businessService } from '@/services/businessService'
 import { CATEGORIES } from '@/data/categories'
 import { BusinessCard } from '@/components/business/BusinessCard'
+import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
@@ -172,6 +173,46 @@ export default function HomePage() {
             ))}
           </ul>
         )}
+      </section>
+
+      {/* Sección Trato Seguro Comunal: Respaldo y Garantía Barrial */}
+      <section aria-labelledby="trato-seguro-heading" className="card relative overflow-hidden p-6 sm:p-8 border-brand-200 dark:border-brand-900/60 bg-gradient-to-br from-white via-cream-50 to-brand-50/40 dark:from-cream-50 dark:via-cream-100/30 dark:to-brand-950/20 shadow-warm-md">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-2 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/40">
+              <span aria-hidden="true">🤝</span>
+              <span>Pacto de Confianza Comunal</span>
+            </div>
+            <h2 id="trato-seguro-heading" className="text-2xl sm:text-3xl font-extrabold text-ink-900 leading-tight">
+              En tu comuna, la palabra vale y el trabajo se respeta
+            </h2>
+            <p className="text-sm sm:text-base text-ink-600 dark:text-ink-300 leading-relaxed">
+              Todos los oficios y servicios solicitados a través de ConectaComuna cuentan con el <strong>Trato Seguro</strong>: máximo 50% de anticipo, precio pactado con comprobante digital QR y acompañamiento de la Junta de Acción Comunal (JAC).
+            </p>
+            <div className="pt-2 flex flex-wrap gap-3">
+              <Link to="/trato-seguro">
+                <Button size="sm">
+                  Conocer cómo funciona el Trato Seguro
+                </Button>
+              </Link>
+              <Link to="/trato-seguro/verificar/CC-DEMO2026">
+                <Button size="sm" variant="secondary">
+                  Ver ejemplo de comprobante
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex flex-col items-center justify-center p-4 rounded-2xl bg-white/90 dark:bg-cream-100/80 border border-brand-200/80 dark:border-brand-900/50 shadow-warm-sm text-center">
+            <SelloOficialComunal size="lg" />
+            <p className="mt-2 text-xs font-bold text-ink-800 tracking-wide uppercase">
+              Garantía Comunal Activa
+            </p>
+            <p className="text-[11px] text-ink-500">
+              Junta de Acción Comunal Cali
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Llamado a la acción con fondo verde claro (bloque 1 del diseño). */}

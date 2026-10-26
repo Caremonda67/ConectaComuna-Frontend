@@ -6,6 +6,8 @@ import { UI_ICONS } from '@/components/ui/icons'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { PactoVerificado } from '@/types'
+import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
+import { SparkleCelebration } from '@/components/ui/SparkleCelebration'
 
 export default function TratoSeguroVerificationPage() {
   const { codigo } = useParams<{ codigo?: string }>()
@@ -256,10 +258,8 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
           {/* Cabecera oficial del comprobante */}
           <div className="bg-brand-700 dark:bg-brand-100 px-6 py-5 border-b border-brand-800 dark:border-brand-200 print:bg-white">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 dark:bg-brand-200 text-white dark:text-brand-800">
-                  <UI_ICONS.shieldCheck size={22} />
-                </span>
+              <div className="flex items-center gap-3">
+                <SelloOficialComunal size="md" className="shrink-0 drop-shadow-md" />
                 <div>
                   <span className="block font-extrabold text-[11px] uppercase tracking-widest text-emerald-200 dark:text-brand-700">
                     Sello Oficial de Autenticidad
@@ -426,6 +426,15 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
               </p>
             </section>
 
+            {/* Línea de troquelado de talonario de recibo vecinal */}
+            <div className="relative py-3 my-2 border-t-2 border-dashed border-ink-300 dark:border-ink-600 flex items-center justify-between text-xs text-ink-600 dark:text-ink-400 select-none">
+              <span className="ticket-notch-l" aria-hidden="true" />
+              <span className="font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-center w-full">
+                ✂️ Talón oficial desprendible • Verificación pública comunal
+              </span>
+              <span className="ticket-notch-r" aria-hidden="true" />
+            </div>
+
             {/* Código QR Verificable y Enlace Directo */}
             <div className="rounded-2xl border border-ink-200 dark:border-ink-700 bg-cream-50 dark:bg-cream-200 p-5 flex flex-col sm:flex-row items-center gap-5">
               <div className="p-3 bg-white rounded-xl shadow-xs border border-ink-200 shrink-0">
@@ -445,7 +454,8 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 <p className="text-xs sm:text-sm text-ink-600 dark:text-ink-700 leading-relaxed">
                   Cualquier vecino, cliente o líder de la JAC puede escanear este código con su teléfono para corroborar en tiempo real que este acuerdo es auténtico y está protegido por ConectaComuna.
                 </p>
-                <div className="pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
+                <div className="relative pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
+                  <SparkleCelebration active={copiado} />
                   <Button
                     type="button"
                     variant="secondary"

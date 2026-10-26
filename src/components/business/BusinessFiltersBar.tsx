@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CATEGORIES } from '@/data/categories'
 import { cn } from '@/lib/utils'
@@ -271,26 +272,35 @@ function CategoryChip({
   label: string
   icon: LucideIcon
 }) {
+  const prefersReduced = useReducedMotion()
+
   return (
     <button
       type="button"
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'group inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-sm font-medium whitespace-nowrap select-none cursor-pointer',
-        'transition-all duration-200 ease-out hover:-translate-y-0.5 active:translate-y-0 active:scale-95',
+        'group relative z-0 inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap select-none cursor-pointer',
+        'transition-colors duration-150 active:scale-95',
         active
-          ? 'border-brand-500 bg-brand-500 text-white shadow-xs font-semibold ring-1 ring-brand-400/50'
-          : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200 hover:text-brand-900 dark:hover:text-brand-300 hover:shadow-xs',
+          ? 'border-brand-600 text-white font-bold shadow-xs'
+          : 'border-ink-200 bg-white dark:bg-cream-50 text-ink-700 hover:border-brand-400 hover:bg-cream-100 dark:hover:bg-cream-200 hover:text-brand-900 dark:hover:text-emerald-300 hover:shadow-xs',
       )}
     >
+      {active && (
+        <motion.span
+          layoutId={prefersReduced ? undefined : 'activeCategoryPill'}
+          className="absolute inset-0 rounded-full bg-brand-500 -z-10 shadow-xs"
+          transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+        />
+      )}
       <Icon
         aria-hidden="true"
         size={15}
         strokeWidth={1.75}
-        className="transition-transform duration-200 group-hover:scale-110 group-hover:rotate-6"
+        className="relative z-10 transition-transform duration-200 group-hover:scale-110"
       />
-      {label}
+      <span className="relative z-10">{label}</span>
     </button>
   )
 }

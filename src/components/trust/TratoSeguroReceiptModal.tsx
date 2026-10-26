@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
+import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import type { Order } from '@/types'
 
@@ -134,8 +135,17 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
             </div>
           )}
 
-          {/* Desglose de dinero */}
-          <div className="rounded-xl bg-cream-100 dark:bg-cream-200/50 p-4 border border-ink-200 space-y-2">
+          {/* Línea de troquelado de talonario de recibo vecinal */}
+          <div className="relative py-2 my-2 border-t-2 border-dashed border-ink-300 dark:border-ink-200 flex items-center justify-between text-xs text-ink-500 select-none">
+            <span className="ticket-notch-l" aria-hidden="true" />
+            <span className="font-mono text-[10px] font-bold tracking-wider uppercase text-center w-full">
+              ✂️ Talón oficial de acuerdo · ConectaComuna & JAC
+            </span>
+            <span className="ticket-notch-r" aria-hidden="true" />
+          </div>
+
+          {/* Desglose de dinero estilo recibo con sello comunal */}
+          <div className="relative rounded-xl bg-cream-100 dark:bg-cream-200/50 p-4 border border-ink-200 space-y-2 overflow-hidden shadow-warm-sm">
             <div className="flex justify-between text-sm">
               <span className="text-ink-600">
                 {isPending ? 'Presupuesto inicial:' : 'Valor acordado:'}
@@ -149,6 +159,15 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
             <div className="border-t border-ink-200 pt-2 flex justify-between text-base font-bold text-ink-900">
               <span>{isPending ? 'Saldo estimado contra entrega:' : 'Saldo a cancelar contra entrega:'}</span>
               <span className="text-brand-700 font-extrabold">{formatCurrency(saldo)}</span>
+            </div>
+
+            {/* Sello de respaldo comunal incrustado en el recibo */}
+            <div className="pt-2 flex items-center justify-between border-t border-ink-200/70 text-xs">
+              <div className="flex items-center gap-1.5 text-ink-600">
+                <span className="text-base" aria-hidden="true">🛡️</span>
+                <span className="font-medium text-[11px]">Garantía Vecinal de la JAC</span>
+              </div>
+              <SelloOficialComunal size="sm" className="origin-right scale-90" />
             </div>
           </div>
 
