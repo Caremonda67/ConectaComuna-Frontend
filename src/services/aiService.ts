@@ -6,44 +6,163 @@ const BARRIO_POR_DEFECTO = 'Antonio Nariño'
 const COORDENADAS_POR_DEFECTO = { lat: 3.4215, lng: -76.512 }
 
 /**
- * Respaldo local en el navegador si no hay conexión al backend.
- * Garantiza que la experiencia nunca se interrumpa.
+ * Normaliza y describe la ubicación de forma humana para evitar frases como "en Mi ubicación".
  */
-function generarRespuestaLocal(mensaje: string, barrio: string): RespuestaAi {
-  const texto = mensaje.toLowerCase().trim()
-
-  if (texto.includes('trato seguro') || texto.includes('anticipo') || texto.includes('garantia')) {
+export function describirUbicacion(barrio: string) {
+  if (!barrio || barrio.toLowerCase().includes('ubicación') || barrio.toLowerCase().includes('ubicacion')) {
     return {
-      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. Ningún anticipo para materiales puede superar el 50% del total acordado.\n2. Todo queda registrado con código de verificación.\n3. Si surge algún desacuerdo, cuentas con mediación vecinal comunitaria.`,
+      cercaDe: 'cerca de tu ubicación actual en la comuna',
+      enBarrio: 'tu zona en la comuna',
+      etiquetaCorta: 'Cerca de ti',
+    }
+  }
+  return {
+    cercaDe: `cerca del barrio ${barrio}`,
+    enBarrio: `el barrio ${barrio}`,
+    etiquetaCorta: `Barrio ${barrio}`,
+  }
+}
+
+/**
+ * Respaldo local inteligente en el navegador si no hay conexión al backend.
+ * Replica la máquina de estados y memoria conversacional para que el chat siempre funcione.
+ */
+function generarRespuestaLocal(mensaje: string, barrio: string, historial: MensajeChat[] = []): RespuestaAi {
+  const texto = mensaje.toLowerCase().trim()
+  const descUbi = describirUbicacion(barrio)
+
+  const mensajesBot = historial.filter((m) => m.emisor === 'asistente')
+  const ultimoMensajeBot = mensajesBot.length > 0 ? mensajesBot[mensajesBot.length - 1].texto.toLowerCase() : ''
+
+  // 1. Petición para aprender a dictar o iniciar el dictado (NO crea servicio falso)
+  const esPeticionDictado =
+    texto.includes('dictar mi servicio') ||
+    texto.includes('cómo dicto') ||
+    texto.includes('como dicto') ||
+    texto.includes('quiero dictar') ||
+    texto.includes('dictar un servicio') ||
+    texto.includes('dictar servicio') ||
+    texto.includes('cómo publico') ||
+    texto.includes('como publico')
+
+  if (esPeticionDictado) {
+    return {
+      mensaje: `¡Listo vecino! Estoy listo para escucharte. Puedes tocar el botón del micrófono 🎙️ que está aquí abajo o escribirme en una sola frase qué haces y cuánto cobras.\n\nPor ejemplo:\n• "Hago confección de vestidos y arreglos de costura a 25 mil pesos"\n• "Cambio guardas, chapas y candados a domicilio a 30 mil"\n• "Corte de cabello para caballero y barbería a 18 mil"\n\n¿Qué oficio o servicio quieres registrar hoy?`,
+      tipo: 'conversacion',
+      sugerencias: [
+        'Hago arreglos de ropa a $15.000',
+        'Cambio cerraduras a $30.000',
+        'Corte de cabello a $18.000',
+      ],
+    }
+  }
+
+  // 2. Intención de cambiar el precio
+  const esPeticionCambiarPrecio =
+    texto === 'cambiar el precio' ||
+    texto.includes('cambiar el precio') ||
+    texto.includes('cambiar precio') ||
+    texto.includes('modificar precio') ||
+    texto.includes('ajustar precio') ||
+    texto.includes('otro precio') ||
+    texto.includes('cambiar valor')
+
+  if (esPeticionCambiarPrecio) {
+    return {
+      mensaje: `¿A qué valor deseas cambiar el precio de tu servicio? Dime el nuevo monto (por ejemplo: "30 mil pesos") o toca uno de los valores rápidos:`,
+      tipo: 'conversacion',
+      sugerencias: ['$15.000', '$20.000', '$30.000', '$40.000'],
+    }
+  }
+
+  // 3. Respuesta con un nuevo monto tras pedir cambio de precio
+  const precioSoloMatch = texto.match(/\b(\d{1,3}(?:\.\d{3})*|\d+)\s*(?:mil|pesos|\$)?\b/)
+  const contextoPrevioPidePrecio =
+    ultimoMensajeBot.includes('precio') ||
+    ultimoMensajeBot.includes('monto') ||
+    ultimoMensajeBot.includes('valor') ||
+    ultimoMensajeBot.includes('servicio identificado')
+
+  if (precioSoloMatch && contextoPrevioPidePrecio && !texto.includes('vendo') && !texto.includes('hago')) {
+    const num = parseInt(precioSoloMatch[1].replace(/\./g, ''), 10)
+    const nuevoPrecio = num < 1000 ? num * 1000 : num
+
+    return {
+      mensaje: `¡Precio actualizado a $${nuevoPrecio.toLocaleString('es-CO')} COP! He guardado este cambio en la ficha. Cuando quieras puedes guardarlo en tu catálogo:`,
+      tipo: 'servicio_catalogo',
+      servicio: {
+        titulo: 'Servicio de oficio comunal',
+        descripcion: 'Tarifa ajustada según solicitud',
+        precioSugerido: nuevoPrecio,
+        categoria: 'costura',
+      },
+      sugerencias: ['Guardar en mi catálogo', 'Cambiar el precio', '¿Cómo funciona el anticipo?'],
+    }
+  }
+
+  // 4. Intención de guardar en el catálogo
+  const esPeticionGuardar =
+    texto === 'guardar en mi catálogo' ||
+    texto === 'guardar en mi catalogo' ||
+    texto.includes('cómo guardo') ||
+    texto.includes('como guardo') ||
+    texto.includes('publicar en catálogo')
+
+  if (esPeticionGuardar) {
+    return {
+      mensaje: `Para publicar este servicio en la plataforma:\n1. Si ya tienes tu cuenta de negocio, toca el botón verde "Guardar directamente en mi catálogo" en la tarjeta superior y se registrará al instante.\n2. Si aún no te has registrado como emprendedor, toca el botón para crear tu perfil gratis en 1 minuto. Así tu taller quedará visible para todos los vecinos.`,
+      tipo: 'conversacion',
+      sugerencias: ['Crear negocio para publicar', 'Ver oficios cercanos', '¿Cómo funciona el Trato Seguro?'],
+    }
+  }
+
+  // 5. Trato Seguro
+  if (texto.includes('trato seguro') || texto.includes('anticipo') || texto.includes('garantia') || texto.includes('50%')) {
+    return {
+      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. Todo queda registrado por escrito con código de verificación oficial.\n3. Si surge algún desacuerdo, cuentas con mediación vecinal comunitaria antes de cualquier conflicto.`,
       tipo: 'conversacion',
       sugerencias: ['¿Cómo pedir un servicio?', '¿Qué es el facilitador?', 'Ver oficios cercanos'],
     }
   }
 
-  if (texto.includes('facilitador') || texto.includes('apadrinar') || texto.includes('ayuda digital')) {
+  // 6. Facilitador Comunitario
+  if (texto.includes('facilitador') || texto.includes('apadrinar') || texto.includes('nieto') || texto.includes('ayuda digital')) {
     return {
-      mensaje: `El Facilitador Comunitario es un familiar o vecino joven de confianza que apoya a los adultos mayores a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 6 letras para vincularlo.`,
+      mensaje: `El Facilitador Comunitario es un familiar o vecino joven de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 6 letras para vincularlo de inmediato.`,
       tipo: 'conversacion',
       sugerencias: ['¿Cómo registrarme?', '¿Cómo funciona el Trato Seguro?'],
     }
   }
 
-  const esDictado =
+  // 7. Dictado real de un oficio
+  const contieneAccionOficio =
     texto.includes('vendo') ||
     texto.includes('hago') ||
     texto.includes('ofrezco') ||
     texto.includes('cobro') ||
-    texto.includes('publicar') ||
-    texto.includes('mi servicio') ||
-    texto.includes('mi catalogo') ||
-    texto.includes('mi catálogo') ||
-    texto.includes('dictar')
+    texto.includes('arreglo') ||
+    texto.includes('reparo') ||
+    texto.includes('confecciono') ||
+    texto.includes('cambio chapas') ||
+    texto.includes('corte de')
 
-  if (esDictado) {
-    const precioMatch = texto.match(/\b(\d{1,3}(?:\.\d{3})*|\d+)\s*(?:mil|pesos|\$)?\b/)
+  const contieneOficioOMonto =
+    texto.includes('vestido') ||
+    texto.includes('pantalon') ||
+    texto.includes('ropa') ||
+    texto.includes('chapa') ||
+    texto.includes('llave') ||
+    texto.includes('celular') ||
+    texto.includes('corte') ||
+    texto.includes('comida') ||
+    texto.includes('pesos') ||
+    texto.includes('mil') ||
+    texto.includes('$')
+
+  if (contieneAccionOficio && contieneOficioOMonto && !esPeticionDictado) {
     let precio = 20000
-    if (precioMatch) {
-      const num = parseInt(precioMatch[1].replace(/\./g, ''), 10)
+    if (precioSoloMatch) {
+      const num = parseInt(precioSoloMatch[1].replace(/\./g, ''), 10)
       precio = num < 1000 ? num * 1000 : num
     }
 
@@ -60,19 +179,22 @@ function generarRespuestaLocal(mensaje: string, barrio: string): RespuestaAi {
     ) {
       categoria = 'costura'
       titulo = 'Confección y arreglo de prendas'
-    } else if (texto.includes('chapa') || texto.includes('llave') || texto.includes('candado')) {
+    } else if (texto.includes('chapa') || texto.includes('llave') || texto.includes('candado') || texto.includes('cerradura')) {
       categoria = 'cerrajeria'
       titulo = 'Servicio de cerrajería y aperturas'
     } else if (texto.includes('celular') || texto.includes('pantalla') || texto.includes('computador') || texto.includes('tecnolog')) {
       categoria = 'tecnologia'
       titulo = 'Mantenimiento y arreglo técnico'
-    } else if (texto.includes('barber') || texto.includes('corte') || texto.includes('unas') || texto.includes('manicure')) {
+    } else if (texto.includes('barber') || texto.includes('corte') || texto.includes('unas') || texto.includes('uñas') || texto.includes('manicure')) {
       categoria = 'belleza'
       titulo = 'Cuidado personal y estética barrial'
+    } else if (texto.includes('comida') || texto.includes('almuerzo') || texto.includes('empanada')) {
+      categoria = 'comida'
+      titulo = 'Preparación de alimentos caseros'
     }
 
     return {
-      mensaje: `¡Qué buen oficio! He estructurado tu servicio para que los vecinos de ${barrio} se enteren de inmediato. Puedes revisarlo y publicarlo con un solo toque:`,
+      mensaje: `¡Qué buen oficio! He estructurado tu servicio para los vecinos de ${descUbi.enBarrio}. Revisa los datos y puedes guardarlo en tu catálogo con un solo toque:`,
       tipo: 'servicio_catalogo',
       servicio: {
         titulo,
@@ -84,10 +206,11 @@ function generarRespuestaLocal(mensaje: string, barrio: string): RespuestaAi {
     }
   }
 
+  // 8. Saludo o mensaje general de orientación
   return {
-    mensaje: `¡Hola vecino de ${barrio}! Soy tu Asistente Comunal. Puedo orientarte sobre oficios cercanos de confianza, explicarte cómo te protege el Trato Seguro o ayudarte a publicar tus servicios dictándomelos con tu voz. ¿En qué te colaboro hoy?`,
+    mensaje: `¡Hola vecino! Soy tu Asistente Comunal para ${descUbi.enBarrio}. Estoy aquí para ayudarte a:\n• 📍 Encontrar oficios de confianza cerca de tu ubicación actual.\n• 🎙️ Dictar y publicar tus servicios con la voz para tu catálogo.\n• 🛡️ Explicarte el Trato Seguro y las garantías vecinales.\n\n¿En qué te colaboro hoy?`,
     tipo: 'conversacion',
-    sugerencias: ['¿Quién arregla ropa?', 'Cerrajería de confianza', '¿Cómo funciona el Trato Seguro?'],
+    sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', '¿Cómo funciona el Trato Seguro?'],
   }
 }
 
@@ -121,6 +244,6 @@ export async function enviarMensajeAsistente(
     return respuesta
   } catch (error) {
     console.warn('Backend de IA no disponible, empleando motor local de respaldo:', error)
-    return generarRespuestaLocal(mensaje, barrio)
+    return generarRespuestaLocal(mensaje, barrio, historial)
   }
 }

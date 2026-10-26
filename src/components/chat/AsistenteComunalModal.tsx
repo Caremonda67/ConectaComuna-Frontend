@@ -5,7 +5,7 @@ import { useAsistente } from '@/hooks/useAsistente'
 import { useAuth } from '@/hooks/useAuth'
 import { leerUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
-import { enviarMensajeAsistente } from '@/services/aiService'
+import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { businessService } from '@/services/businessService'
 import type { MensajeChat, NegocioSugeridoAi, ServicioSugeridoAi } from '@/types/ai'
 import type { ServiceCatalogItem } from '@/types'
@@ -40,13 +40,14 @@ const CHIPS_SUGERIDOS = [
 ]
 
 function crearSaludoInicial(barrio: string): MensajeChat {
+  const descUbi = describirUbicacion(barrio)
   return {
     id: 'bienvenida',
     emisor: 'asistente',
     fecha: new Date(),
-    texto: `¡Hola vecino de ${barrio}! Soy tu Asistente Comunal.
+    texto: `¡Hola vecino! Soy tu Asistente Comunal para ${descUbi.enBarrio}.
 Puedo colaborarte para:
-• 📍 Encontrar oficios de confianza cerca de ti (con tu ubicación actual).
+• 📍 Encontrar oficios de confianza ${descUbi.cercaDe}.
 • 🎙️ Dictar tus servicios con la voz para tu catálogo si no puedes escribir rápido.
 • 🛡️ Entender cómo te protege el Trato Seguro y la regla del 50% de anticipo.
 
@@ -67,6 +68,7 @@ export function AsistenteComunalModal() {
 
   const ubicacion = leerUbicacion()
   const barrioActivo = ubicacion?.etiqueta || 'Antonio Nariño'
+  const descUbi = describirUbicacion(barrioActivo)
 
   const [mensajes, setMensajes] = useState<MensajeChat[]>(() => [
     crearSaludoInicial(barrioActivo),
@@ -287,7 +289,7 @@ export function AsistenteComunalModal() {
   // Guardar servicio estructurado en el catálogo del negocio del usuario
   const guardarEnCatalogo = async (servicio: ServicioSugeridoAi, mensajeId: string) => {
     if (!business) {
-      navigate('/panel/negocio')
+      navigate('/registro?tipo=business')
       cerrarAsistente()
       return
     }
@@ -340,7 +342,7 @@ export function AsistenteComunalModal() {
             detenerLecturaVoz()
             cerrarAsistente()
           }}
-          className="fixed inset-0 bg-ink-950/40 backdrop-blur-sm sm:hidden pointer-events-auto"
+          className="fixed inset-0 bg-ink-950/50 backdrop-blur-xs sm:hidden pointer-events-auto"
         />
 
         {/* Ventana de chat */}
@@ -351,28 +353,28 @@ export function AsistenteComunalModal() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 30, scale: 0.96 }}
           transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-          className="pointer-events-auto relative flex flex-col w-full sm:w-[440px] h-[85vh] sm:h-[650px] max-h-[92vh] bg-white dark:bg-ink-900 border border-ink-200 dark:border-ink-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+          className="pointer-events-auto relative flex flex-col w-full sm:w-[440px] h-[85vh] sm:h-[650px] max-h-[92vh] bg-cream-100 border border-ink-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Encabezado */}
-          <header className="flex items-center justify-between px-4 py-3.5 border-b border-ink-200 dark:border-ink-800 bg-brand-50/70 dark:bg-brand-950/30">
+          <header className="flex items-center justify-between px-4 py-3.5 border-b border-ink-200 bg-cream-200/70">
             <div className="flex items-center gap-3">
               <div className="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-900/20">
                 <UI_ICONS.bot size={22} className="stroke-[2.2] text-amber-300" />
-                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-ink-900" />
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-cream-100" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-sm font-bold text-ink-900 dark:text-ink-100 leading-tight">
+                  <h2 className="text-sm font-bold text-ink-900 leading-tight">
                     Asistente Comunal
                   </h2>
                   <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-brand-100 text-brand-800 dark:bg-brand-900/60 dark:text-brand-300">
                     IA Vecinal
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] text-ink-600 dark:text-ink-400">
+                <div className="flex items-center gap-1 text-[11px] text-ink-600">
                   <UI_ICONS.map size={12} className="text-brand-600 dark:text-brand-400 shrink-0" />
                   <span className="truncate max-w-[200px]">
-                    {barrioActivo} (Cali)
+                    {descUbi.etiquetaCorta} (Cali)
                   </span>
                 </div>
               </div>
@@ -388,7 +390,7 @@ export function AsistenteComunalModal() {
                   'p-2 rounded-xl transition-colors',
                   ttsActivo
                     ? 'bg-brand-200 dark:bg-brand-800/60 text-brand-900 dark:text-brand-100'
-                    : 'text-ink-500 hover:text-ink-900 hover:bg-ink-100 dark:hover:bg-ink-800'
+                    : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200'
                 )}
                 aria-label={ttsActivo ? 'Silenciar lectura de voz' : 'Activar lectura de voz'}
               >
@@ -400,7 +402,7 @@ export function AsistenteComunalModal() {
                 type="button"
                 onClick={reiniciarConversacion}
                 title="Reiniciar conversación"
-                className="p-2 rounded-xl text-ink-500 hover:text-ink-900 hover:bg-ink-100 dark:hover:bg-ink-800 transition-colors"
+                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 transition-colors"
                 aria-label="Reiniciar conversación"
               >
                 <UI_ICONS.reset size={18} />
@@ -413,7 +415,7 @@ export function AsistenteComunalModal() {
                   detenerLecturaVoz()
                   cerrarAsistente()
                 }}
-                className="p-2 rounded-xl text-ink-500 hover:text-ink-900 hover:bg-ink-100 dark:hover:bg-ink-800 transition-colors"
+                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 transition-colors"
                 aria-label="Cerrar chat"
               >
                 <UI_ICONS.close size={20} />
@@ -436,19 +438,19 @@ export function AsistenteComunalModal() {
                     className={cn(
                       'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed whitespace-pre-wrap',
                       esUsuario
-                        ? 'bg-brand-600 text-white rounded-tr-none shadow-sm'
-                        : 'bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-100 rounded-tl-none border border-ink-200 dark:border-ink-700'
+                        ? 'bg-brand-600 text-white rounded-tr-none shadow-xs'
+                        : 'bg-cream-50 border border-ink-200 text-ink-900 rounded-tl-none shadow-xs'
                     )}
                   >
                     {m.texto}
 
                     {/* Botón de reproducción de audio para mensajes del asistente */}
                     {!esUsuario && m.texto && (
-                      <div className="mt-2 pt-2 border-t border-ink-200/60 dark:border-ink-700/60 flex items-center justify-between">
+                      <div className="mt-2 pt-2 border-t border-ink-200 flex items-center justify-between">
                         <button
                           type="button"
                           onClick={() => leerTextoEnVozAlta(m.texto, m.id)}
-                          className="flex items-center gap-1.5 text-xs text-brand-700 dark:text-brand-300 font-medium hover:underline focus:outline-none"
+                          className="flex items-center gap-1.5 text-xs text-brand-700 dark:text-brand-400 font-semibold hover:underline focus:outline-none"
                         >
                           <UI_ICONS.volume size={14} />
                           {hablandoId === m.id ? 'Pausar audio' : 'Escuchar respuesta'}
@@ -457,11 +459,11 @@ export function AsistenteComunalModal() {
                     )}
                   </div>
 
-                  {/* Tarjetas de acción estructurada del Asistente */}
+                  {/* Tarjetas de acción estructurada del Asistente (Negocios recomendados) */}
                   {estructurada && estructurada.tipo === 'negocios' && estructurada.negociosSugeridos && (
                     <div className="mt-3 w-full max-w-[95%] space-y-2">
-                      <div className="text-xs font-semibold text-ink-600 dark:text-ink-400 px-1">
-                        Negocios recomendados cerca de tu barrio:
+                      <div className="text-xs font-semibold text-ink-700 px-1">
+                        Negocios recomendados cerca de ti:
                       </div>
                       {estructurada.negociosSugeridos.map((negocio: NegocioSugeridoAi) => {
                         const CategoryIcon =
@@ -471,23 +473,23 @@ export function AsistenteComunalModal() {
                         return (
                           <div
                             key={negocio.id}
-                            className="card p-3 border border-ink-200 dark:border-ink-700 bg-white dark:bg-ink-850 rounded-2xl shadow-sm hover:border-brand-300 transition-all"
+                            className="card p-3.5 border border-ink-200 hover:border-brand-300 transition-all shadow-xs rounded-2xl"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-xl bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300">
+                                <div className="p-2 rounded-xl bg-brand-100 text-brand-800 dark:bg-brand-900/40 dark:text-brand-300">
                                   <CategoryIcon size={18} />
                                 </div>
                                 <div>
-                                  <h4 className="font-bold text-ink-900 dark:text-ink-100 text-sm leading-snug">
+                                  <h4 className="font-bold text-ink-900 text-sm leading-snug">
                                     {negocio.nombre}
                                   </h4>
-                                  <div className="flex items-center gap-1.5 text-xs text-ink-600 dark:text-ink-400 mt-0.5">
-                                    <span>{negocio.barrio || barrioActivo}</span>
+                                  <div className="flex items-center gap-1.5 text-xs text-ink-600 mt-0.5">
+                                    <span>{negocio.barrio || descUbi.etiquetaCorta}</span>
                                     {negocio.distanciaMetros && (
                                       <>
                                         <span>•</span>
-                                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                                        <span className="font-semibold text-brand-700 dark:text-brand-400">
                                           {negocio.distanciaMetros < 1000
                                             ? `a ${negocio.distanciaMetros} m`
                                             : `a ${(negocio.distanciaMetros / 1000).toFixed(1)} km`}
@@ -501,7 +503,7 @@ export function AsistenteComunalModal() {
                               {negocio.verificado && (
                                 <span
                                   title="Verificado en territorio por la comunidad"
-                                  className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 shrink-0"
+                                  className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shrink-0"
                                 >
                                   <UI_ICONS.shieldCheck size={12} />
                                   Verificado
@@ -516,7 +518,7 @@ export function AsistenteComunalModal() {
                                   navigate(`/negocio/${negocio.id}`)
                                   cerrarAsistente()
                                 }}
-                                className="flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl bg-ink-100 dark:bg-ink-800 text-ink-800 dark:text-ink-200 hover:bg-ink-200 text-center transition-colors"
+                                className="flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-900 text-center transition-colors border border-ink-200"
                               >
                                 Ver perfil
                               </button>
@@ -528,7 +530,7 @@ export function AsistenteComunalModal() {
                                   )}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                                  className="flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-xs"
                                 >
                                   <UI_ICONS.whatsapp size={14} />
                                   WhatsApp
@@ -543,30 +545,30 @@ export function AsistenteComunalModal() {
 
                   {/* Tarjeta de servicio estructurado (Emprendedor dictando servicio) */}
                   {estructurada && estructurada.tipo === 'servicio_catalogo' && estructurada.servicio && (
-                    <div className="mt-3 w-full max-w-[95%] card p-4 border-2 border-brand-300 dark:border-brand-700/60 bg-brand-50/50 dark:bg-brand-950/20 rounded-2xl">
+                    <div className="mt-3 w-full max-w-[95%] card-soft p-4 border-2 border-brand-300 dark:border-brand-500/50 rounded-2xl shadow-xs">
                       <div className="flex items-center gap-2 text-xs font-bold text-brand-800 dark:text-brand-300 uppercase tracking-wider mb-2">
                         <UI_ICONS.checkCircle size={15} />
                         Servicio identificado para tu catálogo
                       </div>
 
-                      <div className="font-bold text-ink-900 dark:text-ink-100 text-base">
+                      <div className="font-bold text-ink-900 text-base">
                         {estructurada.servicio.titulo}
                       </div>
 
-                      <p className="text-xs text-ink-700 dark:text-ink-300 mt-1 leading-relaxed">
+                      <p className="text-xs text-ink-700 mt-1 leading-relaxed">
                         {estructurada.servicio.descripcion}
                       </p>
 
                       <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs text-ink-500">Precio estimado:</span>
-                        <span className="text-sm font-extrabold text-brand-800 dark:text-brand-300">
+                        <span className="text-xs text-ink-600 font-medium">Precio estimado:</span>
+                        <span className="text-sm font-extrabold text-brand-700 dark:text-brand-300">
                           ${estructurada.servicio.precioSugerido.toLocaleString('es-CO')} COP
                         </span>
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-brand-200 dark:border-brand-800/60 flex flex-col gap-2">
                         {servicioGuardadoId === m.id ? (
-                          <div className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl">
+                          <div className="flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-emerald-800 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
                             <UI_ICONS.check size={16} />
                             ¡Guardado en tu catálogo exitosamente!
                           </div>
@@ -598,7 +600,7 @@ export function AsistenteComunalModal() {
                           navigate(estructurada.rutaNavegacion!)
                           cerrarAsistente()
                         }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white text-xs font-bold hover:bg-brand-700 transition-colors shadow-xs"
                       >
                         <UI_ICONS.compass size={16} />
                         Ir a la sección
@@ -614,7 +616,7 @@ export function AsistenteComunalModal() {
                           key={idx}
                           type="button"
                           onClick={() => manejarEnvio(chip)}
-                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 dark:border-ink-700 bg-white dark:bg-ink-800 text-ink-700 dark:text-ink-300 hover:border-brand-500 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
+                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 bg-cream-50 text-ink-800 hover:border-brand-500 hover:text-brand-700 transition-colors shadow-2xs"
                         >
                           {chip}
                         </button>
@@ -627,7 +629,7 @@ export function AsistenteComunalModal() {
 
             {/* Indicador de carga */}
             {cargando && (
-              <div className="flex items-center gap-2 text-xs text-ink-500 py-1">
+              <div className="flex items-center gap-2 text-xs text-ink-600 py-1">
                 <UI_ICONS.loader size={16} className="animate-spin text-brand-600" />
                 <span>El Asistente Comunal está consultando información...</span>
               </div>
@@ -668,7 +670,7 @@ export function AsistenteComunalModal() {
           )}
 
           {/* Entrada de texto y botón de voz */}
-          <footer className="p-3 border-t border-ink-200 dark:border-ink-800 bg-white dark:bg-ink-900">
+          <footer className="p-3 border-t border-ink-200 bg-cream-100">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -685,7 +687,7 @@ export function AsistenteComunalModal() {
                   placeholder={
                     escuchandoVoz ? 'Escuchando tu voz...' : 'Escribe o presiona el micrófono...'
                   }
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-ink-100 dark:bg-ink-800 text-ink-900 dark:text-ink-100 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-ink-850 focus:outline-none transition-all placeholder:text-ink-400"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-cream-50 text-ink-900 border border-ink-200 focus:border-brand-500 focus:outline-none transition-all placeholder:text-ink-500 shadow-2xs"
                 />
 
                 {/* Botón de micrófono */}
@@ -697,7 +699,7 @@ export function AsistenteComunalModal() {
                     'absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all',
                     escuchandoVoz
                       ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
-                      : 'text-ink-500 hover:text-brand-600 hover:bg-ink-200/50 dark:hover:bg-ink-700'
+                      : 'text-ink-600 hover:text-brand-600 hover:bg-cream-200'
                   )}
                   aria-label={escuchandoVoz ? 'Detener grabación de voz' : 'Iniciar grabación de voz'}
                 >
