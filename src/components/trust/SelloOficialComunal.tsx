@@ -100,51 +100,71 @@ export function SelloOficialComunal({
           </textPath>
         </text>
 
-        {/* Icono central de apretón de manos de honor con escudo */}
-        <g transform="translate(42, 44)">
-          <path
-            d="M18 20l-4-4 2-2 4 4M2 14l6-6 4 4-6 6M10 8l4-4 4 4-4 4"
+        {/* Icono central: Apretón de manos nítido y reconocible */}
+        <g transform="translate(44, 30)">
+          <svg
+            width="32"
+            height="32"
+            viewBox="0 0 24 24"
             fill="none"
             stroke="#FDE68A"
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-          />
-          <circle cx="18" cy="18" r="1.5" fill="#FDE68A" />
+            className="drop-shadow-xs"
+          >
+            <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4" />
+            <path d="m21 3 1 11h-2" />
+            <path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3" />
+            <path d="M3 4h8" />
+          </svg>
         </g>
 
-        {/* Textos centrales: AVALADO JAC & TOPE 50% */}
+        {/* Textos centrales basados en el marco legal (Ley 2166 de 2021) */}
         <text
           x="60"
-          y="76"
-          fontSize="7.5"
+          y="72"
+          fontSize="7"
           fontWeight="900"
           letterSpacing="0.8"
           fill="#FFFFFF"
           textAnchor="middle"
         >
-          AVALADO JAC
+          MEDIACIÓN JAC
         </text>
         <text
           x="60"
-          y="85"
-          fontSize="6"
+          y="80"
+          fontSize="5.5"
           fontWeight="800"
+          letterSpacing="0.4"
           fill="#86EFAC"
           textAnchor="middle"
         >
-          TOPE 50% MÁX
+          EN EQUIDAD · LEY 2166
+        </text>
+        <text
+          x="60"
+          y="88"
+          fontSize="5"
+          fontWeight="700"
+          letterSpacing="0.3"
+          fill="#FDE68A"
+          textAnchor="middle"
+        >
+          MÁX. 50% ANTICIPO
         </text>
 
         {/* Texto inferior arqueado */}
         <text
-          fontSize="6.8"
+          fontSize="6.2"
           fontWeight="800"
           letterSpacing="0.5"
           className="fill-emerald-200 dark:fill-emerald-300 uppercase"
         >
           <textPath href="#curve-seal-bottom" startOffset="50%" textAnchor="middle">
-            TRATO SEGURO COMUNAL
+            COMISIÓN DE CONVIVENCIA
           </textPath>
         </text>
       </svg>
