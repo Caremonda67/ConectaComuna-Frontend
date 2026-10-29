@@ -470,9 +470,8 @@ export function AsistenteComunalModal() {
               mensaje: '',
               tipo: 'conversacion',
               sugerencias: [
-                'Estoy en Antonio Nariño',
-                'Estoy en El Rodeo',
-                'Estoy en Nueva Floresta',
+                'Estoy en El Rodeo, Cali',
+                'Estoy en Chapinero, Bogotá',
               ],
             },
           },

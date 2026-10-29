@@ -1,7 +1,11 @@
 import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
 import { resolverLugar } from '@/lib/lugares'
+import { businessService } from '@/services/businessService'
+import { categoryLabel } from '@/data/categories'
+import { COMUNA_CENTER } from '@/lib/env'
 import type { UbicacionGeocodificada } from '@/services/direccionService'
+import type { BusinessWithDistance } from '@/types'
 import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
 
 /**
@@ -91,11 +95,32 @@ export function describirUbicacion(barrio?: string | null, esDefinida = true) {
  * Respaldo local inteligente en el navegador si no hay conexión al backend.
  * Replica la máquina de estados, el contexto del usuario y las reglas lógicas.
  */
+/** Palabras con las que un vecino nombra cada oficio al pedirlo. */
+const PALABRAS_POR_CATEGORIA: Record<string, string[]> = {
+  costura: ['modista', 'costurera', 'costura', 'ropa', 'pantalon', 'pantalón', 'basta', 'dobladillo', 'vestido', 'cierre', 'confecc'],
+  cerrajeria: ['cerrajer', 'llave', 'chapa', 'candado', 'cerradura', 'guarda'],
+  tecnologia: ['celular', 'pantalla', 'computador', 'tecnic', 'técnic', 'bateria', 'batería'],
+  belleza: ['barber', 'peluquer', 'corte de cabello', 'uñas', 'unas', 'manicure', 'pedicure'],
+  comida: ['comida', 'almuerzo', 'empanada', 'cholado', 'desayuno'],
+  ropa: ['ropa americana', 'venta de ropa'],
+  domicilios: ['domicilio', 'mandado', 'encomienda'],
+  construccion: ['albañil', 'albanil', 'obra', 'plomer', 'pintura'],
+}
+
+/** Detecta qué oficio está pidiendo la persona, por las palabras que usa. */
+function categoriaPedida(texto: string): string | null {
+  for (const [slug, palabras] of Object.entries(PALABRAS_POR_CATEGORIA)) {
+    if (palabras.some((p) => texto.includes(p))) return slug
+  }
+  return null
+}
+
 function generarRespuestaLocal(
   mensaje: string,
   barrioParam?: string | null,
   historial: MensajeChat[] = [],
-  contexto?: ContextoUsuarioCopiloto
+  contexto?: ContextoUsuarioCopiloto,
+  negociosReales: BusinessWithDistance[] = []
 ): RespuestaAi {
   const texto = mensaje.toLowerCase().trim()
   const tieneUbicacionExplicita = !!(
@@ -121,7 +146,7 @@ function generarRespuestaLocal(
 
   if (esPreguntaCercania && !tieneUbicacionExplicita) {
     return {
-      mensaje: `Vecino, aún no conozco tu barrio o ubicación exacta en la comuna para calcularte distancias precisas. Puedes activar tu ubicación con el botón de GPS o indicarme en qué barrio te encuentras (por ejemplo: Antonio Nariño, El Rodeo, Nueva Floresta, Vallado).\n\nMientras tanto, aquí tienes algunos oficios y talleres destacados de la comuna:`,
+      mensaje: `Vecino, todavía no sé dónde estás para calcularte distancias precisas. Puedes tocar el botón de ubicación o escribirme tu barrio con la ciudad, como "Estoy en El Rodeo, Cali" o "Estoy en Chapinero, Bogotá".\n\nMientras tanto, aquí tienes algunos oficios y talleres destacados de la comuna:`,
       tipo: 'negocios',
       negociosSugeridos: [
         {
@@ -154,9 +179,8 @@ function generarRespuestaLocal(
       ],
       sugerencias: [
         '📍 Usar mi ubicación actual',
-        'Estoy en El Rodeo',
-        'Estoy en Antonio Nariño',
-        'Estoy en Nueva Floresta',
+        'Estoy en El Rodeo, Cali',
+        'Estoy en Chapinero, Bogotá',
       ],
     }
   }
@@ -849,6 +873,36 @@ function generarRespuestaLocal(
     }
   }
 
+  // 21b. Búsqueda de un oficio sin backend. Es la pregunta más común y antes
+  // caía en el mensaje genérico, justo cuando Render estaba despertando.
+  const categoria = categoriaPedida(texto)
+  if (categoria) {
+    const delOficio = negociosReales.filter((n) => n.category === categoria)
+    if (delOficio.length > 0) {
+      return {
+        mensaje: `Vecino, esto es lo que tenemos de ${categoryLabel(categoria).toLowerCase()} ${descUbi.cercaDe}:`,
+        tipo: 'negocios',
+        negociosSugeridos: delOficio.slice(0, 3).map((n) => ({
+          id: n.id,
+          nombre: n.name,
+          categoria: n.category,
+          barrio: n.neighborhood,
+          whatsapp: n.whatsapp,
+          distanciaMetros: n.distanceKm != null ? Math.round(n.distanceKm * 1000) : null,
+          verificado: n.verification_status === 'verified',
+        })),
+        sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
+      }
+    }
+    // Sin resultados no inventamos talleres: mandamos al directorio real.
+    return {
+      mensaje: `Vecino, por ahora no tengo talleres de ${categoryLabel(categoria).toLowerCase()} registrados ${descUbi.cercaDe}. Puedes revisar el directorio completo por si hay alguno en otra zona:`,
+      tipo: 'navegacion',
+      rutaNavegacion: `/explorar?categoria=${categoria}`,
+      sugerencias: ['Ver en el mapa', 'Buscar otro oficio'],
+    }
+  }
+
   // 22. Mensaje conversacional de seguimiento (cuando ya hay historial)
   if (historial && historial.length > 0) {
     return {
@@ -898,11 +952,26 @@ export async function enviarMensajeAsistente(
         ubicacion: { barrio, lat, lng, esDefinida },
         contexto,
       }),
+      // Si Render está arrancando, mejor responder con el motor local que
+      // dejar la conversación congelada un minuto.
+      signal: AbortSignal.timeout(20000),
     })
 
     return respuesta
   } catch (error) {
     console.warn('Backend de IA no disponible, empleando motor local de respaldo:', error)
-    return generarRespuestaLocal(mensaje, barrio, historial, contexto)
+    // Los negocios salen de Supabase, no de una lista de ejemplo: con datos
+    // inventados las tarjetas llevaban a fichas que no existen.
+    let negociosReales: BusinessWithDistance[] = []
+    try {
+      negociosReales = await businessService.search({
+        center: lat != null && lng != null ? { lat, lng } : COMUNA_CENTER,
+        radiusKm: 25,
+        sort: 'distance',
+      })
+    } catch {
+      // Sin red tampoco hay negocios; el motor responde sin tarjetas.
+    }
+    return generarRespuestaLocal(mensaje, barrio, historial, contexto, negociosReales)
   }
 }
