@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button'
 import { formatCurrency, getBadges, profileCompletion } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
+import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
 
 /** Panel del negocio: pedidos recibidos, reputación y perfil asistido. */
 export default function BusinessDashboard() {
@@ -23,11 +24,18 @@ export default function BusinessDashboard() {
     description: 'Administra tus solicitudes, servicios y catálogo de oficio.',
   })
 
-  const { business } = useAuth()
+  const { business, userId } = useAuth()
   const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
+  const [codigoExpiraEn, setCodigoExpiraEn] = useState<string | null>(null)
   const [generandoCodigo, setGenerandoCodigo] = useState(false)
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null)
   const [copiado, setCopiado] = useState(false)
+  const [ahora, setAhora] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setAhora(Date.now()), 60_000)
+    return () => clearInterval(timer)
+  }, [])
   const { data, loading, error, reload } = useAsync(
     () => (business ? orderService.listAsBusiness(business.id) : Promise.resolve([])),
     [business?.id],
@@ -71,6 +79,22 @@ export default function BusinessDashboard() {
 
   return (
     <div className="space-y-6">
+      {business.verification_status === 'under_review' && (
+        <section
+          role="alert"
+          className="rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/60 p-4 flex items-start gap-3 text-amber-950 dark:text-amber-200"
+        >
+          <UI_ICONS.alert size={22} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div className="space-y-1 text-sm">
+            <p className="font-bold">Tu negocio está bajo observación comunitaria</p>
+            <p className="text-xs text-ink-700 dark:text-ink-300 leading-relaxed">
+              Se han registrado reportes sobre tu servicio que están siendo evaluados por el equipo de Conecta Comuna.
+              Por favor revisa la sección de reportes abajo y comparte tu versión para que el equipo pueda revisar el caso.
+            </p>
+          </div>
+        </section>
+      )}
+
       <section className="card p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -128,46 +152,98 @@ export default function BusinessDashboard() {
           </p>
         </div>
 
+        {(() => {
+          const codigoActual = codigoApadrinamiento || business.codigo_apadrinamiento
+          const expiraActual = codigoExpiraEn || business.codigo_apadrinamiento_expira_en
+          const estaVencido = Boolean(
+            expiraActual && new Date(expiraActual).getTime() <= ahora
+          )
+          return (
+
         <div className="mt-3">
-          {(codigoApadrinamiento || business.codigo_apadrinamiento) ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="text-2xl font-mono font-bold tracking-widest text-brand-800 bg-brand-100 border border-brand-200 px-4 py-2 rounded-lg">
-                {codigoApadrinamiento || business.codigo_apadrinamiento}
-              </span>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  const code = codigoApadrinamiento || business.codigo_apadrinamiento || ''
-                  if (code) {
-                    navigator.clipboard.writeText(code)
-                    setCopiado(true)
-                    setTimeout(() => setCopiado(false), 2500)
-                  }
-                }}
-              >
-                {copiado ? '✓ Copiado' : 'Copiar código'}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                loading={generandoCodigo}
-                onClick={async () => {
-                  setGenerandoCodigo(true)
-                  setErrorCodigo(null)
-                  try {
-                    const nuevo = await facilitadorService.generarCodigo(business.id)
-                    setCodigoApadrinamiento(nuevo)
-                  } catch (e) {
-                    setErrorCodigo(e instanceof Error ? e.message : 'No se pudo regenerar el código.')
-                  } finally {
-                    setGenerandoCodigo(false)
-                  }
-                }}
-              >
-                Regenerar
-              </Button>
-            </div>
+          {codigoActual ? (
+            estaVencido ? (
+              <div className="space-y-2 rounded-xl border border-amber-300 bg-amber-50/80 dark:bg-amber-950/40 p-3.5">
+                <p className="text-xs font-semibold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                  <UI_ICONS.alert size={15} className="text-amber-600 shrink-0" />
+                  El código anterior ya venció (duración de 24 horas)
+                </p>
+                <p className="text-xs text-ink-600 dark:text-ink-400">
+                  Por seguridad de tu negocio, los códigos de vinculación caducan tras un día. Genera uno nuevo para compartirlo con tu facilitador.
+                </p>
+                <Button
+                  size="sm"
+                  loading={generandoCodigo}
+                  onClick={async () => {
+                    setGenerandoCodigo(true)
+                    setErrorCodigo(null)
+                    try {
+                      const nuevo = await facilitadorService.generarCodigo(business.id)
+                      setCodigoApadrinamiento(nuevo)
+                      setCodigoExpiraEn(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
+                    } catch (e) {
+                      setErrorCodigo(e instanceof Error ? e.message : 'No se pudo generar el código.')
+                    } finally {
+                      setGenerandoCodigo(false)
+                    }
+                  }}
+                >
+                  Generar nuevo código
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-2xl font-mono font-bold tracking-widest text-brand-800 bg-brand-100 border border-brand-200 px-4 py-2 rounded-lg">
+                    {codigoActual}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      if (codigoActual) {
+                        navigator.clipboard.writeText(codigoActual)
+                        setCopiado(true)
+                        setTimeout(() => setCopiado(false), 2500)
+                      }
+                    }}
+                  >
+                    {copiado ? '✓ Copiado' : 'Copiar código'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    loading={generandoCodigo}
+                    onClick={async () => {
+                      setGenerandoCodigo(true)
+                      setErrorCodigo(null)
+                      try {
+                        const nuevo = await facilitadorService.generarCodigo(business.id)
+                        setCodigoApadrinamiento(nuevo)
+                        setCodigoExpiraEn(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
+                      } catch (e) {
+                        setErrorCodigo(e instanceof Error ? e.message : 'No se pudo regenerar el código.')
+                      } finally {
+                        setGenerandoCodigo(false)
+                      }
+                    }}
+                  >
+                    Regenerar
+                  </Button>
+                </div>
+                {expiraActual && (
+                  <p className="text-[11px] text-ink-500">
+                    Vigente hasta:{' '}
+                    {new Date(expiraActual).toLocaleTimeString('es-CO', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </p>
+                )}
+              </div>
+            )
           ) : (
             <Button
               loading={generandoCodigo}
@@ -177,6 +253,7 @@ export default function BusinessDashboard() {
                 try {
                   const nuevo = await facilitadorService.generarCodigo(business.id)
                   setCodigoApadrinamiento(nuevo)
+                  setCodigoExpiraEn(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
                 } catch (e) {
                   setErrorCodigo(e instanceof Error ? e.message : 'No se pudo generar el código.')
                 } finally {
@@ -197,6 +274,8 @@ export default function BusinessDashboard() {
             </p>
           )}
         </div>
+          )
+        })()}
       </section>
 
       {/* Gestión asistida: le decimos exactamente qué le falta y por qué importa. */}
@@ -232,6 +311,14 @@ export default function BusinessDashboard() {
       )}
 
       <ApadrinamientoPanel businessId={business.id} />
+
+      {userId && (
+        <ReportesComunitariosPanel
+          modo="dueno"
+          usuarioId={userId}
+          negocioId={business.id}
+        />
+      )}
             <section aria-labelledby="pendientes">
         <h2 id="pendientes" className="mb-2 text-lg font-bold">
           Solicitudes nuevas

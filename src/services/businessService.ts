@@ -215,10 +215,34 @@ export const businessService = {
       return delay(merged)
     }
 
-    // RLS: policy "businesses_owner_write" con `auth.uid() = owner_id`.
-    const { data, error } = await requireSupabase()
+    const supabase = requireSupabase()
+    // Si ya existe el negocio (por id o por owner_id), se actualiza con UPDATE.
+    // Usar `.upsert()` en PostgREST dispara la comprobación de INSERT, la cual
+    // bloquea a los facilitadores autorizados porque su auth.uid() no es el owner_id.
+    let existingId: string | null = (input as { id?: string }).id ?? null
+    if (!existingId) {
+      const { data: found } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', ownerId)
+        .maybeSingle()
+      if (found?.id) existingId = found.id
+    }
+
+    if (existingId) {
+      const { data, error } = await supabase
+        .from('businesses')
+        .update(input)
+        .eq('id', existingId)
+        .select()
+        .single()
+      if (error) throw error
+      return data as Business
+    }
+
+    const { data, error } = await supabase
       .from('businesses')
-      .upsert({ ...input, owner_id: ownerId }, { onConflict: 'owner_id' })
+      .insert({ ...input, owner_id: ownerId })
       .select()
       .single()
     if (error) throw error
@@ -356,21 +380,13 @@ export const businessService = {
     }
 
     if (isDemoMode) {
-      // El umbral lo lleva la base de demostración. Contra la base real lo
-      // resuelve el trigger `refresh_business_reports`, que cuenta los
-      // reportes de todos los vecinos y no los de este dispositivo.
+      // El negocio solo entra bajo observación cuando el equipo confirma dos reportes,
+      // no cuando entran reportes pendientes.
       mutateDb((d) => {
         d.reportes.push({
           ...nuevo,
           estado: 'pendiente',
         })
-        const b = d.businesses.find((x) => x.id === reporte.negocio_id)
-        if (b) {
-          b.report_count = (b.report_count ?? 0) + 1
-          if (b.report_count >= 2) {
-            b.verification_status = 'under_review'
-          }
-        }
       })
       return delay(undefined, 300)
     }
@@ -402,6 +418,14 @@ export const businessService = {
       let list = [...db.reportes]
       if (negocioId) {
         list = list.filter((r) => r.negocio_id === negocioId)
+      } else if (!incluirReportante && db.sessionUserId) {
+        // En vista de facilitador, filtrar únicamente por los negocios que apadrina
+        const vinculados = new Set(
+          db.vinculaciones
+            .filter((v) => v.facilitador_id === db.sessionUserId && v.estado_vinculacion === 'aprobado')
+            .map((v) => v.negocio_id),
+        )
+        list = list.filter((r) => vinculados.has(r.negocio_id))
       }
       const hydrated = list.map((r) => {
         const b = db.businesses.find((x) => x.id === r.negocio_id)
@@ -498,6 +522,20 @@ export const businessService = {
           rep.estado = estado
           rep.notas_moderacion = notas ?? null
           rep.actualizado_en = new Date().toISOString()
+
+          // Recalcular contador y observación igual que el trigger PostgreSQL refresh_business_reports
+          const b = d.businesses.find((x) => x.id === rep.negocio_id)
+          if (b) {
+            const confirmados = d.reportes.filter(
+              (r) => r.negocio_id === rep.negocio_id && r.estado === 'revisado',
+            ).length
+            b.report_count = confirmados
+            if (confirmados >= 2 && b.verification_status !== 'under_review') {
+              b.verification_status = 'under_review'
+            } else if (confirmados < 2 && b.verification_status === 'under_review') {
+              b.verification_status = b.verification_date ? 'verified' : 'unverified'
+            }
+          }
         }
       })
       return delay(undefined, 200)

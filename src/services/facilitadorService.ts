@@ -149,9 +149,13 @@ export const facilitadorService = {
       const codigo = Array.from({ length: 8 }, () =>
         'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)],
       ).join('')
+      const expiraEn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       mutateDb((d) => {
         const b = d.businesses.find((x: Business) => x.id === negocioId)
-        if (b) b.codigo_apadrinamiento = codigo
+        if (b) {
+          b.codigo_apadrinamiento = codigo
+          b.codigo_apadrinamiento_expira_en = expiraEn
+        }
       })
       return delay(codigo, 200)
     }
@@ -167,20 +171,47 @@ export const facilitadorService = {
    */
   async vincularConCodigo(facilitadorId: string, codigo: string): Promise<FacilitadorNegocio> {
     if (isDemoMode) {
-      const negocio = readDb().businesses.find((b: Business) => b.codigo_apadrinamiento === codigo)
+      const limpio = codigo.trim().toUpperCase()
+      const negocio = readDb().businesses.find(
+        (b: Business) => b.codigo_apadrinamiento?.trim().toUpperCase() === limpio,
+      )
       if (!negocio) throw new Error('Código no válido. Verifica con el dueño del negocio.')
+
+      if (
+        negocio.codigo_apadrinamiento_expira_en &&
+        new Date(negocio.codigo_apadrinamiento_expira_en).getTime() < Date.now()
+      ) {
+        throw new Error('Ese código venció. Pídele al dueño que genere uno nuevo.')
+      }
+
       const existente = readDb().vinculaciones.find(
         (v) => v.facilitador_id === facilitadorId && v.negocio_id === negocio.id,
       )
-      if (existente) throw new Error('Ya tienes una vinculación con este negocio.')
+      if (existente && existente.estado_vinculacion === 'aprobado') {
+        throw new Error('Ya tienes una vinculación activa con este negocio.')
+      }
+
       const nueva: FacilitadorNegocio = {
-        id: uid('fac'),
+        id: existente?.id ?? uid('fac'),
         negocio_id: negocio.id,
         facilitador_id: facilitadorId,
         estado_vinculacion: 'aprobado',
-        creado_en: new Date().toISOString(),
+        creado_en: existente?.creado_en ?? new Date().toISOString(),
       }
-      mutateDb((d) => d.vinculaciones.push(nueva))
+      mutateDb((d) => {
+        if (existente) {
+          const idx = d.vinculaciones.findIndex((v) => v.id === existente.id)
+          if (idx >= 0) d.vinculaciones[idx].estado_vinculacion = 'aprobado'
+        } else {
+          d.vinculaciones.push(nueva)
+        }
+        // El código se gasta: se borra igual que en PostgreSQL
+        const b = d.businesses.find((x: Business) => x.id === negocio.id)
+        if (b) {
+          b.codigo_apadrinamiento = null
+          b.codigo_apadrinamiento_expira_en = null
+        }
+      })
       return delay(nueva, 300)
     }
     // El código lo entrega el dueño, así que vale como autorización: la función

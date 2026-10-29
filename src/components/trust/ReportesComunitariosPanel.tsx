@@ -29,11 +29,12 @@ const ESTADO: Record<EstadoReporte, { texto: string; clase: string }> = {
   },
 }
 
-type Modo = 'equipo' | 'acompanante'
+type Modo = 'equipo' | 'acompanante' | 'dueno'
 
 interface Props {
   modo: Modo
   usuarioId: string
+  negocioId?: string
 }
 
 /**
@@ -41,10 +42,10 @@ interface Props {
  * confirma o se descarta; el negocio y su facilitador solo ven los casos de
  * sus propios negocios y pueden contar su versión.
  */
-export function ReportesComunitariosPanel({ modo, usuarioId }: Props) {
+export function ReportesComunitariosPanel({ modo, usuarioId, negocioId }: Props) {
   const { data, loading: cargando, error: errorCarga, reload } = useAsync(
-    () => businessService.listarReportes(undefined, modo === 'equipo'),
-    [modo],
+    () => businessService.listarReportes(negocioId, modo === 'equipo'),
+    [modo, negocioId],
   )
   const [errorAccion, setErrorAccion] = useState<string | null>(null)
   const [abierto, setAbierto] = useState<string | null>(null)
@@ -77,7 +78,11 @@ export function ReportesComunitariosPanel({ modo, usuarioId }: Props) {
       <div className="flex items-center justify-between gap-2">
         <h2 id="reportes-titulo" className="font-bold text-ink-900 flex items-center gap-2">
           <UI_ICONS.flag size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
-          {esEquipo ? 'Reportes de la comuna' : 'Reportes de tus negocios'}
+          {esEquipo
+            ? 'Reportes de la comuna'
+            : modo === 'dueno'
+              ? 'Reportes sobre tu negocio'
+              : 'Reportes de tus negocios'}
         </h2>
         {pendientes.length > 0 && (
           <span className="shrink-0 rounded-full bg-amber-100 dark:bg-amber-950/70 px-2.5 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-200">
@@ -89,7 +94,9 @@ export function ReportesComunitariosPanel({ modo, usuarioId }: Props) {
       <p className="text-sm text-ink-600 leading-relaxed">
         {esEquipo
           ? 'Dos reportes confirmados dejan el negocio bajo observación para toda la comuna. Al descartarlos recupera su estado anterior.'
-          : 'Solo aparecen los reportes de los negocios que apadrinas. La decisión la toma el equipo de Conecta Comuna; aquí puedes dejar la versión del negocio.'}
+          : modo === 'dueno'
+            ? 'Si un cliente tuvo un inconveniente o reclamo, puedes dar tu versión aquí. El equipo de Conecta Comuna revisará las dos partes antes de tomar una decisión.'
+            : 'Solo aparecen los reportes de los negocios que apadrinas. La decisión la toma el equipo de Conecta Comuna; aquí puedes dejar la versión del negocio.'}
       </p>
 
       {error && <p className="text-sm text-rose-700">{error}</p>}
@@ -97,7 +104,11 @@ export function ReportesComunitariosPanel({ modo, usuarioId }: Props) {
 
       {!cargando && reportes.length === 0 && (
         <p className="text-sm text-ink-500">
-          {esEquipo ? 'No hay reportes abiertos. Buena señal.' : 'Tus negocios no tienen reportes. Buena señal.'}
+          {esEquipo
+            ? 'No hay reportes abiertos. Buena señal.'
+            : modo === 'dueno'
+              ? 'Tu negocio no tiene reportes abiertos. ¡Excelente reputación vecinal!'
+              : 'Tus negocios no tienen reportes. Buena señal.'}
         </p>
       )}
 

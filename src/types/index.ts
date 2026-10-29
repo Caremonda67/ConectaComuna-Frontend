@@ -88,6 +88,7 @@ export interface Business {
   report_count?: number
   is_active: boolean
   codigo_apadrinamiento?: string | null
+  codigo_apadrinamiento_expira_en?: string | null
   wholesale_enabled?: boolean
   wholesale_min_order?: string | null
   wholesale_terms?: string | null
