@@ -189,10 +189,20 @@ export async function geocodificar(texto: string): Promise<UbicacionGeocodificad
         address?: Record<string, string>
       }>
       if (Array.isArray(data) && data.length > 0) {
-        return data.map((r) => ({
-          etiqueta: etiquetarDireccion(r.address, r.display_name),
-          center: { lat: Number(r.lat), lng: Number(r.lon) },
-        }))
+        // Nominatim devuelve el mismo lugar varias veces (el polígono y su
+        // nodo, por ejemplo) y al simplificar la etiqueta quedan idénticos.
+        const vistos = new Set<string>()
+        return data
+          .map((r) => ({
+            etiqueta: etiquetarDireccion(r.address, r.display_name),
+            center: { lat: Number(r.lat), lng: Number(r.lon) },
+          }))
+          .filter((hit) => {
+            const clave = `${hit.etiqueta}|${hit.center.lat.toFixed(3)},${hit.center.lng.toFixed(3)}`
+            if (vistos.has(clave)) return false
+            vistos.add(clave)
+            return true
+          })
       }
     }
   } catch (err) {

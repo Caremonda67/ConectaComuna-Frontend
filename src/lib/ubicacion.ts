@@ -8,6 +8,7 @@ export interface UbicacionElegida {
 }
 
 const CLAVE = 'conectacomuna.ubicacion'
+const EVENTO = 'conectacomuna:ubicacion'
 
 /** Recuerda la última ubicación de búsqueda (estilo Rappi) en el dispositivo. */
 export function guardarUbicacion(u: UbicacionElegida): void {
@@ -16,6 +17,16 @@ export function guardarUbicacion(u: UbicacionElegida): void {
   } catch {
     // almacenamiento no disponible (modo privado); la elección vive en memoria
   }
+  // El evento `storage` del navegador solo avisa a las otras pestañas, así que
+  // sin esto el asistente cambiaba la zona y la página de abajo seguía igual.
+  window.dispatchEvent(new CustomEvent<UbicacionElegida>(EVENTO, { detail: u }))
+}
+
+/** Avisa cuando la ubicación cambia desde cualquier parte de la app. */
+export function alCambiarUbicacion(escucha: (u: UbicacionElegida) => void): () => void {
+  const handler = (e: Event) => escucha((e as CustomEvent<UbicacionElegida>).detail)
+  window.addEventListener(EVENTO, handler)
+  return () => window.removeEventListener(EVENTO, handler)
 }
 
 /** Lee la ubicación guardada, validando lat/lng por si el storage está corrupto. */

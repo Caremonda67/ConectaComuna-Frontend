@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
 import { businessService } from '@/services/businessService'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { BusinessFiltersBar } from '@/components/business/BusinessFiltersBar'
 import { UbicacionPicker } from '@/components/location/UbicacionPicker'
-import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
+import { useUbicacionElegida } from '@/hooks/useUbicacionElegida'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
@@ -25,15 +25,7 @@ export default function ExplorePage() {
   })
 
   const [params, setParams] = useSearchParams()
-  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
-
-  const elegirUbicacion = useCallback(
-    (u: UbicacionElegida) => {
-      guardarUbicacion(u)
-      setUbicacion(u)
-    },
-    [],
-  )
+  const [ubicacion, elegirUbicacion] = useUbicacionElegida()
 
   const filters: BusinessFilters = useMemo(
     () => ({

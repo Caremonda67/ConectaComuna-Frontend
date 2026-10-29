@@ -6,7 +6,7 @@ import { businessService } from '@/services/businessService'
 import { LazyMap } from '@/components/map/LazyMap'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { UbicacionPicker } from '@/components/location/UbicacionPicker'
-import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
+import { useUbicacionElegida } from '@/hooks/useUbicacionElegida'
 import { CardSkeletonList, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
@@ -26,14 +26,9 @@ export default function MapPage() {
   const [searchParams] = useSearchParams()
   const catParam = (searchParams.get('categoria') || searchParams.get('cat')) as CategorySlug | null
 
-  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
+  const [ubicacion, elegirUbicacion] = useUbicacionElegida()
   const [category, setCategory] = useState<CategorySlug | 'all'>(catParam || 'all')
   const [radiusKm, setRadiusKm] = useState(5)
-
-  const elegirUbicacion = (u: UbicacionElegida) => {
-    guardarUbicacion(u)
-    setUbicacion(u)
-  }
 
   const center = ubicacion?.center ?? COMUNA_CENTER
 

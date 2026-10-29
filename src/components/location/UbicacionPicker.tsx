@@ -266,7 +266,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
                 className="mt-2 divide-y divide-ink-100 dark:divide-ink-200 rounded-xl border border-ink-200 bg-white dark:bg-cream-100 overflow-hidden"
               >
                 {sugerencias.map((s) => (
-                  <li key={s.etiqueta}>
+                  <li key={`${s.etiqueta}|${s.center.lat},${s.center.lng}`}>
                     <button
                       type="button"
                       role="option"
