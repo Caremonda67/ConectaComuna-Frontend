@@ -26,23 +26,99 @@ function fileToDataUrl(file: File): Promise<string> {
   })
 }
 
-/** Códigos de muestra que se usan en ferias y en el video de presentación. */
-const CODIGOS_DE_MUESTRA = [
-  'demo2026',
-  'demo',
-  'demo-2026-acuerdo-comunal',
-  'ord-1',
-  'ord-1-demostracion',
-  'ord-2',
-  'ord-2-demostracion',
-]
+const CLAUSULA_MEDIACION =
+  'Pacto registrado en ConectaComuna. El anticipo no puede superar el 50% del precio acordado. Si algo sale mal, repórtalo en la ficha del negocio: el equipo de Conecta Comuna revisa el caso.'
 
-function esCodigoDeMuestra(codigo: string): boolean {
-  return (
-    CODIGOS_DE_MUESTRA.includes(codigo) ||
-    codigo.startsWith('93e416f2') ||
-    codigo.startsWith('e9894d7d')
-  )
+/**
+ * Pactos de ejemplo para ferias y ensayos. Van marcados para que la página
+ * avise que no son acuerdos reales, y no llevan nombre ni dirección de nadie.
+ */
+const EJEMPLOS: Record<string, PactoVerificado> = {
+  demo2026: {
+    nivel: 'publico',
+    ejemplo: true,
+    codigo: 'CC-DEMO2026',
+    status: 'in_progress',
+    created_at: '2026-10-25T10:30:00Z',
+    scheduled_for: '2026-10-28T16:00:00Z',
+    title: 'Restauración de comedor de madera y cambio de tapizado',
+    description:
+      'Lijado fino, barniz mate impermeable y retapizado en lino antifluidos para 4 sillas de comedor.',
+    service_location_type: 'workshop',
+    business: {
+      id: 'biz-demo-ebanisteria',
+      name: 'Ebanistería y Restauración Don Carlos',
+      category: 'arreglos',
+      phone: '3000000000',
+      barrio: 'Antonio Nariño',
+      is_verified: true,
+    },
+    precio_total: 160000,
+    anticipo: 80000,
+    saldo_contra_entrega: 80000,
+    porcentaje_anticipo: 50,
+    clausula_mediacion: CLAUSULA_MEDIACION,
+  },
+  'ord-1': {
+    nivel: 'publico',
+    ejemplo: true,
+    codigo: 'CC-ORD-1',
+    status: 'pending',
+    created_at: '2026-10-25T14:00:00Z',
+    scheduled_for: '2026-10-27T14:00:00Z',
+    title: 'Manicure semipermanente y cuidado de uñas',
+    description: 'Servicio a domicilio en Antonio Nariño.',
+    service_location_type: 'home_delivery',
+    business: {
+      id: 'biz-1',
+      name: 'Uñas & Belleza Comunal',
+      category: 'belleza',
+      phone: '3000000000',
+      barrio: 'Antonio Nariño',
+      is_verified: true,
+    },
+    precio_total: 45000,
+    anticipo: 20000,
+    saldo_contra_entrega: 25000,
+    porcentaje_anticipo: 44,
+    clausula_mediacion: CLAUSULA_MEDIACION,
+  },
+  'ord-2': {
+    nivel: 'publico',
+    ejemplo: true,
+    codigo: 'CC-ORD-2',
+    status: 'completed',
+    created_at: '2026-10-20T14:00:00Z',
+    scheduled_for: null,
+    title: 'Arreglo de bastas de 3 pantalones',
+    description: 'Ajuste de 5 cm de basta.',
+    service_location_type: 'workshop',
+    business: {
+      id: 'biz-2',
+      name: 'Costuras Doña Marta',
+      category: 'costura',
+      phone: '3000000000',
+      barrio: 'Antonio Nariño',
+      is_verified: true,
+    },
+    precio_total: 30000,
+    anticipo: 15000,
+    saldo_contra_entrega: 15000,
+    porcentaje_anticipo: 50,
+    clausula_mediacion: CLAUSULA_MEDIACION,
+  },
+}
+
+// Las direcciones de los códigos cortos llegan como "ord-1-demostracion".
+const ALIAS_EJEMPLOS: Record<string, string> = {
+  demo: 'demo2026',
+  'demo-2026-acuerdo-comunal': 'demo2026',
+  'ord-1-demostracion': 'ord-1',
+  'ord-2-demostracion': 'ord-2',
+}
+
+function ejemploPorCodigo(codigo: string): PactoVerificado | null {
+  return EJEMPLOS[codigo] ?? EJEMPLOS[ALIAS_EJEMPLOS[codigo]] ?? null
 }
 
 function hydrate(order: Order): Order {
@@ -65,6 +141,67 @@ function hydrate(order: Order): Order {
       ? { id: client.id, full_name: client.full_name, avatar_url: client.avatar_url, phone: client.phone }
       : undefined,
     review: db.reviews.find((r) => r.order_id === order.id) ?? null,
+  }
+}
+
+/**
+ * ¿Quien consulta el código participa en el pacto? Solo el cliente y el dueño
+ * del taller ven el nombre y la dirección del vecino. Cualquier otro, incluido
+ * quien no ha iniciado sesión, se queda en el nivel público.
+ */
+function participaEnPacto(order: Order): boolean {
+  const db = readDb()
+  const quien = db.sessionUserId
+  if (!quien) return false
+  if (order.client_id === quien) return true
+  const negocio = db.businesses.find((b) => b.id === order.business_id)
+  if (negocio?.owner_id === quien) return true
+  // Mismo criterio que `verificar_pedido_publico` en la base: el facilitador
+  // aprobado del taller también media en sus pactos.
+  return db.vinculaciones.some(
+    (v) =>
+      v.negocio_id === order.business_id &&
+      v.facilitador_id === quien &&
+      v.estado_vinculacion === 'aprobado',
+  )
+}
+
+function pactoDesdePedido(order: Order): PactoVerificado {
+  const precio = order.final_price ?? order.price_estimate ?? 0
+  const anticipo = order.advance_payment ?? 0
+  const esParte = participaEnPacto(order)
+  const telefono = esParte ? order.client?.phone : undefined
+
+  return {
+    nivel: esParte ? 'participante' : 'publico',
+    codigo: `CC-${order.id.slice(0, 8).toUpperCase()}`,
+    order_id: order.id,
+    status: order.status,
+    created_at: order.created_at,
+    scheduled_for: order.scheduled_for,
+    title: order.title,
+    description: esParte ? order.description : undefined,
+    service_location_type: order.service_location_type,
+    delivery_address: esParte ? order.delivery_address : undefined,
+    business: {
+      id: order.business?.id ?? order.business_id,
+      name: order.business?.name ?? 'Taller comunal',
+      category: order.business?.category ?? 'Oficio',
+      phone: order.business?.phone ?? null,
+      barrio: null,
+      is_verified: false,
+    },
+    client: esParte
+      ? {
+          name: order.client?.full_name ?? 'Vecino de la comuna',
+          phone_masked: telefono ? `...${telefono.slice(-4)}` : null,
+        }
+      : undefined,
+    precio_total: precio,
+    anticipo,
+    saldo_contra_entrega: Math.max(0, precio - anticipo),
+    porcentaje_anticipo: precio > 0 ? Math.round((anticipo / precio) * 100) : 0,
+    clausula_mediacion: CLAUSULA_MEDIACION,
   }
 }
 
@@ -275,23 +412,40 @@ export const orderService = {
       return delay(hydrate(db.orders.find((o) => o.id === orderId)!))
     }
 
-    const payload: Record<string, unknown> = {
-      status,
-      updated_at: new Date().toISOString(),
-    }
-    if (options?.finalPrice !== undefined) payload.final_price = options.finalPrice
-    if (options?.advancePayment !== undefined) payload.advance_payment = options.advancePayment
-    if (options?.businessNotes !== undefined) payload.business_notes = options.businessNotes
-    if (options?.cancellationReason !== undefined) payload.cancellation_reason = options.cancellationReason
+    const { error } = await requireSupabase().rpc('cambiar_estado_pedido', {
+      p_pedido: orderId,
+      p_estado: status,
+      p_precio_final: options?.finalPrice ?? null,
+      p_anticipo: options?.advancePayment ?? null,
+      p_notas: options?.businessNotes ?? null,
+      p_motivo: options?.cancellationReason ?? null,
+    })
+    if (error) throw new Error(error.message)
 
+    // La función devuelve la fila sin relaciones; el panel necesita el negocio
+    // y el cliente para pintar la tarjeta.
+    const { data, error: errorLectura } = await requireSupabase()
+      .from('orders')
+      .select(SELECT_WITH_RELATIONS)
+      .eq('id', orderId)
+      .single()
+    if (errorLectura) throw errorLectura
+    return mapDbOrder(data)
+  },
+
+  /** Pedido completo para abrir el comprobante dentro del chat. */
+  async getForReceipt(orderId: string): Promise<Order | null> {
+    if (isDemoMode) {
+      const encontrado = readDb().orders.find((o) => o.id === orderId)
+      return encontrado ? delay(hydrate(encontrado)) : null
+    }
     const { data, error } = await requireSupabase()
       .from('orders')
-      .update(payload)
-      .eq('id', orderId)
       .select(SELECT_WITH_RELATIONS)
-      .single()
+      .eq('id', orderId)
+      .maybeSingle()
     if (error) throw error
-    return mapDbOrder(data)
+    return data ? mapDbOrder(data) : null
   },
 
   async createReview(input: {
@@ -339,289 +493,53 @@ export const orderService = {
     return data as Review
   },
 
-  /** Consulta pública y verificable de un acuerdo de Trato Seguro por código o ID */
+  /**
+   * Consulta verificable de un pacto por código o ID. La función de la base
+   * decide el nivel: las partes del pedido reciben todo, el resto solo ve que
+   * el pacto existe, con qué negocio y por cuánto.
+   */
   async getVerifiableByCode(code: string): Promise<PactoVerificado | null> {
     const raw = (code || '').trim()
     if (!raw) return null
-    const clean = raw.replace(/^#?CC[-_]?/i, '').toLowerCase()
 
-    // 1. La función pública de la base contesta sin sesión y sin depender de
-    // que el backend de Render esté despierto.
+    const limpio = raw.replace(/^#?CC[-_]?/i, '').toLowerCase()
+    const ejemplo = ejemploPorCodigo(limpio)
+
     if (!isDemoMode) {
+      // El QR lo resuelve Postgres, sin depender de que Render esté despierto.
       const { data, error } = await requireSupabase().rpc('verificar_pedido_publico', {
         p_codigo: raw,
       })
 
       if (!error) {
         if (data) return data as PactoVerificado
-
-        // La base contestó y no encontró nada. Los códigos de muestra de más
-        // abajo se resuelven sin red; el resto no merece despertar el backend.
-        if (!esCodigoDeMuestra(clean)) return null
+        // La base contestó y no hay nada con ese código. Los ejemplos se
+        // resuelven más abajo, sin red.
+        if (!ejemplo) return null
       } else if (env.apiUrl) {
-        // Solo si la función todavía no está aplicada se prueba la API
+        // Solo si la función todavía no está aplicada se prueba la API.
         try {
           const fromApi = await apiFetch<PactoVerificado>(
-            `/api/orders/verificar/${encodeURIComponent(clean)}`,
+            `/api/orders/verificar/${encodeURIComponent(limpio)}`,
           )
-          if (fromApi?.order_id) return fromApi
+          if (fromApi?.codigo) return fromApi
         } catch (apiErr) {
-          console.warn('API Express no respondió para verificación directa:', apiErr)
+          console.warn('La API de respaldo no respondió para la verificación:', apiErr)
         }
       }
     }
 
-    // 3. Último recurso: la sesión abierta puede leer el pedido por RLS
-    try {
-      const supabase = requireSupabase()
-      let orderData: any = null
+    if (ejemplo) return ejemplo
 
-      if (clean.length === 36 && clean.includes('-')) {
-        const { data } = await supabase
-          .from('orders')
-          .select(SELECT_WITH_RELATIONS)
-          .eq('id', clean)
-          .maybeSingle()
-        orderData = data
-      }
-
-      if (orderData) {
-        const mapped = mapDbOrder(orderData)
-        const precio = mapped.final_price ?? mapped.price_estimate ?? 0
-        const anticipo = mapped.advance_payment ?? 0
-        const saldo = Math.max(0, precio - anticipo)
-        const tel = mapped.client?.phone
-        const phoneMasked = tel ? `...${tel.slice(-4)}` : null
-
-        return {
-          codigo: `CC-${mapped.id.slice(0, 8).toUpperCase()}`,
-          order_id: mapped.id,
-          status: mapped.status,
-          created_at: mapped.created_at,
-          scheduled_for: mapped.scheduled_for,
-          title: mapped.title,
-          description: mapped.description,
-          service_location_type: mapped.service_location_type,
-          delivery_address: mapped.delivery_address,
-          business: {
-            id: mapped.business?.id ?? mapped.business_id,
-            name: mapped.business?.name ?? 'Taller Comunal',
-            category: mapped.business?.category ?? 'Oficio',
-            phone: mapped.business?.phone ?? null,
-            barrio: (mapped.business as any)?.neighborhood ?? 'Comuna',
-            is_verified: (mapped.business as any)?.verification_status === 'verified',
-          },
-          client: {
-            name: mapped.client?.full_name ?? 'Vecino de la Comuna',
-            phone_masked: phoneMasked,
-          },
-          precio_total: precio,
-          anticipo,
-          saldo_contra_entrega: saldo,
-          porcentaje_anticipo: precio > 0 ? Math.round((anticipo / precio) * 100) : 0,
-          clausula_mediacion:
-            'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-        }
-      }
-    } catch {
-      // Fallback a base local
-    }
-
-    // 3. Fallback en base de datos local en memoria/almacenamiento
-    try {
-      const db = readDb()
-      const found = db.orders.find(
+    // En modo demostración los pedidos viven en el navegador.
+    if (isDemoMode) {
+      const encontrado = readDb().orders.find(
         (o) =>
-          o.id.toLowerCase() === clean ||
-          o.id.toLowerCase().startsWith(clean) ||
+          o.id.toLowerCase() === limpio ||
+          o.id.toLowerCase().startsWith(limpio) ||
           `cc-${o.id.toLowerCase()}` === raw.toLowerCase(),
       )
-      if (found) {
-        const hydrated = hydrate(found)
-        const precio = hydrated.final_price ?? hydrated.price_estimate ?? 0
-        const anticipo = hydrated.advance_payment ?? 0
-        const saldo = Math.max(0, precio - anticipo)
-        const tel = hydrated.client?.phone
-        const phoneMasked = tel ? `...${tel.slice(-4)}` : null
-
-        return delay({
-          codigo: `CC-${hydrated.id.slice(0, 8).toUpperCase()}`,
-          order_id: hydrated.id,
-          status: hydrated.status,
-          created_at: hydrated.created_at,
-          scheduled_for: hydrated.scheduled_for,
-          title: hydrated.title,
-          description: hydrated.description,
-          service_location_type: hydrated.service_location_type,
-          delivery_address: hydrated.delivery_address,
-          business: {
-            id: hydrated.business?.id ?? hydrated.business_id,
-            name: hydrated.business?.name ?? 'Taller Comunal',
-            category: hydrated.business?.category ?? 'Oficio',
-            phone: hydrated.business?.phone ?? null,
-            barrio: 'Antonio Nariño, Cali',
-            is_verified: true,
-          },
-          client: {
-            name: hydrated.client?.full_name ?? 'Vecino de la Comuna',
-            phone_masked: phoneMasked,
-          },
-          precio_total: precio,
-          anticipo,
-          saldo_contra_entrega: saldo,
-          porcentaje_anticipo: precio > 0 ? Math.round((anticipo / precio) * 100) : 0,
-          clausula_mediacion:
-            'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-        })
-      }
-    } catch {
-      // Error leyendo db local
-    }
-
-    // 4. Semillas estáticas de demostración para jurados (disponibles en cualquier dispositivo sin caché)
-    if (clean === 'demo2026' || clean === 'demo' || clean === 'demo-2026-acuerdo-comunal') {
-      return {
-        codigo: 'CC-DEMO2026',
-        order_id: 'demo-2026-acuerdo-comunal',
-        status: 'in_progress',
-        created_at: '2026-10-25T10:30:00Z',
-        scheduled_for: '2026-10-28T16:00:00Z',
-        title: 'Restauración de comedor de madera y cambio de tapizado',
-        description: 'Lijado fino, barniz mate impermeable y retapizado en lino antifluidos para 4 sillas de comedor.',
-        service_location_type: 'workshop',
-        delivery_address: 'Calle 44 # 39B-18, Taller La Esperanza',
-        business: {
-          id: 'biz-demo-ebanisteria',
-          name: 'Ebanistería y Restauración Don Carlos',
-          category: 'arreglos',
-          phone: '3187654321',
-          barrio: 'Antonio Nariño, Comuna 16, Cali',
-          is_verified: true,
-        },
-        client: { name: 'Esperanza Gómez (Vecina)', phone_masked: '...6543' },
-        precio_total: 160000,
-        anticipo: 80000,
-        saldo_contra_entrega: 80000,
-        porcentaje_anticipo: 50,
-        clausula_mediacion:
-          'Pacto protegido bajo el Trato Seguro Comunal con mediación en equidad de la Junta de Acción Comunal (JAC) conforme a la Ley 2166 de 2021.',
-      }
-    }
-
-    if (clean === 'ord-1' || clean === 'ord-1-demostracion') {
-      return {
-        codigo: 'CC-ORD-1',
-        order_id: 'ord-1-demostracion',
-        status: 'pending',
-        created_at: '2026-10-25T14:00:00Z',
-        scheduled_for: '2026-10-27T14:00:00Z',
-        title: 'Manicure semipermanente y cuidado de uñas',
-        description: 'Servicio a domicilio en Antonio Nariño.',
-        service_location_type: 'home_delivery',
-        delivery_address: 'Carrera 40 # 42-15',
-        business: {
-          id: 'biz-1',
-          name: 'Uñas & Belleza Comunal',
-          category: 'belleza',
-          phone: '3123456789',
-          barrio: 'Antonio Nariño, Cali',
-          is_verified: true,
-        },
-        client: { name: 'Vecino de la Comuna', phone_masked: '...4567' },
-        precio_total: 45000,
-        anticipo: 20000,
-        saldo_contra_entrega: 25000,
-        porcentaje_anticipo: 44,
-        clausula_mediacion:
-          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-      }
-    }
-
-    if (clean === 'ord-2' || clean === 'ord-2-demostracion') {
-      return {
-        codigo: 'CC-ORD-2',
-        order_id: 'ord-2-demostracion',
-        status: 'completed',
-        created_at: '2026-10-20T14:00:00Z',
-        scheduled_for: null,
-        title: 'Arreglo de bastas de 3 pantalones',
-        description: 'Ajuste de 5 cm de basta.',
-        service_location_type: 'workshop',
-        delivery_address: null,
-        business: {
-          id: 'biz-2',
-          name: 'Costuras Doña Marta',
-          category: 'costura',
-          phone: '3009876543',
-          barrio: 'Antonio Nariño, Cali',
-          is_verified: true,
-        },
-        client: { name: 'Vecino de la Comuna', phone_masked: '...2211' },
-        precio_total: 30000,
-        anticipo: 15000,
-        saldo_contra_entrega: 15000,
-        porcentaje_anticipo: 50,
-        clausula_mediacion:
-          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-      }
-    }
-
-    if (clean === '93e416f2' || clean.startsWith('93e416f2')) {
-      return {
-        codigo: 'CC-93E416F2',
-        order_id: '93e416f2-d1a1-4a9c-803a-f4275742fea9',
-        status: 'accepted',
-        created_at: '2026-10-26T03:19:35Z',
-        scheduled_for: null,
-        title: 'Reparación de mesa de comedor y 4 sillas',
-        description: 'Ajustar patas flojas y lijar la superficie con acabado en barniz mate.',
-        service_location_type: 'workshop',
-        delivery_address: null,
-        business: {
-          id: 'd31a0639-c782-4b99-b821-801d8cb18d3e',
-          name: 'Carpintería y Muebles Don Jaime',
-          category: 'carpinteria',
-          phone: '3157778899',
-          barrio: 'Antonio Nariño',
-          is_verified: true,
-        },
-        client: { name: 'Carmen Alicia Vecina', phone_masked: '...2211' },
-        precio_total: 60000,
-        anticipo: 0,
-        saldo_contra_entrega: 60000,
-        porcentaje_anticipo: 0,
-        clausula_mediacion:
-          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-      }
-    }
-
-    if (clean === 'e9894d7d' || clean.startsWith('e9894d7d')) {
-      return {
-        codigo: 'CC-E9894D7D',
-        order_id: 'e9894d7d-ff11-4076-a9d7-d486b985a22c',
-        status: 'completed',
-        created_at: '2026-10-05T06:32:59Z',
-        scheduled_for: null,
-        title: 'Confección de 3 manteles y 2 cortinas',
-        description: 'Telas de lino ya compradas. Medidas: manteles de 2 metros y cortinas de 2.50 de alto.',
-        service_location_type: 'home_delivery',
-        delivery_address: 'Carrera 45 # 12-34, Apto 201 (El Poblado)',
-        business: {
-          id: '482d4311-3bb7-4e87-9076-7781f63751df',
-          name: 'Costuras Doña Marta',
-          category: 'costura',
-          phone: '3009876543',
-          barrio: 'Antonio Nariño',
-          is_verified: true,
-        },
-        client: { name: 'Luisa Martínez', phone_masked: '...4567' },
-        precio_total: 45000,
-        anticipo: 20000,
-        saldo_contra_entrega: 25000,
-        porcentaje_anticipo: 44,
-        clausula_mediacion:
-          'Pacto respaldado por el Comité de Convivencia y Mediación Comunitaria de la JAC de la Comuna y ConectaComuna.',
-      }
+      if (encontrado) return delay(pactoDesdePedido(hydrate(encontrado)))
     }
 
     return null
