@@ -1,6 +1,5 @@
 import { requireSupabase } from '@/lib/supabase'
-import { isDemoMode, env } from '@/lib/env'
-import { apiFetch } from '@/lib/apiClient'
+import { isDemoMode } from '@/lib/env'
 import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Business, BusinessFilters, BusinessWithDistance, EstadoReporte, ReporteComunitario, Review } from '@/types'
@@ -297,16 +296,14 @@ export const businessService = {
       return delay(undefined, 250)
     }
 
-    try {
-      await requireSupabase()
-        .from('businesses')
-        .update({
-          verification_status: 'verified',
-        })
-        .eq('id', negocioId)
-    } catch (e) {
-      console.warn('Actualización remota de verificación:', e)
-    }
+    // El sello lo aplica una función de la base: comprueba que quien firma sea
+    // un facilitador vinculado y escribe estado, nombre, fecha y nota de campo.
+    // El trigger de protección no permite ese update a mano.
+    const { error } = await requireSupabase().rpc('otorgar_sello_territorial', {
+      p_negocio: negocioId,
+      p_nota: notaLimpia,
+    })
+    if (error) throw new Error(error.message)
   },
 
   /**
@@ -338,16 +335,10 @@ export const businessService = {
       return delay(undefined, 250)
     }
 
-    try {
-      await requireSupabase()
-        .from('businesses')
-        .update({
-          verification_status: 'unverified',
-        })
-        .eq('id', negocioId)
-    } catch (e) {
-      console.warn('Actualización remota de revocación:', e)
-    }
+    const { error } = await requireSupabase().rpc('revocar_sello_territorial', {
+      p_negocio: negocioId,
+    })
+    if (error) throw new Error(error.message)
   },
 
   /**
@@ -402,22 +393,6 @@ export const businessService = {
         }
       })
       return delay(undefined, 300)
-    }
-
-    if (env.apiUrl) {
-      try {
-        await apiFetch('/api/reports', {
-          method: 'POST',
-          body: JSON.stringify({
-            negocio_id: reporte.negocio_id,
-            motivo: reporte.motivo,
-            descripcion: reporte.descripcion ?? null,
-          }),
-        })
-        return
-      } catch (err) {
-        console.warn('API Express no disponible, usando PostgREST directo:', err)
-      }
     }
 
     const { error } = await requireSupabase()
@@ -535,48 +510,6 @@ export const businessService = {
         actualizado_en: new Date().toISOString(),
       })
       .eq('id', reporteId)
-    if (error) throw error
-  },
-
-  /**
-   * Cambia el estado de verificación u observación de un negocio ante reportes.
-   */
-  async cambiarEstadoObservacionNegocio(
-    negocioId: string,
-    nuevoEstado: 'under_review' | 'verified' | 'unverified',
-    nota?: string,
-  ): Promise<void> {
-    if (isDemoMode) {
-      mutateDb((d) => {
-        const b = d.businesses.find((x) => x.id === negocioId)
-        if (b) {
-          b.verification_status = nuevoEstado
-          b.verification_note = nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null)
-          b.verification_date = new Date().toISOString()
-        }
-      })
-      try {
-        localStorage.setItem(
-          `cc_verif_${negocioId}`,
-          JSON.stringify({
-            status: nuevoEstado,
-            by: 'Moderación Comunitaria',
-            note: nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null),
-            date: new Date().toISOString(),
-          }),
-        )
-      } catch {}
-      return delay(undefined, 200)
-    }
-
-    const { error } = await requireSupabase()
-      .from('businesses')
-      .update({
-        verification_status: nuevoEstado,
-        verification_note: nota ?? null,
-        verification_date: new Date().toISOString(),
-      })
-      .eq('id', negocioId)
     if (error) throw error
   },
 }

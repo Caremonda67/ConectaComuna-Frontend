@@ -180,49 +180,13 @@ export const facilitadorService = {
       mutateDb((d) => d.vinculaciones.push(nueva))
       return delay(nueva, 300)
     }
-    // Buscar el negocio por codigo
-    const { data: negocios, error: busqError } = await requireSupabase()
-      .from('businesses')
-      .select('id')
-      .eq('codigo_apadrinamiento', codigo)
-      .limit(1)
-    if (busqError) throw busqError
-    if (!negocios || negocios.length === 0) throw new Error('Código no válido. Verifica con el dueño del negocio.')
-
-    const negocioId = negocios[0].id
-
-    // Si ya existe registro previo, actualizarlo a aprobado o notificar
-    const { data: existente } = await requireSupabase()
-      .from('facilitadores_negocio')
-      .select('id, estado_vinculacion')
-      .eq('facilitador_id', facilitadorId)
-      .eq('negocio_id', negocioId)
-      .maybeSingle()
-
-    if (existente) {
-      if (existente.estado_vinculacion === 'aprobado') {
-        throw new Error('Ya tienes una vinculación activa con este negocio.')
-      }
-      const { data, error } = await requireSupabase()
-        .from('facilitadores_negocio')
-        .update({ estado_vinculacion: 'aprobado' })
-        .eq('id', existente.id)
-        .select()
-        .single()
-      if (error) throw error
-      return data as FacilitadorNegocio
-    }
-
-    const { data, error } = await requireSupabase()
-      .from('facilitadores_negocio')
-      .insert({
-        facilitador_id: facilitadorId,
-        negocio_id: negocioId,
-        estado_vinculacion: 'aprobado',
-      })
-      .select()
-      .single()
-    if (error) throw error
+    // El código lo entrega el dueño, así que vale como autorización: la función
+    // de la base busca el negocio, revisa si ya hay vinculación y la deja
+    // aprobada. Hacerlo desde el cliente choca con las políticas de la tabla.
+    const { data, error } = await requireSupabase().rpc('vincular_facilitador_por_codigo', {
+      p_codigo: codigo.trim(),
+    })
+    if (error) throw new Error(error.message)
     return data as FacilitadorNegocio
   },
 }

@@ -26,6 +26,25 @@ function fileToDataUrl(file: File): Promise<string> {
   })
 }
 
+/** Códigos de muestra que se usan en ferias y en el video de presentación. */
+const CODIGOS_DE_MUESTRA = [
+  'demo2026',
+  'demo',
+  'demo-2026-acuerdo-comunal',
+  'ord-1',
+  'ord-1-demostracion',
+  'ord-2',
+  'ord-2-demostracion',
+]
+
+function esCodigoDeMuestra(codigo: string): boolean {
+  return (
+    CODIGOS_DE_MUESTRA.includes(codigo) ||
+    codigo.startsWith('93e416f2') ||
+    codigo.startsWith('e9894d7d')
+  )
+}
+
 function hydrate(order: Order): Order {
   const db = readDb()
   const business = db.businesses.find((b) => b.id === order.business_id)
@@ -223,21 +242,6 @@ export const orderService = {
       status: 'pending' satisfies OrderStatus,
     }
 
-    if (env.apiUrl) {
-      try {
-        const fromApi = await apiFetch<any>('/api/orders', {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        })
-        if (fromApi?.id) {
-          return mapDbOrder(fromApi)
-        }
-      } catch (apiErr) {
-        // Fallback transparente a Supabase si el servidor Express no está levantado
-        console.warn('API Express no disponible, usando PostgREST directo:', apiErr)
-      }
-    }
-
     const { data, error } = await supabase
       .from('orders')
       .insert(payload)
@@ -341,17 +345,33 @@ export const orderService = {
     if (!raw) return null
     const clean = raw.replace(/^#?CC[-_]?/i, '').toLowerCase()
 
-    // 1. Intentar consultar siempre al backend oficial de verificación (vía proxy o API directa)
-    try {
-      const fromApi = await apiFetch<PactoVerificado>(`/api/orders/verificar/${encodeURIComponent(clean)}`)
-      if (fromApi?.order_id) {
-        return fromApi
+    // 1. La función pública de la base contesta sin sesión y sin depender de
+    // que el backend de Render esté despierto.
+    if (!isDemoMode) {
+      const { data, error } = await requireSupabase().rpc('verificar_pedido_publico', {
+        p_codigo: raw,
+      })
+
+      if (!error) {
+        if (data) return data as PactoVerificado
+
+        // La base contestó y no encontró nada. Los códigos de muestra de más
+        // abajo se resuelven sin red; el resto no merece despertar el backend.
+        if (!esCodigoDeMuestra(clean)) return null
+      } else if (env.apiUrl) {
+        // Solo si la función todavía no está aplicada se prueba la API
+        try {
+          const fromApi = await apiFetch<PactoVerificado>(
+            `/api/orders/verificar/${encodeURIComponent(clean)}`,
+          )
+          if (fromApi?.order_id) return fromApi
+        } catch (apiErr) {
+          console.warn('API Express no respondió para verificación directa:', apiErr)
+        }
       }
-    } catch (apiErr) {
-      console.warn('API Express no respondió para verificación directa, probando respaldo:', apiErr)
     }
 
-    // 2. Si hay conexión directa a Supabase y la sesión permite consultar
+    // 3. Último recurso: la sesión abierta puede leer el pedido por RLS
     try {
       const supabase = requireSupabase()
       let orderData: any = null
@@ -363,25 +383,6 @@ export const orderService = {
           .eq('id', clean)
           .maybeSingle()
         orderData = data
-      }
-
-      if (!orderData) {
-        const { data } = await supabase
-          .from('orders')
-          .select(SELECT_WITH_RELATIONS)
-          .order('created_at', { ascending: false })
-          .limit(50)
-
-        orderData =
-          (data || []).find(
-            (o: any) =>
-              o.id.toLowerCase() === clean.toLowerCase() ||
-              o.id.toLowerCase().startsWith(clean.toLowerCase()) ||
-              o.id
-                .replace(/-/g, '')
-                .toLowerCase()
-                .startsWith(clean.replace('cc-', '').replace(/-/g, ''))
-          ) ?? null
       }
 
       if (orderData) {

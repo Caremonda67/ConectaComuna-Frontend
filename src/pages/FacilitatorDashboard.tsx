@@ -37,6 +37,7 @@ export default function FacilitatorDashboard() {
   const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
   const [notaVerificacion, setNotaVerificacion] = useState('')
   const [guardandoVerif, setGuardandoVerif] = useState(false)
+  const [errorVerif, setErrorVerif] = useState<string | null>(null)
 
   useEffect(() => {
     if (userId) {
@@ -86,6 +87,7 @@ export default function FacilitatorDashboard() {
   async function handleConfirmarVerificacion(negocioId: string) {
     if (!profile) return
     setGuardandoVerif(true)
+    setErrorVerif(null)
     try {
       await businessService.verificarTerritorialmente(
         negocioId,
@@ -97,16 +99,23 @@ export default function FacilitatorDashboard() {
         const data = await facilitadorService.getNegociosVinculados(userId)
         setVinculaciones(data)
       }
+    } catch (e) {
+      setErrorVerif(e instanceof Error ? e.message : 'No pudimos guardar el sello. Intenta de nuevo.')
     } finally {
       setGuardandoVerif(false)
     }
   }
 
   async function handleRevocarVerificacion(negocioId: string) {
-    await businessService.revocarVerificacion(negocioId)
-    if (userId) {
-      const data = await facilitadorService.getNegociosVinculados(userId)
-      setVinculaciones(data)
+    setErrorVerif(null)
+    try {
+      await businessService.revocarVerificacion(negocioId)
+      if (userId) {
+        const data = await facilitadorService.getNegociosVinculados(userId)
+        setVinculaciones(data)
+      }
+    } catch (e) {
+      setErrorVerif(e instanceof Error ? e.message : 'No pudimos retirar el sello. Intenta de nuevo.')
     }
   }
 
@@ -239,6 +248,12 @@ export default function FacilitatorDashboard() {
             {vinculaciones.length} {vinculaciones.length === 1 ? 'negocio' : 'negocios'}
           </span>
         </div>
+
+        {errorVerif && (
+          <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-200">
+            {errorVerif}
+          </p>
+        )}
 
         {vinculaciones.length === 0 ? (
           <div className="card p-6 text-center">
