@@ -76,11 +76,11 @@ const FAQS = [
   },
   {
     q: '¿Qué significa el distintivo "Verificado en territorio"?',
-    a: 'Indica que un facilitador o líder comunitario visitó físicamente el taller o punto de atención en la comuna, validando la identidad del emprendedor y la existencia de su oficio.',
+    a: 'Indica que un facilitador de la red visitó el taller o punto de atención en la comuna y confirmó que el oficio existe.',
   },
   {
     q: '¿Qué hago si una persona incumple o me cobra algo no pactado?',
-    a: 'Primero, revisa el mensaje inicial de WhatsApp donde acordaron el precio. Si la persona se niega a responder, utiliza el botón "Reportar" ubicado en su perfil para que el equipo de moderación revise el caso.',
+    a: 'Primero, revisa el mensaje inicial de WhatsApp donde acordaron el precio. Si la persona se niega a responder, usa el botón "Reportar" de su perfil: el equipo de Conecta Comuna revisa el caso con las dos partes.',
   },
   {
     q: '¿Puedo pedir apoyo a un facilitador para comunicarme?',
@@ -105,7 +105,7 @@ export default function TratoSeguroPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 py-2 sm:py-4">
-      {/* Cabecera con Sello Oficial de la JAC */}
+      {/* Cabecera con el sello de verificación en territorio */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2">
         <div className="space-y-4 max-w-2xl">
           <Link
@@ -118,7 +118,7 @@ export default function TratoSeguroPage() {
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
               <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
-              Pacto vecinal de confianza · Ley 2166 de 2021
+              Pacto vecinal con comprobante público
             </span>
             <span className="text-xs text-ink-500">Uso ético y mediación comunitaria</span>
           </div>
@@ -127,9 +127,9 @@ export default function TratoSeguroPage() {
             Trato Seguro Comunal
           </h1>
           <p className="max-w-2xl text-base text-ink-600 dark:text-ink-300 sm:text-lg leading-relaxed">
-            En ConectaComuna creemos en la palabra de la gente del barrio. Este pacto reúne pautas
-            claras de respeto, acuerdos de pago con tope máximo del 50% de anticipo y mediación amistosa
-            de la Junta de Acción Comunal (JAC) para que cada trabajo se haga con tranquilidad.
+            En ConectaComuna creemos en la palabra de la gente del barrio. Este pacto deja constancia
+            del trabajo, del precio y del anticipo, que no puede pasar del 50%. Si algo sale mal,
+            el equipo de Conecta Comuna revisa el caso con las dos partes.
           </p>
         </div>
 
@@ -137,6 +137,39 @@ export default function TratoSeguroPage() {
           <SelloOficialComunal size="md" />
         </div>
       </header>
+
+      {/* Decirlo de frente evita la pregunta incómoda: no movemos plata y no
+          somos un seguro. Lo que damos es constancia, y eso sí sirve. */}
+      <section aria-labelledby="alcance-pacto" className="grid gap-3 sm:grid-cols-2">
+        <div className="card p-4 border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30">
+          <h2 id="alcance-pacto" className="font-bold text-emerald-900 dark:text-emerald-200 mb-2 flex items-center gap-2">
+            <UI_ICONS.shieldCheck size={18} className="shrink-0 text-emerald-700 dark:text-emerald-400" />
+            Lo que sí hace
+          </h2>
+          <ul className="space-y-1.5 text-sm text-emerald-900 dark:text-emerald-200">
+            <li>Deja por escrito qué se acordó, por cuánto y para cuándo.</li>
+            <li>Impide registrar un anticipo mayor al 50% del precio.</li>
+            <li>Te da un código que cualquiera puede verificar, también sin cuenta.</li>
+            <li>Si hay desacuerdo, el equipo de Conecta Comuna revisa el caso con las dos partes.</li>
+          </ul>
+        </div>
+
+        <div className="card p-4 border-ink-200 dark:border-ink-700">
+          <h2 className="font-bold text-ink-900 mb-2 flex items-center gap-2">
+            <UI_ICONS.alert size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
+            Lo que no hace
+          </h2>
+          <ul className="space-y-1.5 text-sm text-ink-700 dark:text-ink-300">
+            <li>No recibe ni retiene tu dinero: el pago va directo entre ustedes.</li>
+            <li>No es un seguro ni devuelve lo pagado si el trabajo sale mal.</li>
+            <li>No reemplaza a la autoridad si hay que denunciar algo grave.</li>
+          </ul>
+          <p className="mt-2.5 text-xs text-ink-500">
+            Cuando hay un papel con fecha, precio y testigos, hay con qué reclamar. Esa es la
+            diferencia con un acuerdo hablado y perdido en un chat.
+          </p>
+        </div>
+      </section>
 
       <div className="craft-stitch-divider" aria-hidden="true" />
 
@@ -152,7 +185,7 @@ export default function TratoSeguroPage() {
               ¿Te compartieron un código de acuerdo o recibo?
             </h2>
             <p className="text-xs text-ink-600 dark:text-ink-400">
-              Comprueba que el oficio esté registrado, el anticipo respete el tope del 50% y cuente con respaldo de mediación de la JAC.
+              Comprueba que el oficio esté registrado, con qué negocio se pactó y cuánto quedó de anticipo.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
