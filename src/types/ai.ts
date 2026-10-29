@@ -83,7 +83,7 @@ export interface ContextoUsuarioCopiloto {
   userId?: string | null
   nombre?: string | null
   email?: string | null
-  tipoCuenta?: 'client' | 'business' | 'facilitador' | 'admin'
+  tipoCuenta?: 'client' | 'business' | 'facilitador'
   rolActivo?: string
   telefono?: string | null
   barrio?: string | null

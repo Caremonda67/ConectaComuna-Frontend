@@ -80,22 +80,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'verificar-trato/:codigo',
-        element: (
-          <Lazy>
-            <TratoSeguroVerificationPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'verificar-trato',
-        element: (
-          <Lazy>
-            <TratoSeguroVerificationPage />
-          </Lazy>
-        ),
-      },
-      {
         path: 'trato-seguro',
         element: (
           <Lazy>

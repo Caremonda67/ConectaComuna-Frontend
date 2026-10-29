@@ -3,7 +3,7 @@
 **Proyecto:** Conecta Comuna · Directorio digital barrial para micro-emprendedores  
 **Concurso:** Fedesoft 2026 · Categoría Inclusión y Bienestar  
 **Metodología:** SCRUM (5 Sprints · 1 de septiembre al 3 de octubre de 2026)  
-**Equipo:** 5 integrantes (3 Frontend + 2 Backend)  
+**Equipo:** 3 integrantes (1 Frontend + 2 Backend)  
 
 ---
 
@@ -48,7 +48,7 @@ Aunque la muestra inicial consta de 4 casos de estudio en profundidad, la distri
 
 4. **El problema de la confianza vecinal:**  
    Alex David (19 años) señaló que su mayor barrera es "la confianza de los clientes". Para responder a esta necesidad, diseñamos un esquema de tres niveles de confianza:
-   - Nivel 1: Verificación de identidad con prueba de vida local en el navegador (`face-api.js`).
+   - Nivel 1: Perfil activo con datos de contacto reales (nombre, teléfono y barrio), visibles para el vecino antes de escribir.
    - Nivel 2: Sello de Verificación en Territorio otorgado presencialmente por líderes comunales.
    - Nivel 3: Calificaciones y reseñas comunitarias asociadas a pedidos completados.
 
@@ -85,11 +85,9 @@ El proyecto se ejecutó en 5 ciclos de trabajo de una semana cada uno:
 ```
 
 ### Organización del equipo
-- **Coordinador y Backend Principal:** Arquitectura de endpoints, diseño de esquemas en PostgreSQL y políticas RLS.
-- **Backend de Soporte:** Gestión de triggers, configuración de Supabase y pruebas de integración.
-- **Frontend Lead:** Arquitectura de vistas en React 19, enrutador y gestión del estado de autenticación.
-- **Frontend UI/UX:** Maquetación con Tailwind CSS, accesibilidad móvil y diseño de tarjetas.
-- **Frontend Integrador:** Integración de Leaflet, selector de mapas y biometría local con `face-api.js`.
+- **Coordinador y Backend Principal:** arquitectura de endpoints, diseño de esquemas en PostgreSQL y políticas RLS.
+- **Backend de Soporte:** gestión de triggers, configuración de Supabase y pruebas de integración.
+- **Frontend y UI/UX:** arquitectura de vistas en React 19, enrutador, estado de autenticación, maquetación con Tailwind CSS, mapas con Leaflet y selector de ubicación.
 
 ---
 
@@ -134,20 +132,19 @@ El sistema implementa una arquitectura desacoplada de dos capas apoyada en servi
 
 ## 5. Matriz de Roles y Capacidades
 
-| Capacidad | Cliente | Emprendedor | Facilitador | Administrador |
-|---|:---:|:---:|:---:|:---:|
-| Explorar catálogo y filtrar por categoría | Sí | Sí | Sí | Sí |
-| Buscar negocios por cercanía o barrio | Sí | Sí | Sí | Sí |
-| Contactar al emprendedor vía WhatsApp | Sí | Sí | Sí | Sí |
-| Iniciar solicitud de pedido desde la web | Sí | No (a sí mismo) | Sí | Sí |
-| Crear y calificar reseñas (con pedido completado) | Sí | No (a sí mismo) | Sí | No |
-| Crear y gestionar perfil de negocio propio | No | Sí | No | Sí |
-| Publicar productos, fotos, horarios y precios | No | Sí | Sí (apadrinado) | Sí |
-| Vincular emprendedores mediante código de apadrinamiento | No | No | Sí | Sí |
-| Editar catálogo de emprendedores apadrinados | No | No | Sí | Sí |
-| Realizar prueba de vida facial (liveness) | Sí | Sí | Sí | Sí |
-| Otorgar Sello de Verificación en Territorio | No | No | Sí | Sí |
-| Moderar contenido y suspender cuentas | No | No | No | Sí |
+| Capacidad | Cliente | Emprendedor | Facilitador |
+|---|:---:|:---:|:---:|
+| Explorar catálogo y filtrar por categoría | Sí | Sí | Sí |
+| Buscar negocios por cercanía o barrio | Sí | Sí | Sí |
+| Contactar al emprendedor vía WhatsApp | Sí | Sí | Sí |
+| Iniciar solicitud de pedido desde la web | Sí | No (a sí mismo) | Sí |
+| Crear y calificar reseñas (con pedido completado) | Sí | No (a sí mismo) | Sí |
+| Crear y gestionar perfil de negocio propio | No | Sí | No |
+| Publicar productos, fotos, horarios y precios | No | Sí | Sí (apadrinado) |
+| Vincular emprendedores mediante código de apadrinamiento | No | No | Sí |
+| Editar catálogo de emprendedores apadrinados | No | No | Sí |
+| Otorgar Sello de Verificación en Territorio | No | No | Sí |
+| Revisar y cerrar reportes comunitarios | No | No | Sí |
 
 ---
 
