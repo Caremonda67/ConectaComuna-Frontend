@@ -60,10 +60,14 @@ export default function BusinessDashboard() {
     data?.filter((o) => ['accepted', 'in_progress'].includes(o.status)) ?? []
   const closed =
     data?.filter((o) => ['completed', 'cancelled'].includes(o.status)) ?? []
-  const totalGenerado =
-    data
-      ?.filter((o) => o.status === 'completed')
-      .reduce((acc, o) => acc + (o.final_price ?? o.price_estimate ?? 0), 0) ?? 0
+  // El contador `completed_orders` del negocio y esta suma salían de fuentes
+  // distintas, así que el panel llegaba a decir "$30.000 en 61 servicios".
+  // Las dos cifras se calculan ahora sobre los mismos pedidos.
+  const completados = data?.filter((o) => o.status === 'completed') ?? []
+  const totalGenerado = completados.reduce(
+    (acc, o) => acc + (o.final_price ?? o.price_estimate ?? 0),
+    0,
+  )
 
   return (
     <div className="space-y-6">
@@ -88,7 +92,7 @@ export default function BusinessDashboard() {
         <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
           <Stat label="Pendientes" value={pending.length} />
           <Stat label="En curso" value={inProgress.length} />
-          <Stat label="Finalizados" value={business.completed_orders} />
+          <Stat label="Finalizados" value={completados.length} />
         </dl>
 
         {totalGenerado > 0 && (
@@ -107,7 +111,7 @@ export default function BusinessDashboard() {
               </div>
             </div>
             <span className="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-              {business.completed_orders} {business.completed_orders === 1 ? 'servicio' : 'servicios'}
+              {completados.length} {completados.length === 1 ? 'servicio' : 'servicios'}
             </span>
           </div>
         )}
