@@ -186,9 +186,26 @@ export default function BusinessDetailPage() {
             <UI_ICONS.shieldCheck size={18} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold block">Negocio verificado en territorio</span>
-              <span className="text-[11px] text-emerald-800 dark:text-emerald-300">
-                {business.verification_note || 'Validado en persona en la comuna por un facilitador o junta comunitaria.'}
+              {/* Quién firmó y cuándo. Un sello anónimo no compromete a nadie;
+                  con el nombre a la vista, quien avala responde por lo que avala. */}
+              <span className="text-[11px] text-emerald-800 dark:text-emerald-300 block">
+                {business.verification_by
+                  ? `Lo visitó ${business.verification_by}${
+                      business.verification_date
+                        ? `, el ${new Date(business.verification_date).toLocaleDateString('es-CO', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })}`
+                        : ''
+                    }.`
+                  : 'Validado en persona por un facilitador de la red.'}
               </span>
+              {business.verification_note && (
+                <span className="text-[11px] text-emerald-800 dark:text-emerald-300 block mt-0.5 italic">
+                  «{business.verification_note}»
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -199,7 +216,7 @@ export default function BusinessDetailPage() {
             <div>
               <span className="font-semibold block">Bajo observación comunitaria</span>
               <span className="text-[11px] text-amber-800 dark:text-amber-300">
-                Este negocio cuenta con reportes recientes que están siendo verificados por la comunidad.
+                Este negocio acumula reportes confirmados por el equipo de Conecta Comuna. Habla con la persona antes de pagar un anticipo.
               </span>
             </div>
           </div>
