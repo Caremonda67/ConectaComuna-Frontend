@@ -20,11 +20,24 @@ export function detectarBarrioEnTexto(texto?: string): { barrio: string; lat: nu
   if (!texto) return null
   const t = texto.toLowerCase()
   for (const [clave, datos] of Object.entries(BARRIOS_COORDENADAS)) {
-    if (t.includes(clave)) {
+    // Con `includes` suelto, "vallado" aparecía dentro de "amurallado" y
+    // mudaba al usuario de barrio sin que lo pidiera.
+    const limite = new RegExp(`(^|[^\\p{L}])${clave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'u')
+    if (limite.test(t)) {
       return datos
     }
   }
   return null
+}
+
+/**
+ * ¿El usuario está diciendo dónde está, o solo mencionó un barrio de paso?
+ * Sin esta distinción, escribir "mi prima vive en El Rodeo" bastaba para
+ * reubicar a alguien que está en Bogotá.
+ */
+export function declaraSuUbicacion(texto?: string): boolean {
+  if (!texto) return false
+  return /\b(estoy|vivo|vivimos|resido|me encuentro|mi barrio|soy de|aquí en|aca en|acá en)\b/i.test(texto)
 }
 
 /**
@@ -902,16 +915,20 @@ export async function enviarMensajeAsistente(
   contexto?: ContextoUsuarioCopiloto
 ): Promise<RespuestaAi> {
   const ubicacionElegida = leerUbicacion()
-  const barrioDetectado = detectarBarrioEnTexto(mensaje)
-  const esDefinida = !!(
-    barrioDetectado ||
-    contexto?.ubicacion?.esDefinida ||
-    ubicacionElegida?.etiqueta
-  )
+  // Un barrio nombrado al pasar no debe pisar la ubicación que el usuario ya
+  // eligió: solo manda si lo declara ("estoy en…") o si no hay nada elegido.
+  const barrioMencionado = detectarBarrioEnTexto(mensaje)
+  const tieneUbicacionPropia = !!(contexto?.ubicacion?.esDefinida || ubicacionElegida?.etiqueta)
+  const barrioDetectado =
+    barrioMencionado && (declaraSuUbicacion(mensaje) || !tieneUbicacionPropia)
+      ? barrioMencionado
+      : null
+
+  const esDefinida = !!(barrioDetectado || tieneUbicacionPropia)
 
   const barrio = barrioDetectado?.barrio || contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
-  const lat = barrioDetectado?.lat || contexto?.ubicacion?.lat || ubicacionElegida?.center.lat || null
-  const lng = barrioDetectado?.lng || contexto?.ubicacion?.lng || ubicacionElegida?.center.lng || null
+  const lat = barrioDetectado?.lat ?? contexto?.ubicacion?.lat ?? ubicacionElegida?.center.lat ?? null
+  const lng = barrioDetectado?.lng ?? contexto?.ubicacion?.lng ?? ubicacionElegida?.center.lng ?? null
 
   const historialFormateado = historial.slice(-6).map((m) => ({
     rol: m.emisor === 'usuario' ? 'user' : 'model',

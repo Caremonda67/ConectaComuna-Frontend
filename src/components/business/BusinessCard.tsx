@@ -5,7 +5,19 @@ import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { formatDistance, getBusinessOpenStatus, cn } from '@/lib/utils'
 import { RatingStars } from '@/components/ui/Rating'
 import { UI_ICONS } from '@/components/ui/icons'
-import type { BusinessWithDistance } from '@/types'
+import { COMUNA_CENTER } from '@/lib/env'
+import type { Business, BusinessWithDistance } from '@/types'
+
+/**
+ * Los negocios que nunca marcaron su punto quedaron guardados con el centro
+ * de la comuna, así que mostrar una distancia desde ahí sería inventar.
+ */
+function sinUbicacionPropia(business: Business): boolean {
+  return (
+    Math.abs(business.lat - COMUNA_CENTER.lat) < 0.0001 &&
+    Math.abs(business.lng - COMUNA_CENTER.lng) < 0.0001
+  )
+}
 
 interface Props {
   business: BusinessWithDistance
@@ -68,7 +80,7 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
             <MapPin aria-hidden="true" size={13} strokeWidth={1.75} className="shrink-0" />
             {business.neighborhood}
             {business.distanceKm != null &&
-              (Math.abs(business.lat - 3.4372) < 0.0001 && Math.abs(business.lng - (-76.5225)) < 0.0001
+              (sinUbicacionPropia(business)
                 ? ' · Ubicación por confirmar'
                 : ` · ${formatDistance(business.distanceKm)}`)}
           </span>
