@@ -356,29 +356,9 @@ export const businessService = {
     }
 
     if (isDemoMode) {
-      // Solo en demo el umbral se lleva en el navegador. Contra la base real
-      // lo resuelve el trigger `refresh_business_reports`, que cuenta los
+      // El umbral lo lleva la base de demostración. Contra la base real lo
+      // resuelve el trigger `refresh_business_reports`, que cuenta los
       // reportes de todos los vecinos y no los de este dispositivo.
-      try {
-        const raw = localStorage.getItem('cc_reportes_local')
-        const arr: ReporteComunitario[] = raw ? JSON.parse(raw) : []
-        arr.unshift(nuevo)
-        localStorage.setItem('cc_reportes_local', JSON.stringify(arr))
-
-        const reportesNegocio = arr.filter((r) => r.negocio_id === reporte.negocio_id)
-        if (reportesNegocio.length >= 2) {
-          localStorage.setItem(
-            `cc_verif_${reporte.negocio_id}`,
-            JSON.stringify({
-              status: 'under_review',
-              by: null,
-              note: 'Bajo observación comunitaria por reportes vecinales',
-              date: fecha,
-            }),
-          )
-        }
-      } catch {}
-
       mutateDb((d) => {
         d.reportes.push({
           ...nuevo,
@@ -412,14 +392,8 @@ export const businessService = {
    */
   async listarReportes(negocioId?: string): Promise<ReporteComunitario[]> {
     if (isDemoMode) {
-      let localList: ReporteComunitario[] = []
-      try {
-        const raw = localStorage.getItem('cc_reportes_local')
-        if (raw) localList = JSON.parse(raw)
-      } catch {}
-
       const db = readDb()
-      let list = [...localList, ...db.reportes]
+      let list = [...db.reportes]
       if (negocioId) {
         list = list.filter((r) => r.negocio_id === negocioId)
       }
