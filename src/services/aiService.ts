@@ -148,42 +148,10 @@ function generarRespuestaLocal(
 
   if (esPreguntaCercania && !tieneUbicacionExplicita) {
     return {
-      mensaje: `Vecino, todavía no sé dónde estás para calcularte distancias precisas. Puedes tocar el botón de ubicación o escribirme tu barrio con la ciudad, como "Estoy en El Rodeo, Cali" o "Estoy en Chapinero, Bogotá".\n\nMientras tanto, aquí tienes algunos oficios y talleres destacados de la comuna:`,
-      tipo: 'negocios',
-      negociosSugeridos: [
-        {
-          id: 'biz-1',
-          nombre: 'Uñas de Kelly',
-          categoria: 'manicure',
-          barrio: 'El Rodeo',
-          whatsapp: '3145558899',
-          distanciaMetros: null,
-          verificado: false,
-        },
-        {
-          id: 'biz-2',
-          nombre: 'Costuras Doña Marta',
-          categoria: 'costura',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3009876543',
-          distanciaMetros: null,
-          verificado: true,
-        },
-        {
-          id: 'biz-3',
-          nombre: 'TecnoFix Celulares',
-          categoria: 'tecnologia',
-          barrio: 'Nueva Floresta',
-          whatsapp: '3129990011',
-          distanciaMetros: null,
-          verificado: false,
-        },
-      ],
-      sugerencias: [
-        '📍 Usar mi ubicación actual',
-        'Estoy en El Rodeo, Cali',
-        'Estoy en Chapinero, Bogotá',
-      ],
+      mensaje: `Vecino, todavía no sé dónde estás para calcularte distancias. Toca el botón de ubicación o escríbeme tu barrio con la ciudad, por ejemplo "Estoy en El Rodeo, Cali".\n\nCon eso te muestro los oficios registrados, ordenados por cercanía.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/explorar',
+      sugerencias: ['📍 Usar mi ubicación actual', 'Ver oficios cerca', 'Ver en el mapa'],
     }
   }
 
@@ -555,29 +523,19 @@ function generarRespuestaLocal(
   ) {
     if (texto.includes('verificar') || texto.includes('código') || texto.includes('codigo')) {
       return {
-        mensaje: `Puedes verificar la autenticidad de cualquier acuerdo vecinal escaneando su código QR o buscando su código oficial (por ejemplo CC-ORD-1). Aquí puedes consultar el comprobante en tiempo real:`,
+        mensaje: `Puedes verificar la autenticidad de cualquier acuerdo vecinal escaneando su código QR o buscando su código oficial (el negocio te lo entrega al aceptar). Aquí puedes consultar el comprobante en tiempo real:`,
         tipo: 'navegacion',
         rutaNavegacion: '/trato-seguro/verificar',
-        sugerencias: ['Verificar CC-ORD-1', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
+        sugerencias: ['Ver un comprobante', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
       }
     }
 
     if (texto.includes('pactar') || texto.includes('hacer acuerdo') || texto.includes('crear acuerdo')) {
-      const precioBase = 45000
-      const anticipoMax = 22500
       return {
-        mensaje: `¡Excelente iniciativa, ${nombreUsuario}! He estructurado la ficha de Pacto de Trato Seguro. Cumple con la regla comunal: máximo 50% de anticipo para materiales y saldo contra entrega a entera satisfacción:`,
-        tipo: 'acuerdo_trato_seguro',
-        acuerdo: {
-          codigo: 'CC-ORD-1',
-          servicio: 'Servicio de oficio comunal acordado',
-          negocioNombre: 'Taller Comunitario',
-          precioEstimado: precioBase,
-          anticipoMaximo: anticipoMax,
-          saldoContraEntrega: precioBase - anticipoMax,
-          modalidad: 'workshop',
-        },
-        sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+        mensaje: `El pacto se arma desde la ficha del negocio: eliges el oficio, acuerdan el precio y el anticipo no puede pasar del 50%. Cuando el negocio acepta, el pedido queda con su código y su QR.`,
+        tipo: 'navegacion',
+        rutaNavegacion: '/trato-seguro',
+        sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver oficios cerca', '¿Qué pasa si hay un desacuerdo?'],
       }
     }
 
@@ -592,18 +550,10 @@ function generarRespuestaLocal(
     }
 
     return {
-      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. 🛡️ Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. 🧾 Todo queda registrado por escrito con código de verificación oficial y código QR escaneable.\n3. 🤝 Si algo sale mal, reportas el caso desde la ficha del negocio y el equipo de Conecta Comuna lo revisa con las dos partes.`,
-      tipo: 'acuerdo_trato_seguro',
-      acuerdo: {
-        codigo: 'CC-ORD-1',
-        servicio: 'Servicio de mantenimiento y arreglo',
-        negocioNombre: 'Taller Comunal',
-        precioEstimado: 45000,
-        anticipoMaximo: 22500,
-        saldoContraEntrega: 22500,
-        modalidad: 'workshop',
-      },
-      sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+      mensaje: `El Trato Seguro Comunal es el pacto de confianza del barrio:\n1. Ningún anticipo para materiales pasa del 50% del total acordado.\n2. Todo queda por escrito, con código de verificación y QR.\n3. Si algo sale mal, reportas el caso desde la ficha del negocio y el equipo de Conecta Comuna lo revisa con las dos partes.\n\nEl pacto se crea desde la ficha del negocio, no desde este chat.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/trato-seguro',
+      sugerencias: ['Ver oficios cerca', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
     }
   }
 
@@ -740,38 +690,10 @@ function generarRespuestaLocal(
 
   if (esPeticionPiloto) {
     return {
-      mensaje: `¡Claro que sí, vecino! Aquí tienes los talleres de la fase piloto territorial en la Comuna de Cali. Puedes consultar sus oficios, coordinar directamente por WhatsApp o pactar con Trato Seguro:`,
-      tipo: 'negocios',
-      negociosSugeridos: [
-        {
-          id: 'biz-1',
-          nombre: 'Costuras Doña Marta',
-          categoria: 'costura',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3151234567',
-          distanciaMetros: null,
-          verificado: true,
-        },
-        {
-          id: 'biz-2',
-          nombre: 'Cerrajería El Rayo',
-          categoria: 'cerrajeria',
-          barrio: 'Nueva Floresta',
-          whatsapp: '3187654321',
-          distanciaMetros: null,
-          verificado: true,
-        },
-        {
-          id: 'biz-3',
-          nombre: 'TecnoFix Celulares',
-          categoria: 'tecnologia',
-          barrio: 'Nueva Floresta',
-          whatsapp: '3129990011',
-          distanciaMetros: null,
-          verificado: false,
-        },
-      ],
-      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', '🎙️ Dictar mi servicio para el catálogo'],
+      mensaje: `Los oficios del piloto están en el directorio y se actualizan solos. Te llevo a la lista para que veas los que hay registrados hoy, con su barrio y su contacto.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/explorar',
+      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Dictar mi servicio para el catálogo'],
     }
   }
 

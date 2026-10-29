@@ -20,13 +20,19 @@ function resolveBaseUrl(): string {
   return env.apiUrl || 'http://localhost:4000'
 }
 
-export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+/** Espera por defecto. El chat la sube porque Render tarda en despertar. */
+const ESPERA_POR_DEFECTO_MS = 12000
+
+type OpcionesApi = RequestInit & { timeoutMs?: number }
+
+export async function apiFetch<T>(endpoint: string, options: OpcionesApi = {}): Promise<T> {
+  const { timeoutMs = ESPERA_POR_DEFECTO_MS, ...resto } = options
   const baseUrl = resolveBaseUrl()
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   const url = `${baseUrl}${cleanEndpoint}`
 
-  const headers = new Headers(options.headers || {})
-  if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
+  const headers = new Headers(resto.headers || {})
+  if (!headers.has('Content-Type') && !(resto.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
   }
 
@@ -42,8 +48,10 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   }
 
   const res = await fetch(url, {
-    ...options,
+    ...resto,
     headers,
+    // Sin reloj, una pestaña que perdió la red se queda esperando para siempre.
+    signal: resto.signal ?? AbortSignal.timeout(timeoutMs),
   })
 
   if (!res.ok) {
@@ -54,12 +62,19 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   return res.json() as Promise<T>
 }
 
-/** Comprueba si el backend Express está alcanzable en la red. */
+/**
+ * Comprueba si el backend Express está alcanzable.
+ * Un 200 no basta: si Vercel reescribe /api a index.html, la respuesta también
+ * es 200 y con HTML. Se exige el cuerpo que devuelve /api/salud.
+ */
 export async function checkBackendHealth(): Promise<boolean> {
   try {
     const baseUrl = resolveBaseUrl()
     const res = await fetch(`${baseUrl}/api/salud`, { signal: AbortSignal.timeout(2000) })
-    return res.ok
+    if (!res.ok) return false
+
+    const cuerpo = await res.json()
+    return cuerpo?.estado === 'ok'
   } catch {
     return false
   }
