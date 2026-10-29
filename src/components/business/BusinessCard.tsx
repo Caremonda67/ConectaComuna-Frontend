@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Award } from 'lucide-react'
+import { MapPin, Award, Sprout } from 'lucide-react'
 import { categoryLabel } from '@/data/categories'
 import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { formatDistance, getBusinessOpenStatus, cn } from '@/lib/utils'
@@ -35,7 +35,7 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         <h3 className="font-semibold text-ink-900 min-w-0 line-clamp-1">{business.name}</h3>
         {business.verification_status === 'verified' && (
           <span
-            title="Oficio verificado en territorio por facilitador o junta comunal"
+            title="Oficio verificado en territorio por un facilitador de la red"
             className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300"
           >
             <UI_ICONS.shieldCheck size={11} className="text-emerald-700 dark:text-emerald-400" />
@@ -72,7 +72,16 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
       </div>
       <p className="truncate text-xs text-ink-500">{categoryLabel(business.category)}</p>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <RatingStars value={business.rating_avg} count={business.rating_count} />
+        {/* Cero reseñas no es "nadie lo recomienda", es "acaba de entrar". Las
+            estrellas vacías leían a negocio abandonado en todo el directorio. */}
+        {business.rating_count > 0 ? (
+          <RatingStars value={business.rating_avg} count={business.rating_count} />
+        ) : (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800/60 px-2 py-0.5 text-[11px] font-medium text-brand-800 dark:text-brand-300">
+            <Sprout size={12} className="shrink-0 text-brand-600 dark:text-brand-400" />
+            Nuevo en la comuna
+          </span>
+        )}
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
         {business.neighborhood && (
