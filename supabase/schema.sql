@@ -48,6 +48,12 @@ alter table public.profiles enable row level security;
 create policy profiles_select_public on public.profiles
   for select using (true);
 
+-- RLS filtra filas, no columnas: sin esto cualquiera con la clave anónima
+-- (que es pública, viaja en el bundle) se lleva el listado de teléfonos.
+revoke select on public.profiles from anon;
+grant select (id, full_name, avatar_url) on public.profiles to anon;
+grant select on public.profiles to authenticated;
+
 create policy profiles_update_own on public.profiles
   for update using (auth.uid() = id) with check (auth.uid() = id);
 
