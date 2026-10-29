@@ -5,7 +5,7 @@
  * Toda mutación aquí replica exactamente la firma de los servicios Supabase.
  */
 import { demoBusinesses, demoDirecciones, demoOrders, demoProfiles, demoReviews, demoVinculaciones } from '@/data/demoData'
-import type { Business, DireccionUsuario, FacilitadorNegocio, Order, Profile, ReporteComunitario, Review } from '@/types'
+import type { Business, DireccionUsuario, FacilitadorNegocio, Order, Profile, ReporteComunitario, ReporteRespuesta, Review } from '@/types'
 
 const KEY = 'conectacomuna.demo.v1'
 
@@ -17,18 +17,40 @@ interface DemoDb {
   vinculaciones: FacilitadorNegocio[]
   direcciones: DireccionUsuario[]
   reportes: ReporteComunitario[]
+  respuestas: ReporteRespuesta[]
   sessionUserId: string | null
 }
 
+/**
+ * La reputación se calcula, no se escribe. Es lo mismo que hacen los triggers
+ * `bump_completed_orders` y `refresh_business_rating` en Postgres: así el
+ * contador de la ficha siempre cuadra con los pedidos y las reseñas que la
+ * propia pantalla lista, y nadie tiene que mantener dos números a la vez.
+ */
+function calcularReputacion(businesses: Business[], orders: Order[], reviews: Review[]): Business[] {
+  return businesses.map((b) => {
+    const completados = orders.filter((o) => o.business_id === b.id && o.status === 'completed').length
+    const suyas = reviews.filter((r) => r.business_id === b.id)
+    const promedio = suyas.length
+      ? Math.round((suyas.reduce((acc, r) => acc + r.rating, 0) / suyas.length) * 100) / 100
+      : 0
+    return { ...b, completed_orders: completados, rating_count: suyas.length, rating_avg: promedio }
+  })
+}
+
 function seed(): DemoDb {
+  const orders = structuredClone(demoOrders)
+  const reviews = structuredClone(demoReviews)
+
   return {
     profiles: structuredClone(demoProfiles),
-    businesses: structuredClone(demoBusinesses),
-    orders: structuredClone(demoOrders),
-    reviews: structuredClone(demoReviews),
+    businesses: calcularReputacion(structuredClone(demoBusinesses), orders, reviews),
+    orders,
+    reviews,
     vinculaciones: structuredClone(demoVinculaciones),
     direcciones: structuredClone(demoDirecciones),
     reportes: [],
+    respuestas: [],
     sessionUserId: null,
   }
 }
@@ -50,6 +72,7 @@ export function readDb(): DemoDb {
       ...parsed,
       direcciones: parsed.direcciones ?? seed().direcciones,
       reportes: parsed.reportes ?? [],
+      respuestas: parsed.respuestas ?? [],
     }
     localStorage.setItem(KEY, JSON.stringify(merged))
     return merged

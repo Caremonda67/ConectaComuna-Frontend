@@ -277,10 +277,16 @@ export default function BusinessDetailPage() {
               <dd>{business.neighborhood}</dd>
             </div>
           )}
-          <div className="flex gap-2">
-            <dt className="font-medium">Servicios finalizados:</dt>
-            <dd>{business.completed_orders}</dd>
-          </div>
+          {/* Solo contamos lo que pasó por la plataforma. La trayectoria de
+              antes la cuenta la persona en su descripción, que es donde
+              corresponde: es algo que declara, no algo que nosotros podamos
+              certificar. */}
+          {business.completed_orders > 0 && (
+            <div className="flex gap-2">
+              <dt className="font-medium">Servicios por ConectaComuna:</dt>
+              <dd>{business.completed_orders}</dd>
+            </div>
+          )}
         </dl>
 
         {isOwner ? (

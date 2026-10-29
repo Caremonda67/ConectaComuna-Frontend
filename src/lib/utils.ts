@@ -86,7 +86,7 @@ export function getBadges(business: Business): Badge[] {
       label: 'Verificado en territorio',
       description: business.verification_note
         ? `${business.verification_note}${business.verification_by ? ` (por ${business.verification_by})` : ''}`
-        : 'Negocio validado en persona por facilitador o junta comunal',
+        : 'Negocio validado en persona por un facilitador de la red',
       icon: BADGE_ICONS.verified,
       tone: 'verified',
     })
@@ -104,7 +104,7 @@ export function getBadges(business: Business): Badge[] {
     badges.push({
       id: 'rank-gold',
       label: 'Maestro de la comuna',
-      description: '50+ servicios finalizados',
+      description: '50+ servicios finalizados por ConectaComuna',
       icon: BADGE_ICONS.trophy,
       tone: 'gold',
     })
@@ -112,7 +112,7 @@ export function getBadges(business: Business): Badge[] {
     badges.push({
       id: 'rank-silver',
       label: 'Reconocido',
-      description: '15+ servicios finalizados',
+      description: '15+ servicios finalizados por ConectaComuna',
       icon: BADGE_ICONS.silver,
       tone: 'silver',
     })
@@ -120,7 +120,7 @@ export function getBadges(business: Business): Badge[] {
     badges.push({
       id: 'rank-bronze',
       label: 'En crecimiento',
-      description: '3+ servicios finalizados',
+      description: '3+ servicios finalizados por ConectaComuna',
       icon: BADGE_ICONS.bronze,
       tone: 'bronze',
     })

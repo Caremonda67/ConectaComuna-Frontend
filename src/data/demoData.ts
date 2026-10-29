@@ -252,7 +252,53 @@ export const demoBusinesses: Business[] = [
   },
 ]
 
+/**
+ * Trabajos ya cerrados de los primeros meses del piloto. Existen para que el
+ * contador de servicios y las insignias tengan de dónde salir: antes eran un
+ * número escrito a mano en la ficha del negocio que los pedidos no respaldaban.
+ */
+const TRABAJOS_CERRADOS: Array<{ negocio: string; trabajos: string[]; precio: number; cuantos: number }> = [
+  { negocio: 'biz-1', trabajos: ['Ruedo de pantalón', 'Cambio de cierre', 'Entallado de blusa', 'Dobladillo de cortinas'], precio: 18000, cuantos: 16 },
+  { negocio: 'biz-2', trabajos: ['Manicure semipermanente', 'Pedicure completo', 'Decoración de uñas'], precio: 42000, cuantos: 9 },
+  { negocio: 'biz-4', trabajos: ['Bulto de ropa americana', 'Surtido de camisetas'], precio: 95000, cuantos: 6 },
+  { negocio: 'biz-6', trabajos: ['Cambio de pantalla', 'Cambio de batería', 'Liberación de equipo'], precio: 85000, cuantos: 5 },
+  { negocio: 'biz-3', trabajos: ['Apertura de puerta', 'Cambio de guarda', 'Copia de llave'], precio: 35000, cuantos: 4 },
+  { negocio: 'biz-5', trabajos: ['Pedido de cholados para evento'], precio: 60000, cuantos: 3 },
+  { negocio: 'biz-7', trabajos: ['Corte y perfilado de barba'], precio: 22000, cuantos: 2 },
+]
+
+/** Reparte los trabajos cerrados hacia atrás en el tiempo, uno cada pocos días. */
+function historialDelPiloto(): Order[] {
+  const inicio = new Date('2026-09-05T15:00:00Z').getTime()
+  const unDia = 24 * 60 * 60 * 1000
+  const pedidos: Order[] = []
+
+  TRABAJOS_CERRADOS.forEach(({ negocio, trabajos, precio, cuantos }) => {
+    for (let i = 0; i < cuantos; i += 1) {
+      const fecha = new Date(inicio - (i * 3 + 1) * unDia).toISOString()
+      const entrega = new Date(inicio - i * 3 * unDia).toISOString()
+      pedidos.push({
+        id: `${negocio}-hist-${i + 1}`,
+        business_id: negocio,
+        client_id: i % 2 === 0 ? 'user-cliente' : 'user-otro',
+        title: trabajos[i % trabajos.length],
+        description: 'Trabajo acordado y entregado en el barrio.',
+        status: 'completed',
+        scheduled_for: null,
+        price_estimate: precio,
+        final_price: precio,
+        photos: [],
+        created_at: fecha,
+        updated_at: entrega,
+      })
+    }
+  })
+
+  return pedidos
+}
+
 export const demoOrders: Order[] = [
+  ...historialDelPiloto(),
   {
     id: 'ord-1',
     business_id: 'biz-2',
@@ -294,9 +340,58 @@ export const demoOrders: Order[] = [
   },
 ]
 
+/**
+ * Opiniones de los trabajos que ya se cerraron. Cada una cuelga de un pedido
+ * del historial, igual que exige la plataforma: sin pedido completado no hay
+ * reseña. Antes las estrellas eran un promedio escrito a mano en la ficha,
+ * sin una sola opinión detrás.
+ */
+const OPINIONES: Array<{ negocio: string; nota: number; texto: string }> = [
+  { negocio: 'biz-1', nota: 5, texto: 'Quedó impecable y me lo entregó al día siguiente.' },
+  { negocio: 'biz-1', nota: 5, texto: 'Doña Marta cose muy bien y cobra lo justo.' },
+  { negocio: 'biz-1', nota: 4, texto: 'Buen trabajo, se demoró un día más de lo acordado.' },
+  { negocio: 'biz-1', nota: 5, texto: 'Le llevé tres pantalones y quedaron como nuevos.' },
+  { negocio: 'biz-1', nota: 5, texto: 'Muy amable, me explicó qué se podía arreglar y qué no.' },
+  { negocio: 'biz-2', nota: 5, texto: 'Kelly es muy detallista, me duraron tres semanas.' },
+  { negocio: 'biz-2', nota: 4, texto: 'Buen trabajo, el local es pequeño pero limpio.' },
+  { negocio: 'biz-2', nota: 5, texto: 'Vino a la casa y quedó todo lindo.' },
+  { negocio: 'biz-3', nota: 5, texto: 'Me abrió la puerta en veinte minutos un domingo.' },
+  { negocio: 'biz-3', nota: 4, texto: 'Resolvió rápido, el precio me pareció correcto.' },
+  { negocio: 'biz-4', nota: 5, texto: 'La ropa llegó como en las fotos, bien surtida.' },
+  { negocio: 'biz-4', nota: 4, texto: 'Buen bulto, aunque pedí tallas y llegaron mezcladas.' },
+  { negocio: 'biz-5', nota: 5, texto: 'Los cholados del evento quedaron deliciosos.' },
+  { negocio: 'biz-6', nota: 4, texto: 'Cambió la pantalla el mismo día, funciona bien.' },
+  { negocio: 'biz-6', nota: 5, texto: 'Me salvó el celular, pensé que ya no servía.' },
+  { negocio: 'biz-7', nota: 5, texto: 'Buen corte y conversación, volveré.' },
+]
+
+/** Cuelga cada opinión de uno de los trabajos cerrados de ese negocio. */
+function opinionesDelPiloto(): Review[] {
+  const usados: Record<string, number> = {}
+
+  return OPINIONES.map((op, i) => {
+    const n = (usados[op.negocio] ?? 0) + 1
+    usados[op.negocio] = n
+    const esLuisa = i % 2 === 0
+    return {
+      id: `rev-${i + 1}`,
+      order_id: `${op.negocio}-hist-${n}`,
+      business_id: op.negocio,
+      client_id: esLuisa ? 'user-cliente' : 'user-otro',
+      rating: op.nota,
+      comment: op.texto,
+      created_at: new Date(Date.parse('2026-09-06T12:00:00Z') - i * 2 * 24 * 60 * 60 * 1000).toISOString(),
+      client: esLuisa
+        ? { id: 'user-cliente', full_name: 'Luisa Martínez', avatar_url: null }
+        : { id: 'user-otro', full_name: 'Jorge Benítez', avatar_url: null },
+    }
+  })
+}
+
 export const demoReviews: Review[] = [
+  ...opinionesDelPiloto(),
   {
-    id: 'rev-1',
+    id: 'rev-ord2',
     order_id: 'ord-2',
     business_id: 'biz-1',
     client_id: 'user-cliente',
