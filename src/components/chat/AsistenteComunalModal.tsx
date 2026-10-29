@@ -142,7 +142,7 @@ export function AsistenteComunalModal() {
   const [pedidosUsuario, setPedidosUsuario] = useState<PedidoActivoCopiloto[]>([])
 
   const reconocimientoRef = useRef<IWindowSpeechRecognition | null>(null)
-  const finalScrollRef = useRef<HTMLDivElement | null>(null)
+  const listaRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   // Cargar pedidos y pactos activos para que el copiloto tenga contexto real
@@ -508,11 +508,18 @@ export function AsistenteComunalModal() {
     }
   }, [isOpen, mensajeInicial, manejarEnvio])
 
-  // Desplazar al último mensaje
+  // Desplazar al último mensaje. `scrollIntoView` sobre el centinela dejaba la
+  // conversación a media altura: la respuesta llegaba y el vecino no la veía
+  // hasta que bajaba a mano. Se mueve el contenedor, que sí es predecible.
   useEffect(() => {
-    if (isOpen) {
-      finalScrollRef.current?.scrollIntoView({ behavior: 'smooth' })
-    }
+    if (!isOpen) return
+    const lista = listaRef.current
+    if (!lista) return
+    const ir = () => lista.scrollTo({ top: lista.scrollHeight, behavior: 'smooth' })
+    ir()
+    // Las tarjetas de negocio y los chips entran después del primer pintado.
+    const t = setTimeout(ir, 120)
+    return () => clearTimeout(t)
   }, [mensajes, cargando, isOpen])
 
   // Manejar Escape para cerrar
@@ -784,7 +791,7 @@ export function AsistenteComunalModal() {
           </header>
 
           {/* Área de mensajes con scroll */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
+          <div ref={listaRef} className="flex-1 overflow-y-auto p-4 space-y-4 text-sm">
             {mensajes.map((m) => {
               const esUsuario = m.emisor === 'usuario'
               const estructurada = m.respuestaEstructurada
@@ -825,7 +832,7 @@ export function AsistenteComunalModal() {
                   </div>
 
                   {/* Tarjetas de acción estructurada del Asistente (Negocios recomendados) */}
-                  {estructurada && estructurada.tipo === 'negocios' && estructurada.negociosSugeridos && (
+                  {estructurada?.tipo === 'negocios' && !!estructurada.negociosSugeridos?.length && (
                     <div className="mt-3 w-full max-w-[95%] space-y-2">
                       <div className="text-xs font-semibold text-ink-700 px-1">
                         Negocios recomendados cerca de ti:
@@ -1213,7 +1220,6 @@ export function AsistenteComunalModal() {
               </div>
             )}
 
-            <div ref={finalScrollRef} />
           </div>
 
           {/* Notificación de error de voz si aplica */}
