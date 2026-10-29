@@ -134,50 +134,136 @@ export const direccionService = {
   },
 }
 
-/** Convierte el texto del usuario ("El Rodeo", "Calle 5 #4-20") en puntos. */
+/** Convierte el texto del usuario ("El Rodeo", "Calle 26 Bogotá", "Corferias") en puntos. */
 export async function geocodificar(texto: string): Promise<UbicacionGeocodificada[]> {
   const q = texto.trim()
   if (!q) return []
-  if (isDemoMode) {
-    const low = q.toLowerCase()
-    const hits = LUGARES_DEMO.filter((l) => l.etiqueta.toLowerCase().includes(low))
-    const ranked = [...hits].sort((a, b) => {
-      const ia = a.etiqueta.toLowerCase().indexOf(low)
-      const ib = b.etiqueta.toLowerCase().indexOf(low)
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib)
-    })
-    return delay(ranked.slice(0, 5))
-  }
 
-  // Geocoder abierto de OpenStreetMap, acotado a Cali con `viewbox`.
-  // Incluimos email identificador requerido por la política de uso de Nominatim para clientes web.
-  const viewbox = '-76.75,3.30,-76.40,3.55'
+  // Geocoder abierto de OpenStreetMap para Colombia
   const url =
     'https://nominatim.openstreetmap.org/search' +
-    `?format=json&limit=5&countrycodes=co&viewbox=${viewbox}&bounded=1&email=contacto@conectacomuna.co&q=${encodeURIComponent(q)}`
+    `?format=json&limit=5&countrycodes=co&addressdetails=1&email=contacto@conectacomuna.co&q=${encodeURIComponent(q)}`
 
   try {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'ConectaComuna-Web/1.0 (contacto@conectacomuna.co)',
+        Accept: 'application/json',
+      },
+    })
     if (res.ok) {
       const data = (await res.json()) as Array<{
         display_name: string
         lat: string
         lon: string
+        address?: Record<string, string>
       }>
       if (Array.isArray(data) && data.length > 0) {
-        return data.map((r) => ({
-          etiqueta: r.display_name,
-          center: { lat: Number(r.lat), lng: Number(r.lon) },
-        }))
+        return data.map((r) => {
+          const a = r.address || {}
+          const barrio =
+            a.neighbourhood ||
+            a.suburb ||
+            a.residential ||
+            a.quarter ||
+            a.amenity ||
+            a.road ||
+            ''
+          const rawCiudad =
+            a.city ||
+            a.town ||
+            a.village ||
+            a.municipality ||
+            a.county ||
+            a.state ||
+            ''
+          const ciudad = rawCiudad
+            .replace(/^perímetro urbano\s+/gi, '')
+            .replace(/\s+ciudad$/gi, '')
+            .trim()
+
+          let etiqueta = ''
+          if (barrio && ciudad && !barrio.toLowerCase().includes(ciudad.toLowerCase())) {
+            etiqueta = `${barrio}, ${ciudad}`
+          } else {
+            etiqueta = barrio || ciudad || r.display_name
+          }
+
+          return {
+            etiqueta,
+            center: { lat: Number(r.lat), lng: Number(r.lon) },
+          }
+        })
       }
     }
   } catch (err) {
-    // Si la red externa de OSM falla o está bloqueada, hacemos fallback a los barrios locales de Cali
     console.warn('Geocodificación externa no disponible, usando índice de barrios local:', err)
   }
 
-  // Fallback local con barrios de la comuna
+  // Fallback local con barrios de la comuna si falla la red externa
   const low = q.toLowerCase()
   const fallbackHits = LUGARES_DEMO.filter((l) => l.etiqueta.toLowerCase().includes(low))
   return fallbackHits.slice(0, 5)
+}
+
+/** Convierte coordenadas geográficas en un barrio y ciudad legible en Colombia. */
+export async function reverseGeocodificar(coords: Coordinates): Promise<UbicacionGeocodificada> {
+  const url =
+    `https://nominatim.openstreetmap.org/reverse` +
+    `?format=json&lat=${coords.lat}&lon=${coords.lng}&zoom=16&addressdetails=1&email=contacto@conectacomuna.co`
+
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'ConectaComuna-Web/1.0 (contacto@conectacomuna.co)',
+        Accept: 'application/json',
+      },
+    })
+    if (res.ok) {
+      const data = (await res.json()) as {
+        display_name?: string
+        address?: Record<string, string>
+      }
+      const a = data.address || {}
+      const barrio =
+        a.neighbourhood ||
+        a.suburb ||
+        a.residential ||
+        a.quarter ||
+        a.amenity ||
+        a.road ||
+        ''
+      const rawCiudad =
+        a.city ||
+        a.town ||
+        a.village ||
+        a.municipality ||
+        a.county ||
+        a.state ||
+        ''
+      const ciudad = rawCiudad
+        .replace(/^perímetro urbano\s+/gi, '')
+        .replace(/\s+ciudad$/gi, '')
+        .trim()
+
+      let etiqueta = ''
+      if (barrio && ciudad && !barrio.toLowerCase().includes(ciudad.toLowerCase())) {
+        etiqueta = `${barrio}, ${ciudad}`
+      } else {
+        etiqueta = barrio || ciudad || data.display_name || `Punto (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
+      }
+
+      return {
+        etiqueta,
+        center: coords,
+      }
+    }
+  } catch (err) {
+    console.warn('Reverse geocodificación no disponible, usando coordenadas:', err)
+  }
+
+  return {
+    etiqueta: `Punto (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`,
+    center: coords,
+  }
 }

@@ -5,7 +5,12 @@ import { LazyMap } from '@/components/map/LazyMap'
 import { cn } from '@/lib/utils'
 import { COMUNA_CENTER } from '@/lib/env'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { geocodificar, BARRIOS_COMUNA, type UbicacionGeocodificada } from '@/services/direccionService'
+import {
+  geocodificar,
+  reverseGeocodificar,
+  BARRIOS_COMUNA,
+  type UbicacionGeocodificada,
+} from '@/services/direccionService'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { UbicacionElegida } from '@/lib/ubicacion'
 import type { Coordinates } from '@/types'
@@ -28,6 +33,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
   const [buscando, setBuscando] = useState(false)
   const [verMapa, setVerMapa] = useState(false)
   const [picked, setPicked] = useState<Coordinates | null>(null)
+  const [identificandoPunto, setIdentificandoPunto] = useState(false)
   const [gpsActivo, setGpsActivo] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -72,14 +78,25 @@ export function UbicacionPicker({ value, onChange }: Props) {
   useEffect(() => {
     if (!gpsActivo) return
     if (status === 'granted') {
-      // Diferimos a un tick: el cambio de estado se aplica tras el render,
-      // sin cascada dentro del efecto.
+      let cancelado = false
       const t = setTimeout(() => {
         setGpsActivo(false)
-        onChange({ etiqueta: 'Mi ubicación', center: position, origen: 'gps' })
-        cerrar()
+        void (async () => {
+          let etiqueta = 'Mi ubicación'
+          try {
+            const geo = await reverseGeocodificar(position)
+            if (geo?.etiqueta) etiqueta = geo.etiqueta
+          } catch {}
+          if (!cancelado) {
+            onChange({ etiqueta, center: position, origen: 'gps' })
+            cerrar()
+          }
+        })()
       }, 0)
-      return () => clearTimeout(t)
+      return () => {
+        cancelado = true
+        clearTimeout(t)
+      }
     }
     if (status === 'insecure_context') {
       const t = setTimeout(() => {
@@ -105,10 +122,23 @@ export function UbicacionPicker({ value, onChange }: Props) {
     return undefined
   }, [gpsActivo, status, position, onChange])
 
-  const usarPuntoDelMapa = () => {
+  const usarPuntoDelMapa = async () => {
     if (!picked) return
-    onChange({ etiqueta: 'Punto elegido en el mapa', center: picked, origen: 'mapa' })
-    cerrar()
+    setIdentificandoPunto(true)
+    try {
+      const geo = await reverseGeocodificar(picked)
+      onChange({ etiqueta: geo.etiqueta, center: picked, origen: 'mapa' })
+      cerrar()
+    } catch {
+      onChange({
+        etiqueta: `Punto (${picked.lat.toFixed(4)}, ${picked.lng.toFixed(4)})`,
+        center: picked,
+        origen: 'mapa',
+      })
+      cerrar()
+    } finally {
+      setIdentificandoPunto(false)
+    }
   }
 
   return (
@@ -255,10 +285,23 @@ export function UbicacionPicker({ value, onChange }: Props) {
                 pickedPosition={picked}
                 onPick={setPicked}
               />
-              <Button fullWidth disabled={!picked} onClick={usarPuntoDelMapa}>
-                Usar este punto
+              {picked && (
+                <div className="flex items-center gap-1.5 text-xs text-ink-600 bg-cream-100 dark:bg-cream-200 p-2 rounded-lg">
+                  <MapPin size={13} className="text-brand-600 shrink-0" />
+                  <span className="truncate">
+                    Punto marcado: {picked.lat.toFixed(4)}, {picked.lng.toFixed(4)}
+                  </span>
+                </div>
+              )}
+              <Button
+                fullWidth
+                disabled={!picked}
+                loading={identificandoPunto}
+                onClick={usarPuntoDelMapa}
+              >
+                {identificandoPunto ? 'Identificando ubicación…' : 'Usar este punto'}
               </Button>
-              <p className="text-xs text-ink-500">Toca el mapa donde quieras buscar.</p>
+              <p className="text-xs text-ink-500">Toca el mapa en cualquier lugar para ubicarte.</p>
             </div>
           )}
 

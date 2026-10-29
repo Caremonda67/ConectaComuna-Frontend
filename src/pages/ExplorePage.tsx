@@ -10,6 +10,7 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
+import { distanceKm } from '@/lib/utils'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
@@ -47,6 +48,11 @@ export default function ExplorePage() {
     }),
     [params, ubicacion],
   )
+
+  const estaFueraDeCali = useMemo(() => {
+    if (!ubicacion?.center) return false
+    return distanceKm(ubicacion.center, COMUNA_CENTER) > 35
+  }, [ubicacion])
 
   const { data, loading, error, reload } = useAsync(
     () => businessService.search(filters),
@@ -106,12 +112,16 @@ export default function ExplorePage() {
       {!loading && !error && (data?.length ?? 0) === 0 && (
         <EmptyState
           title={
-            filters.openNow
+            estaFueraDeCali
+              ? `No hay negocios registrados aún en ${ubicacion?.etiqueta}`
+              : filters.openNow
               ? 'No hay negocios abiertos en este momento'
               : 'No encontramos negocios con esos filtros'
           }
           description={
-            filters.openNow
+            estaFueraDeCali
+              ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes explorar los oficios y talleres del piloto con un toque:'
+              : filters.openNow
               ? 'En este horario los talleres se encuentran cerrados. Desactiva «Solo abiertos ahora» para ver todos los oficios disponibles y coordinar por WhatsApp.'
               : filters.wholesaleOnly
                 ? 'No encontramos opciones con venta al por mayor para esta combinación. Desactiva el filtro mayorista o prueba en otra categoría.'
@@ -121,6 +131,20 @@ export default function ExplorePage() {
           }
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">
+              {estaFueraDeCali && (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    elegirUbicacion({
+                      etiqueta: 'Nueva Floresta, Cali',
+                      center: COMUNA_CENTER,
+                      origen: 'busqueda',
+                    })
+                  }
+                >
+                  Ver comercios del piloto (Cali)
+                </Button>
+              )}
               {filters.openNow && (
                 <Button variant="primary" onClick={() => onChange({ openNow: false })}>
                   Ver todos los negocios

@@ -9,7 +9,9 @@ import { UbicacionPicker } from '@/components/location/UbicacionPicker'
 import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
 import { CardSkeletonList, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
+import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER } from '@/lib/env'
+import { distanceKm } from '@/lib/utils'
 import { CATEGORIES } from '@/data/categories'
 import type { CategorySlug } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
@@ -34,6 +36,11 @@ export default function MapPage() {
   }
 
   const center = ubicacion?.center ?? COMUNA_CENTER
+
+  const estaFueraDeCali = useMemo(() => {
+    if (!ubicacion?.center) return false
+    return distanceKm(ubicacion.center, COMUNA_CENTER) > 35
+  }, [ubicacion])
 
   const filters = useMemo(
     () => ({ category, center, radiusKm, sort: 'distance' as const }),
@@ -108,8 +115,32 @@ export default function MapPage() {
         {!loading && !error && (data?.length ?? 0) === 0 && (
           <EmptyState
             icon={UI_ICONS.map}
-            title="Ningún negocio en este radio"
-            description="Amplía el radio de búsqueda para ver más opciones."
+            title={
+              estaFueraDeCali
+                ? `No hay talleres registrados en ${ubicacion?.etiqueta}`
+                : 'Ningún negocio en este radio'
+            }
+            description={
+              estaFueraDeCali
+                ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes ver los oficios del piloto en el mapa con un toque:'
+                : 'Amplía el radio de búsqueda para ver más opciones.'
+            }
+            action={
+              estaFueraDeCali ? (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    elegirUbicacion({
+                      etiqueta: 'Nueva Floresta, Cali',
+                      center: COMUNA_CENTER,
+                      origen: 'busqueda',
+                    })
+                  }
+                >
+                  Ver talleres del piloto (Cali)
+                </Button>
+              ) : undefined
+            }
           />
         )}
         <div className="grid gap-3">

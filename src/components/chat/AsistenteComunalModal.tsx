@@ -7,6 +7,8 @@ import { leerUbicacion, guardarUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { AudioWaveVisualizer } from '@/components/ui/AudioWaveVisualizer'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
+import { reverseGeocodificar } from '@/services/direccionService'
+import { COMUNA_CENTER } from '@/lib/env'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
 import { orderService } from '@/services/orderService'
@@ -225,10 +227,27 @@ export function AsistenteComunalModal() {
       const textoLimpio = texto.replace(/[#*•_]/gu, '')
       const utterance = new SpeechSynthesisUtterance(textoLimpio)
       utterance.lang = 'es-CO'
-      utterance.rate = 1.0
+      utterance.rate = 0.96
+      utterance.pitch = 1.0
 
       const voces = window.speechSynthesis.getVoices()
-      const vozEspanol = voces.find((v) => v.lang.startsWith('es-') || v.lang === 'es')
+      // Priorizar voces Naturales / Neuronales en español colombiano o latinoamericano
+      const vozEspanol = voces
+        .filter((v) => v.lang.startsWith('es') || v.lang.includes('ES') || v.lang.includes('CO'))
+        .sort((a, b) => {
+          const scoreA =
+            (a.lang.includes('CO') ? 40 : 0) +
+            (a.name.includes('Natural') || a.name.includes('Neural') || a.name.includes('Online') ? 30 : 0) +
+            (a.name.includes('Google') ? 20 : 0) +
+            (a.lang.includes('419') || a.lang.includes('MX') || a.lang.includes('US') ? 10 : 0)
+          const scoreB =
+            (b.lang.includes('CO') ? 40 : 0) +
+            (b.name.includes('Natural') || b.name.includes('Neural') || b.name.includes('Online') ? 30 : 0) +
+            (b.name.includes('Google') ? 20 : 0) +
+            (b.lang.includes('419') || b.lang.includes('MX') || b.lang.includes('US') ? 10 : 0)
+          return scoreB - scoreA
+        })[0]
+
       if (vozEspanol) {
         utterance.voice = vozEspanol
       }
@@ -355,15 +374,52 @@ export function AsistenteComunalModal() {
 
     setCargando(true)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+      async (pos) => {
+        const { latitude, longitude } = pos.coords
+        const coords = { lat: latitude, lng: longitude }
+
+        let etiqueta = 'Mi ubicación actual'
+        try {
+          const geo = await reverseGeocodificar(coords)
+          if (geo?.etiqueta) etiqueta = geo.etiqueta
+        } catch {}
+
         guardarUbicacion({
-          etiqueta: 'Mi ubicación actual',
+          etiqueta,
           center: coords,
           origen: 'gps',
         })
         setCargando(false)
-        void manejarEnvio('He compartido mi ubicación GPS')
+
+        // Comprobar si las coordenadas están en el Valle/Cali (lat ~3.25 a 3.65, lng ~-76.7 a -76.35)
+        const estaEnZonaPiloto =
+          latitude >= 3.25 && latitude <= 3.65 && longitude >= -76.7 && longitude <= -76.35
+
+        if (estaEnZonaPiloto) {
+          void manejarEnvio(`He compartido mi ubicación GPS en ${etiqueta}`)
+        } else {
+          setMensajes((prev) => [
+            ...prev,
+            {
+              id: `gps-loc-${Date.now()}`,
+              emisor: 'asistente',
+              texto:
+                `¡Te ubiqué en ${etiqueta}! Reconocemos tu ubicación real aquí en ${etiqueta}. Como ConectaComuna está operando su fase piloto territorial en la Comuna de Cali, en este radio aún no contamos con talleres registrados. Si deseas ver los comercios del piloto de Cali con distancias reales y probar el Trato Seguro, puedes tocar la opción abajo:`,
+              fecha: new Date(),
+              respuestaEstructurada: {
+                mensaje: '',
+                tipo: 'conversacion',
+                sugerencias: [
+                  'Ver comercios del piloto (Cali)',
+                  '👗 Modista o costurera cerca',
+                  '🔑 Cerrajería urgente',
+                  '🎙️ Dictar mi servicio para el catálogo',
+                  '🛡️ ¿Cómo funciona el Trato Seguro?',
+                ],
+              },
+            },
+          ])
+        }
       },
       () => {
         setCargando(false)
@@ -391,6 +447,15 @@ export function AsistenteComunalModal() {
     (chip: string) => {
       if (chip.includes('Usar mi ubicación actual') || chip.includes('Activar mi ubicación')) {
         solicitarUbicacionGps()
+        return
+      }
+      if (chip.includes('Ver comercios del piloto (Cali)') || chip.includes('comercios del piloto')) {
+        guardarUbicacion({
+          etiqueta: 'Nueva Floresta, Cali',
+          center: COMUNA_CENTER,
+          origen: 'busqueda',
+        })
+        void manejarEnvio('Muéstrame los oficios del piloto en Cali')
         return
       }
       void manejarEnvio(chip)
@@ -426,6 +491,16 @@ export function AsistenteComunalModal() {
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, cerrarAsistente, detenerLecturaVoz])
+
+  // Enfocar automáticamente el campo de entrada al abrir el asistente
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus()
+      }, 120)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
 
   // Ejecutar acción de mutación confirmada por el usuario
   const ejecutarAccionConfirmada = async (accion?: AccionPendienteAi) => {
@@ -484,7 +559,7 @@ export function AsistenteComunalModal() {
 
       recognition.onresult = (event: any) => {
         let textoTranscribiendo = ''
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        for (let i = 0; i < event.results.length; ++i) {
           textoTranscribiendo += event.results[i][0].transcript
         }
         setTextoEntrada(textoTranscribiendo)
@@ -495,6 +570,8 @@ export function AsistenteComunalModal() {
         setEscuchandoVoz(false)
         if (event.error === 'not-allowed') {
           setErrorVoz('Permiso de micrófono denegado. Habilítalo en tu navegador para dictar.')
+        } else if (event.error === 'no-speech') {
+          setErrorVoz('No se escuchó voz. Toca de nuevo el micrófono y habla con tranquilidad.')
         } else {
           setErrorVoz('No te escuchamos bien. Intenta dictar más cerca del micrófono.')
         }
@@ -572,7 +649,7 @@ export function AsistenteComunalModal() {
   // Reiniciar conversación
   const reiniciarConversacion = () => {
     detenerLecturaVoz()
-    setMensajes([crearSaludoInicial(barrioActivo)])
+    setMensajes([crearSaludoInicial(barrioActivo, tieneUbicacionDefinida)])
     setErrorVoz(null)
   }
 
@@ -601,7 +678,7 @@ export function AsistenteComunalModal() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={prefersReduced ? { opacity: 0 } : { opacity: 0, y: 30, scale: 0.96 }}
           transition={{ type: 'spring', damping: 26, stiffness: 300 }}
-          className="pointer-events-auto relative flex flex-col w-full sm:w-[440px] h-[85vh] sm:h-[650px] max-h-[92vh] bg-cream-100 border border-ink-200 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
+          className="pointer-events-auto relative flex flex-col w-full sm:w-[440px] h-[85vh] sm:h-[650px] max-h-[92vh] bg-cream-100 dark:bg-cream-100 border border-ink-200 dark:border-ink-700 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden"
         >
           {/* Encabezado */}
           <header className="flex items-center justify-between px-3.5 sm:px-4 py-3 border-b border-ink-200 dark:border-ink-700 bg-cream-200/70 dark:bg-cream-100">
@@ -622,7 +699,7 @@ export function AsistenteComunalModal() {
                 <div className="flex items-center gap-1 text-[11px] text-ink-600">
                   <UI_ICONS.map size={12} className="text-brand-600 dark:text-brand-400 shrink-0" />
                   <span className="truncate max-w-[150px] sm:max-w-[200px]">
-                    {descUbi.etiquetaCorta} (Cali)
+                    {descUbi.etiquetaCorta}
                   </span>
                 </div>
               </div>
@@ -638,7 +715,7 @@ export function AsistenteComunalModal() {
                   'p-2 rounded-xl transition-colors',
                   ttsActivo
                     ? 'bg-brand-200 dark:bg-emerald-950/80 text-brand-900 dark:text-emerald-300 border border-brand-300 dark:border-emerald-700/60'
-                    : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:hover:bg-cream-200'
+                    : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200'
                 )}
                 aria-label={ttsActivo ? 'Silenciar lectura de voz' : 'Activar lectura de voz'}
               >
@@ -650,7 +727,7 @@ export function AsistenteComunalModal() {
                 type="button"
                 onClick={reiniciarConversacion}
                 title="Reiniciar conversación"
-                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 transition-colors"
+                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
                 aria-label="Reiniciar conversación"
               >
                 <UI_ICONS.reset size={18} />
@@ -663,7 +740,7 @@ export function AsistenteComunalModal() {
                   detenerLecturaVoz()
                   cerrarAsistente()
                 }}
-                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 transition-colors"
+                className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
                 aria-label="Cerrar chat"
               >
                 <UI_ICONS.close size={20} />
@@ -687,7 +764,7 @@ export function AsistenteComunalModal() {
                       'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed',
                       esUsuario
                         ? 'bg-brand-600 text-white rounded-tr-none shadow-xs'
-                        : 'bg-white dark:bg-cream-200 border border-ink-200 dark:border-ink-700 text-ink-900 rounded-tl-none shadow-xs'
+                        : 'bg-white dark:bg-cream-200 border border-ink-200 dark:border-ink-700 text-ink-900 dark:text-white rounded-tl-none shadow-xs'
                     )}
                   >
                     <FormatoTextoMensaje texto={m.texto} />
@@ -771,7 +848,7 @@ export function AsistenteComunalModal() {
                                   navigate(`/negocio/${negocio.id}`)
                                   cerrarAsistente()
                                 }}
-                                className="flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-900 text-center transition-colors border border-ink-200"
+                                className="flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 dark:bg-cream-200 dark:hover:bg-cream-300 text-ink-900 dark:text-white text-center transition-colors border border-ink-200 dark:border-ink-700"
                               >
                                 Ver perfil
                               </button>
@@ -907,7 +984,7 @@ export function AsistenteComunalModal() {
                             cerrarAsistente()
                             navigate('/trato-seguro')
                           }}
-                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-800 text-center transition-colors border border-ink-200"
+                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 dark:bg-cream-200 dark:hover:bg-cream-300 text-ink-800 dark:text-white text-center transition-colors border border-ink-200 dark:border-ink-700"
                         >
                           Conocer el pacto
                         </button>
@@ -955,7 +1032,7 @@ export function AsistenteComunalModal() {
                               estructurada.accionPendiente?.botonCancelar || '❌ No por ahora'
                             )
                           }
-                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 text-ink-800 text-center transition-colors border border-ink-200"
+                          className="py-2 px-3 text-xs font-semibold rounded-xl bg-cream-200 hover:bg-cream-300 dark:bg-cream-200 dark:hover:bg-cream-300 text-ink-800 dark:text-white text-center transition-colors border border-ink-200 dark:border-ink-700"
                         >
                           <span>
                             {estructurada.accionPendiente?.botonCancelar || '❌ No por ahora'}
@@ -1082,7 +1159,7 @@ export function AsistenteComunalModal() {
                           key={idx}
                           type="button"
                           onClick={() => manejarClickChip(chip)}
-                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 dark:border-ink-600 bg-cream-50 dark:bg-cream-200 text-ink-800 dark:text-ink-800 hover:border-brand-500 hover:text-brand-700 dark:hover:border-emerald-400 dark:hover:text-emerald-300 transition-colors shadow-2xs"
+                          className="px-2.5 py-1 text-[11px] font-medium rounded-full border border-ink-300 dark:border-ink-600 bg-cream-50 dark:bg-cream-200 text-ink-800 dark:text-white hover:border-brand-500 hover:text-brand-700 dark:hover:border-emerald-400 dark:hover:text-emerald-300 transition-colors shadow-2xs"
                         >
                           {chip}
                         </button>
@@ -1136,7 +1213,7 @@ export function AsistenteComunalModal() {
           )}
 
           {/* Entrada de texto y botón de voz */}
-          <footer className="p-3 border-t border-ink-200 bg-cream-100">
+          <footer className="p-3 border-t border-ink-200 dark:border-ink-700 bg-cream-100 dark:bg-cream-100">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
@@ -1153,7 +1230,7 @@ export function AsistenteComunalModal() {
                   placeholder={
                     escuchandoVoz ? 'Escuchando tu voz...' : 'Escribe o presiona el micrófono...'
                   }
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-cream-50 text-ink-900 border border-ink-200 focus:border-brand-500 focus:outline-none transition-all placeholder:text-ink-500 shadow-2xs"
+                  className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-cream-50 dark:bg-cream-200 text-ink-900 dark:text-white border border-ink-200 dark:border-ink-700 focus:border-brand-500 focus:outline-none transition-all placeholder:text-ink-500 dark:placeholder:text-ink-400 shadow-2xs"
                 />
 
                 {/* Botón de micrófono */}
@@ -1165,7 +1242,7 @@ export function AsistenteComunalModal() {
                     'absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all',
                     escuchandoVoz
                       ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
-                      : 'text-ink-600 hover:text-brand-600 hover:bg-cream-200'
+                      : 'text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-emerald-400 hover:bg-cream-200 dark:hover:bg-cream-200'
                   )}
                   aria-label={escuchandoVoz ? 'Detener grabación de voz' : 'Iniciar grabación de voz'}
                 >
