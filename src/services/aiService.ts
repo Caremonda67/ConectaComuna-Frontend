@@ -1,35 +1,8 @@
 import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
-import { geocodificar, type UbicacionGeocodificada } from '@/services/direccionService'
+import { resolverLugar } from '@/lib/lugares'
+import type { UbicacionGeocodificada } from '@/services/direccionService'
 import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
-
-export const BARRIOS_COORDENADAS: Record<string, { barrio: string; lat: number; lng: number }> = {
-  'antonio nariño': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
-  'antonio narino': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
-  'el rodeo': { barrio: 'El Rodeo', lat: 3.4401, lng: -76.5209 },
-  'nueva floresta': { barrio: 'Nueva Floresta', lat: 3.4342, lng: -76.5281 },
-  'vallado': { barrio: 'Vallado', lat: 3.4140, lng: -76.5050 },
-  'san judas': { barrio: 'San Judas', lat: 3.4215, lng: -76.5120 },
-  'ciudad córdoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
-  'ciudad cordoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
-  'mariano ramos': { barrio: 'Mariano Ramos', lat: 3.4130, lng: -76.5160 },
-  'república de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
-  'republica de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
-}
-
-export function detectarBarrioEnTexto(texto?: string): { barrio: string; lat: number; lng: number } | null {
-  if (!texto) return null
-  const t = texto.toLowerCase()
-  for (const [clave, datos] of Object.entries(BARRIOS_COORDENADAS)) {
-    // Con `includes` suelto, "vallado" aparecía dentro de "amurallado" y
-    // mudaba al usuario de barrio sin que lo pidiera.
-    const limite = new RegExp(`(^|[^\\p{L}])${clave.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'u')
-    if (limite.test(t)) {
-      return datos
-    }
-  }
-  return null
-}
 
 /**
  * ¿El usuario está diciendo dónde está, o solo mencionó un barrio de paso?
@@ -41,8 +14,11 @@ export function declaraSuUbicacion(texto?: string): boolean {
   return /\b(estoy|vivo|vivimos|resido|me encuentro|mi barrio|soy de|aquí en|aca en|acá en)\b/i.test(texto)
 }
 
+// Ojo con los artículos: quitar un "el" suelto convierte "El Rodeo" en
+// "Rodeo", que el geocodificador resuelve en otra ciudad. Solo se recortan
+// los encabezados que no forman parte del nombre.
 const DECLARACION =
-  /\b(?:estoy|vivo|vivimos|resido|me encuentro|soy)\s+(?:en|de)\s+(?:el\s+barrio\s+|la\s+localidad\s+|el\s+|la\s+)?(.+)$|\bmi\s+barrio\s+es\s+(.+)$/i
+  /\b(?:estoy|vivo|vivimos|resido|me encuentro|soy)\s+(?:en|de)\s+(?:el\s+barrio\s+|la\s+localidad\s+|el\s+municipio\s+(?:de\s+)?)?(.+)$|\bmi\s+barrio\s+es\s+(.+)$/i
 
 /**
  * Saca el lugar de una frase como "estoy en Chapinero, Bogotá" y lo busca en
@@ -56,14 +32,8 @@ export async function resolverUbicacionDeclarada(
   const lugar = (coincidencia?.[1] ?? coincidencia?.[2] ?? '')
     .replace(/[.?!¿¡]+$/, '')
     .trim()
-  if (lugar.length < 3) return null
-
-  try {
-    const hits = await geocodificar(lugar)
-    return hits[0] ?? null
-  } catch {
-    return null
-  }
+  if (!lugar) return null
+  return resolverLugar(lugar)
 }
 
 /**
@@ -128,49 +98,13 @@ function generarRespuestaLocal(
   contexto?: ContextoUsuarioCopiloto
 ): RespuestaAi {
   const texto = mensaje.toLowerCase().trim()
-  const barrioDetectado = detectarBarrioEnTexto(texto)
   const tieneUbicacionExplicita = !!(
-    barrioDetectado ||
-    (contexto?.ubicacion?.esDefinida && contexto?.ubicacion?.barrio && contexto.ubicacion.barrio !== 'Comuna' && contexto.ubicacion.barrio !== 'Cali') ||
-    (barrioParam && barrioParam !== 'Comuna' && barrioParam !== 'Cali')
+    (contexto?.ubicacion?.esDefinida && contexto?.ubicacion?.barrio && contexto.ubicacion.barrio !== 'Comuna') ||
+    (barrioParam && barrioParam !== 'Comuna')
   )
 
-  const barrio = barrioDetectado?.barrio || (tieneUbicacionExplicita ? (barrioParam || contexto?.ubicacion?.barrio || null) : null)
+  const barrio = tieneUbicacionExplicita ? (barrioParam || contexto?.ubicacion?.barrio || null) : null
   const descUbi = describirUbicacion(barrio, tieneUbicacionExplicita)
-
-  // 0a. Detección y confirmación explícita al indicar barrio por texto
-  if (barrioDetectado && (texto.includes('estoy') || texto.includes('vivo') || texto.includes('barrio') || texto.startsWith('en ') || texto === barrioDetectado.barrio.toLowerCase())) {
-    return {
-      mensaje: `¡Listo vecino! He fijado tu ubicación en el barrio ${barrioDetectado.barrio}. Estos son los oficios más cercanos a tu zona:`,
-      tipo: 'negocios',
-      ubicacionDetectada: {
-        barrio: barrioDetectado.barrio,
-        lat: barrioDetectado.lat,
-        lng: barrioDetectado.lng,
-      },
-      negociosSugeridos: [
-        {
-          id: 'biz-1',
-          nombre: 'Costuras Doña Marta',
-          categoria: 'costura',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3009876543',
-          distanciaMetros: 420,
-          verificado: true,
-        },
-        {
-          id: 'biz-2',
-          nombre: 'Carpintería y Muebles Don Jaime',
-          categoria: 'carpinteria',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3157778899',
-          distanciaMetros: 480,
-          verificado: true,
-        },
-      ],
-      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
-    }
-  }
 
   // 0b. Pregunta por cercanía ("cuál es el comercio más cercano") cuando la ubicación aún no está definida
   const esPreguntaCercania =
@@ -940,21 +874,15 @@ export async function enviarMensajeAsistente(
   historial: MensajeChat[] = [],
   contexto?: ContextoUsuarioCopiloto
 ): Promise<RespuestaAi> {
+  // La ubicación ya viene resuelta: quien declara dónde está pasa antes por
+  // `resolverUbicacionDeclarada`, que la guarda. Aquí solo se lee, nunca se
+  // adivina a partir del texto.
   const ubicacionElegida = leerUbicacion()
-  // Un barrio nombrado al pasar no debe pisar la ubicación que el usuario ya
-  // eligió: solo manda si lo declara ("estoy en…") o si no hay nada elegido.
-  const barrioMencionado = detectarBarrioEnTexto(mensaje)
-  const tieneUbicacionPropia = !!(contexto?.ubicacion?.esDefinida || ubicacionElegida?.etiqueta)
-  const barrioDetectado =
-    barrioMencionado && (declaraSuUbicacion(mensaje) || !tieneUbicacionPropia)
-      ? barrioMencionado
-      : null
+  const esDefinida = !!(contexto?.ubicacion?.esDefinida || ubicacionElegida?.etiqueta)
 
-  const esDefinida = !!(barrioDetectado || tieneUbicacionPropia)
-
-  const barrio = barrioDetectado?.barrio || contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
-  const lat = barrioDetectado?.lat ?? contexto?.ubicacion?.lat ?? ubicacionElegida?.center.lat ?? null
-  const lng = barrioDetectado?.lng ?? contexto?.ubicacion?.lng ?? ubicacionElegida?.center.lng ?? null
+  const barrio = contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
+  const lat = contexto?.ubicacion?.lat ?? ubicacionElegida?.center.lat ?? null
+  const lng = contexto?.ubicacion?.lng ?? ubicacionElegida?.center.lng ?? null
 
   const historialFormateado = historial.slice(-6).map((m) => ({
     rol: m.emisor === 'usuario' ? 'user' : 'model',

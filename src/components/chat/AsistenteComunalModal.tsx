@@ -10,7 +10,6 @@ import {
   enviarMensajeAsistente,
   describirUbicacion,
   declaraSuUbicacion,
-  detectarBarrioEnTexto,
   resolverUbicacionDeclarada,
 } from '@/services/aiService'
 import { reverseGeocodificar } from '@/services/direccionService'
@@ -296,7 +295,7 @@ export function AsistenteComunalModal() {
       // "Estoy en Chapinero" tiene que funcionar igual que "Estoy en El Rodeo".
       // El diccionario de barrios solo cubre Cali, así que lo que no reconozca
       // se resuelve contra el geocodificador antes de seguir.
-      if (declaraSuUbicacion(texto) && !detectarBarrioEnTexto(texto)) {
+      if (declaraSuUbicacion(texto)) {
         const lugar = await resolverUbicacionDeclarada(texto)
         if (lugar) {
           guardarUbicacion({ etiqueta: lugar.etiqueta, center: lugar.center, origen: 'busqueda' })
