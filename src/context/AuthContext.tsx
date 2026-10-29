@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { authService, type SignUpInput, type SocialProvider } from '@/services/authService'
+import { authService, type AuthSession, type SignUpInput, type SocialProvider } from '@/services/authService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
 import type { ActiveRole, Business, Profile } from '@/types'
@@ -22,7 +22,7 @@ interface AuthContextValue {
   isDual: boolean
   setActiveRole: (role: ActiveRole) => void
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (input: SignUpInput) => Promise<void>
+  signUp: (input: SignUpInput) => Promise<AuthSession>
   signInWithOAuth: (provider: SocialProvider, returnTo?: string) => Promise<void>
   signOut: () => Promise<void>
   refresh: () => Promise<void>
@@ -109,9 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadUser()
       },
       async signUp(input) {
-        await authService.signUp(input)
+        const session = await authService.signUp(input)
         setActiveRole(input.accountType)
         await loadUser()
+        return session
       },
       async signInWithOAuth(provider, returnTo) {
         await authService.signInWithOAuth(provider, returnTo)
