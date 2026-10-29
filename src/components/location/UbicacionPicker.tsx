@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, LocateFixed, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { LazyMap } from '@/components/map/LazyMap'
@@ -36,6 +36,15 @@ export function UbicacionPicker({ value, onChange }: Props) {
   const [identificandoPunto, setIdentificandoPunto] = useState(false)
   const [gpsActivo, setGpsActivo] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const resolviendoGpsRef = useRef(false)
+  const montadoRef = useRef(true)
+
+  useEffect(() => {
+    montadoRef.current = true
+    return () => {
+      montadoRef.current = false
+    }
+  }, [])
 
   const cerrar = () => {
     setAbierto(false)
@@ -55,17 +64,24 @@ export function UbicacionPicker({ value, onChange }: Props) {
   useEffect(() => {
     const query = texto.trim()
     if (query.length < 2) return
+    // Nominatim admite una consulta por segundo. Con 250 ms una persona
+    // escribiendo normal se comía el límite y recibía 429, que la pantalla
+    // mostraba como "sin coincidencias".
+    let vigente = true
     const timeout = setTimeout(async () => {
       try {
         const hits = await geocodificar(query)
-        setSugerencias(hits)
+        if (vigente) setSugerencias(hits)
       } catch {
-        setError('No pudimos geolocalizar esa dirección. Prueba con el nombre de un barrio.')
+        if (vigente) setError('El buscador de direcciones no responde. Marca el punto en el mapa.')
       } finally {
-        setBuscando(false)
+        if (vigente) setBuscando(false)
       }
-    }, 250)
-    return () => clearTimeout(timeout)
+    }, 650)
+    return () => {
+      vigente = false
+      clearTimeout(timeout)
+    }
   }, [texto])
 
   const usarGps = () => {
@@ -78,25 +94,25 @@ export function UbicacionPicker({ value, onChange }: Props) {
   useEffect(() => {
     if (!gpsActivo) return
     if (status === 'granted' && lectura) {
-      let cancelado = false
-      const t = setTimeout(() => {
-        setGpsActivo(false)
-        void (async () => {
-          let etiqueta = 'Mi ubicación'
-          try {
-            const geo = await reverseGeocodificar(lectura)
-            if (geo?.etiqueta) etiqueta = geo.etiqueta
-          } catch {}
-          if (!cancelado) {
-            onChange({ etiqueta, center: lectura, origen: 'gps' })
-            cerrar()
-          }
-        })()
-      }, 0)
-      return () => {
-        cancelado = true
-        clearTimeout(t)
-      }
+      // El resultado se aplica cuando vuelve Nominatim. No se puede apagar
+      // `gpsActivo` antes de esperar: eso reejecuta este efecto, dispara su
+      // propia limpieza y la respuesta llega sin nadie que la reciba.
+      if (resolviendoGpsRef.current) return undefined
+      resolviendoGpsRef.current = true
+
+      void (async () => {
+        let etiqueta = 'Mi ubicación'
+        try {
+          const geo = await reverseGeocodificar(lectura)
+          if (geo?.etiqueta) etiqueta = geo.etiqueta
+        } catch {}
+        resolviendoGpsRef.current = false
+        if (montadoRef.current) {
+          onChange({ etiqueta, center: lectura, origen: 'gps' })
+          cerrar()
+        }
+      })()
+      return undefined
     }
     if (status === 'insecure_context') {
       const t = setTimeout(() => {

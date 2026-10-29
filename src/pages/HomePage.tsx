@@ -14,7 +14,8 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
-import { DEFAULT_RADIUS_KM } from '@/lib/env'
+import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
+import { leerUbicacion } from '@/lib/ubicacion'
 
 export default function HomePage() {
   usePageMeta({
@@ -24,11 +25,17 @@ export default function HomePage() {
   })
 
   const { profile } = useAuth()
-  const { position, status, request } = useGeolocation()
+  const { lectura, status, request } = useGeolocation()
+
+  // La portada ignoraba la ubicación que la persona ya había elegido en
+  // Explorar o en el asistente, así que volvía a mostrar Cali al regresar.
+  const ubicacionElegida = leerUbicacion()
+  const lat = ubicacionElegida?.center.lat ?? lectura?.lat ?? COMUNA_CENTER.lat
+  const lng = ubicacionElegida?.center.lng ?? lectura?.lng ?? COMUNA_CENTER.lng
 
   const filters = useMemo(
-    () => ({ center: position, radiusKm: DEFAULT_RADIUS_KM, sort: 'rating' as const }),
-    [position],
+    () => ({ center: { lat, lng }, radiusKm: DEFAULT_RADIUS_KM, sort: 'rating' as const }),
+    [lat, lng],
   )
 
   const { data, loading, error, reload } = useAsync(
