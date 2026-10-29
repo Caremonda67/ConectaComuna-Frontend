@@ -205,7 +205,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
           {/* Accesos directos a barrios de la comuna en 1 toque */}
           <div className="rounded-xl border border-ink-100 dark:border-ink-200 bg-cream-50 dark:bg-cream-100 p-2.5 space-y-1.5">
             <span className="text-[11px] font-semibold text-ink-600 uppercase tracking-wider block">
-              Barrios de la comuna (1 toque)
+              Barrios del piloto (1 toque)
             </span>
             <div className="flex flex-wrap gap-1.5">
               {BARRIOS_COMUNA.map((b) => (

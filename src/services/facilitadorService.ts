@@ -140,23 +140,26 @@ export const facilitadorService = {
   },
 
   /**
-   * Genera un codigo de 6 digitos para que el emprendedor lo comparta con su facilitador.
+   * Genera un código de un solo uso para que el dueño se lo pase a su
+   * facilitador. La base arma los 8 caracteres, les pone vencimiento de 24
+   * horas y borra el anterior.
    */
   async generarCodigo(negocioId: string): Promise<string> {
-    const codigo = String(Math.floor(100000 + Math.random() * 900000))
     if (isDemoMode) {
+      const codigo = Array.from({ length: 8 }, () =>
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)],
+      ).join('')
       mutateDb((d) => {
         const b = d.businesses.find((x: Business) => x.id === negocioId)
         if (b) b.codigo_apadrinamiento = codigo
       })
       return delay(codigo, 200)
     }
-    const { error } = await requireSupabase()
-      .from('businesses')
-      .update({ codigo_apadrinamiento: codigo })
-      .eq('id', negocioId)
-    if (error) throw error
-    return codigo
+    const { data, error } = await requireSupabase().rpc('generar_codigo_apadrinamiento', {
+      p_negocio: negocioId,
+    })
+    if (error) throw new Error(error.message)
+    return data as string
   },
 
   /**

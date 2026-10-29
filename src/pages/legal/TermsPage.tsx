@@ -218,7 +218,7 @@ export default function TermsPage() {
           </h2>
           <p>
             ConectaComuna cuenta con herramientas de reporte ciudadano en cada perfil de negocio. El
-            equipo administrador se reserva el derecho de revisar, suspender de forma temporal o
+            equipo de Conecta Comuna se reserva el derecho de revisar, suspender de forma temporal o
             eliminar definitivamente cualquier cuenta, oficio o comentario que incumpla estos
             términos, que acumule quejas fundamentadas de la comunidad o que ponga en riesgo la
             seguridad del barrio.

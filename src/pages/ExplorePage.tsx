@@ -20,7 +20,7 @@ import type { BusinessFilters, CategorySlug } from '@/types'
  */
 export default function ExplorePage() {
   usePageMeta({
-    title: 'Explorar oficios en la comuna',
+    title: 'Explorar oficios en tu comuna',
     description: 'Directorio barrial de oficios y servicios en Cali. Filtra por categoría, ubicación y disponibilidad.',
   })
 

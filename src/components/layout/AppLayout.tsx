@@ -8,6 +8,7 @@ import { env, isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import { usePendingOrdersCount } from '@/hooks/usePendingOrdersCount'
+import { businessService } from '@/services/businessService'
 import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
@@ -22,6 +23,24 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const prefersReduced = useReducedMotion()
+
+  // Solo la lista corta del equipo ve el acceso a la mesa de reportes. La
+  // consulta va después del login, no frena el primer render.
+  const [equipo, setEquipo] = useState<{ userId: string; pertenece: boolean } | null>(null)
+  useEffect(() => {
+    if (!profile?.id) return
+    let vigente = true
+    businessService
+      .esEquipoConecta()
+      .then((si) => {
+        if (vigente) setEquipo({ userId: profile.id, pertenece: si })
+      })
+      .catch(() => {})
+    return () => {
+      vigente = false
+    }
+  }, [profile?.id])
+  const esEquipo = equipo !== null && equipo.userId === profile?.id && equipo.pertenece
 
   // Despierta el backend en la primera visita. En el plan gratuito de Render el
   // arranque tarda cerca de un minuto y quien abre el asistente lo pagaría.
@@ -248,6 +267,15 @@ export function AppLayout() {
 
             {profile ? (
               <>
+                {esEquipo && (
+                  <NavLink
+                    to="/panel/equipo"
+                    className="hidden min-h-9 items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-3 text-sm font-medium text-ink-900 sm:inline-flex transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-xs active:translate-y-0 active:scale-95"
+                  >
+                    <UI_ICONS.flag size={15} className="text-amber-600" />
+                    <span>Reportes</span>
+                  </NavLink>
+                )}
                 <NavLink
                   to="/panel"
                   className="hidden min-h-9 items-center gap-1.5 rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-3 text-sm font-medium text-ink-900 sm:inline-flex transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-xs active:translate-y-0 active:scale-95"

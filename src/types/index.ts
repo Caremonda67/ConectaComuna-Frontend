@@ -148,14 +148,20 @@ export interface Review {
   client?: Pick<Profile, 'id' | 'full_name' | 'avatar_url'>
 }
 
+/**
+ * Lo que devuelve el verificador público. `participante` trae los datos
+ * completos; `publico` solo confirma que el pacto existe, con qué negocio y
+ * por cuánto, sin nombre ni dirección del cliente.
+ */
 export interface PactoVerificado {
+  nivel: 'participante' | 'publico'
   codigo: string
-  order_id: string
+  order_id?: string
   status: OrderStatus
   created_at: string
   scheduled_for: string | null
   title: string
-  description: string
+  description?: string | null
   service_location_type?: 'workshop' | 'home_delivery'
   delivery_address?: string | null
   business: {
@@ -166,7 +172,7 @@ export interface PactoVerificado {
     barrio?: string | null
     is_verified?: boolean
   }
-  client: {
+  client?: {
     name: string
     phone_masked?: string | null
   }
@@ -175,6 +181,8 @@ export interface PactoVerificado {
   saldo_contra_entrega: number
   porcentaje_anticipo: number
   clausula_mediacion: string
+  /** Los códigos de muestra llevan este aviso para no pasar por acuerdos reales. */
+  ejemplo?: boolean
 }
 
 export interface Badge {
@@ -241,6 +249,16 @@ export type MotivoReporte =
 
 export type EstadoReporte = 'pendiente' | 'revisado' | 'descartado'
 
+/** Lo que responde el negocio o su facilitador dentro de un reporte. */
+export interface ReporteRespuesta {
+  id: string
+  reporte_id: string
+  autor_id: string
+  mensaje: string
+  creado_en: string
+  autor?: Pick<Profile, 'id' | 'full_name'> | null
+}
+
 export interface ReporteComunitario {
   id: string
   negocio_id: string
@@ -254,4 +272,5 @@ export interface ReporteComunitario {
   actualizado_en?: string
   negocio?: Pick<Business, 'id' | 'name' | 'category' | 'phone' | 'verification_status'> | null
   reportado_por?: Pick<Profile, 'id' | 'full_name' | 'phone'> | null
+  respuestas?: ReporteRespuesta[]
 }

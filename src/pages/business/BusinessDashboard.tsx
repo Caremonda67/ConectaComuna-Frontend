@@ -103,7 +103,7 @@ export default function BusinessDashboard() {
               </span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                  Total generado en la comuna
+                  Total generado en tu comuna
                 </p>
                 <p className="text-lg font-black text-emerald-900 dark:text-emerald-100">
                   {formatCurrency(totalGenerado)}
@@ -122,7 +122,9 @@ export default function BusinessDashboard() {
         <div>
           <h2 className="font-bold text-ink-900 mb-1">Código de apadrinamiento</h2>
           <p className="text-xs sm:text-sm text-ink-500 max-w-xl">
-            Comparte este código con tu facilitador comunitario de confianza (un familiar o vecino). Le permitirá vincularse a tu negocio y ayudarte a subir fotos, actualizar precios y gestionar tu catálogo.
+            Pásale este código a tu facilitador comunitario de confianza (un familiar o vecino). Son
+            8 caracteres, sirve una sola vez y vence en 24 horas. Con él puede vincularte el negocio
+            para ayudarte con fotos, precios y catálogo.
           </p>
         </div>
 

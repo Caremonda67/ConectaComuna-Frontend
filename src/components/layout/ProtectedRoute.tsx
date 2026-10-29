@@ -12,7 +12,7 @@ export function ProtectedRoute({
 }: {
   children: ReactNode
   requireBusiness?: boolean
-  /** Solo para el panel del facilitador: gestiona negocios ajenos y modera reportes. */
+  /** Solo para el panel del facilitador: gestiona negocios ajenos y responde reportes. */
   requireFacilitador?: boolean
   allowIncompleteProfile?: boolean
 }) {

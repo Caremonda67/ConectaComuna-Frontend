@@ -47,6 +47,11 @@ export interface AcuerdoTratoSeguroAi {
   anticipoMaximo: number
   saldoContraEntrega: number
   modalidad?: 'workshop' | 'home_delivery'
+  /** Se llenan cuando la tarjeta sale de consultar un pacto ya registrado. */
+  orderId?: string
+  estado?: string
+  esParticipante?: boolean
+  esEjemplo?: boolean
 }
 
 export interface UbicacionDetectadaAi {

@@ -30,7 +30,7 @@ const columns = [
     links: [
       { to: '/', label: 'Inicio', isExternal: false },
       { to: '/explorar', label: 'Explorar oficios', isExternal: false },
-      { to: '/mapa', label: 'Mapa de la comuna', isExternal: false },
+      { to: '/mapa', label: 'Mapa de tu comuna', isExternal: false },
       { to: '/como-funciona', label: 'Cómo funciona', isExternal: false },
     ],
   },

@@ -11,7 +11,9 @@ export const RADIO_PILOTO_KM = 35
 
 /** Punto al que mandamos a quien quiere ver el piloto sin estar en Cali. */
 export const PUNTO_PILOTO = {
-  etiqueta: 'Centro de la Comuna, Cali',
+  // Nombrarlo "la Comuna" sugería que solo hay una. Es el punto donde arrancó
+  // el piloto, no el centro del mundo.
+  etiqueta: 'Comuna 20, Cali',
   center: COMUNA_CENTER,
 } as const
 

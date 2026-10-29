@@ -70,12 +70,7 @@ export default function RegisterPage() {
         neighborhood: values.neighborhood || undefined,
         accountType,
       })
-      const destino =
-        accountType === 'business'
-          ? '/panel/negocio'
-          : accountType === 'facilitador'
-            ? '/panel/facilitador'
-            : '/panel'
+      const destino = accountType === 'business' ? '/panel/negocio' : '/panel'
       navigate(destino, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
@@ -90,7 +85,7 @@ export default function RegisterPage() {
         <legend className="mb-2 text-sm font-medium text-ink-700">
           ¿Cómo vas a usar ConectaComuna?
         </legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <TypeCard
             active={accountType === 'client'}
             onClick={() => setAccountType('client')}
@@ -105,14 +100,10 @@ export default function RegisterPage() {
             title="Negocio"
             description="Ofrezco mi oficio"
           />
-          <TypeCard
-            active={accountType === 'facilitador'}
-            onClick={() => setAccountType('facilitador')}
-            icon={UI_ICONS.person}
-            title="Facilitador"
-            description="Apoyo a negocios"
-          />
         </div>
+        <p className="mt-2 text-xs text-ink-500">
+          Las cuentas de facilitador comunitario las asigna el equipo de Conecta Comuna.
+        </p>
       </fieldset>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">

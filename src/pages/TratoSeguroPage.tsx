@@ -345,7 +345,7 @@ export default function TratoSeguroPage() {
             </div>
             <p className="text-xs text-ink-600">
               Un facilitador comprobó presencialmente que el taller o negocio existe físicamente en
-              la comuna.
+              el barrio.
             </p>
           </div>
 

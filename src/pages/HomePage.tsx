@@ -198,7 +198,9 @@ export default function HomePage() {
               En tu comuna, la palabra vale y el trabajo se respeta
             </h2>
             <p className="text-sm sm:text-base text-ink-600 dark:text-ink-300 leading-relaxed">
-              Todos los oficios y servicios solicitados a través de ConectaComuna cuentan con el <strong>Trato Seguro</strong>: máximo 50% de anticipo, precio pactado con comprobante digital QR y acompañamiento de la Junta de Acción Comunal (JAC).
+              Cuando un trabajo se pacta por ConectaComuna puedes dejar un <strong>comprobante de Trato Seguro</strong>:
+              el anticipo no pasa del 50%, el precio queda escrito y cualquiera puede verificar el código.
+              Si algo sale mal, el equipo de Conecta Comuna revisa el caso con las dos partes.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link to="/trato-seguro">
@@ -217,10 +219,10 @@ export default function HomePage() {
           <div className="shrink-0 flex flex-col items-center justify-center p-4 rounded-2xl bg-white/90 dark:bg-cream-100/80 border border-brand-200/80 dark:border-brand-900/50 shadow-warm-sm text-center">
             <SelloOficialComunal size="lg" />
             <p className="mt-2 text-xs font-bold text-ink-800 tracking-wide uppercase">
-              Garantía Comunal Activa
+              Verificación en territorio
             </p>
             <p className="text-[11px] text-ink-500">
-              Junta de Acción Comunal Cali
+              Red de facilitadores del barrio
             </p>
           </div>
         </div>

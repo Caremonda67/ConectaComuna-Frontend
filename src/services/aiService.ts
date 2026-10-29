@@ -2,11 +2,13 @@ import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
 import { resolverLugar } from '@/lib/lugares'
 import { businessService } from '@/services/businessService'
+import { orderService } from '@/services/orderService'
 import { categoryLabel } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
+import { ORDER_STATUS_LABEL, formatCurrency } from '@/lib/utils'
 import type { UbicacionGeocodificada } from '@/services/direccionService'
 import type { BusinessWithDistance } from '@/types'
-import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
+import type { AcuerdoTratoSeguroAi, ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
 
 /**
  * ¿El usuario está diciendo dónde está, o solo mencionó un barrio de paso?
@@ -224,39 +226,7 @@ function generarRespuestaLocal(
     }
   }
 
-  // 2b. Detección directa de código oficial de Trato Seguro (ej: CC-93E416, CC-ORD-1)
-  const matchCodigo = texto.match(/\b(CC-[A-Z0-9]{4,10})\b/i)
-  if (matchCodigo) {
-    const cod = matchCodigo[1].toUpperCase()
-    const pedidoRelacionado = (contexto?.pedidosActivos || []).find(
-      (p) => p.codigo.toUpperCase() === cod || (p.id && p.id.toUpperCase().startsWith(cod.replace('CC-', '')))
-    )
-
-    let detalle = `¡He ubicado el acuerdo ${cod} en el registro comunal!`
-    if (pedidoRelacionado) {
-      const est =
-        pedidoRelacionado.estado === 'pending'
-          ? 'Pendiente de inicio'
-          : pedidoRelacionado.estado === 'accepted'
-          ? 'Pacto aceptado por el taller'
-          : pedidoRelacionado.estado === 'in_progress'
-          ? 'Trabajo en ejecución'
-          : pedidoRelacionado.estado === 'completed'
-          ? 'Finalizado y entregado'
-          : pedidoRelacionado.estado
-      const contra = pedidoRelacionado.rol === 'comerciante' ? `Cliente: ${pedidoRelacionado.contraparte}` : `Taller: ${pedidoRelacionado.contraparte}`
-      detalle += `\n• Trabajo: ${pedidoRelacionado.titulo}\n• ${contra}\n• Estado: ${est}\n• Valor: $ ${Number(pedidoRelacionado.monto).toLocaleString('es-CO')} COP`
-    }
-
-    return {
-      mensaje: `${detalle}\n\nToca el botón para consultar el comprobante oficial con código QR y verificación en tiempo real:`,
-      tipo: 'navegacion',
-      rutaNavegacion: `/trato-seguro/verificar/${cod}`,
-      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos activos', 'Ver oficios cercanos'],
-    }
-  }
-
-  // 2c. Consulta de pedidos o acuerdos del usuario ("mis pedidos", "cómo va mi pedido", etc.)
+  // 2b. Consulta de pedidos o acuerdos del usuario ("mis pedidos", "cómo va mi pedido", etc.)
   const esConsultaMisPedidos =
     texto.includes('mis pedidos') ||
     texto.includes('mi pedido') ||
@@ -622,7 +592,7 @@ function generarRespuestaLocal(
     }
 
     return {
-      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. 🛡️ Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. 🧾 Todo queda registrado por escrito con código de verificación oficial y código QR escaneable.\n3. 🤝 Si surge algún desacuerdo, cuentas con el respaldo de mediación comunitaria de la Junta de Acción Comunal (JAC) antes de cualquier conflicto.`,
+      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. 🛡️ Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. 🧾 Todo queda registrado por escrito con código de verificación oficial y código QR escaneable.\n3. 🤝 Si algo sale mal, reportas el caso desde la ficha del negocio y el equipo de Conecta Comuna lo revisa con las dos partes.`,
       tipo: 'acuerdo_trato_seguro',
       acuerdo: {
         codigo: 'CC-ORD-1',
@@ -645,7 +615,7 @@ function generarRespuestaLocal(
     texto.includes('mediacion')
   ) {
     return {
-      mensaje: `Si surge algún inconveniente o retraso con un trabajo, ConectaComuna promueve la mediación comunitaria a través de los líderes de la Junta de Acción Comunal (JAC) y los facilitadores del barrio, buscando siempre un acuerdo amistoso y justo.`,
+      mensaje: `Si surge algún inconveniente o retraso con un trabajo, repórtalo desde la ficha del negocio. El equipo de Conecta Comuna revisa el caso con las dos partes y, si hace falta, pide a un facilitador del barrio que acompañe la conversación.`,
       tipo: 'conversacion',
       sugerencias: ['¿Cómo funciona el Trato Seguro?', '¿Qué es el facilitador?', 'Ver oficios cercanos'],
     }
@@ -660,7 +630,7 @@ function generarRespuestaLocal(
     texto.includes('adulto mayor')
   ) {
     return {
-      mensaje: `El Facilitador Comunitario es un familiar o vecino joven de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 6 letras para vincularlo de inmediato.`,
+      mensaje: `El Facilitador Comunitario es un familiar o vecino de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 8 caracteres para vincularlo.`,
       tipo: 'conversacion',
       sugerencias: ['Crear negocio para publicar', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
     }
@@ -923,11 +893,75 @@ function generarRespuestaLocal(
 /**
  * Envía un mensaje al Asistente Comunal con contexto completo del usuario y de la pantalla.
  */
+const CODIGO_PACTO = /\bcc[-_\s]?([a-z0-9][a-z0-9-]{2,30})\b/i
+
+/**
+ * Resuelve un código de Trato Seguro contra la base antes de decir nada.
+ * Devuelve null cuando el mensaje no trae un código, para que siga el motor
+ * normal. Sin esta consulta el asistente afirmaba haber encontrado acuerdos
+ * que nadie había buscado.
+ */
+export async function responderConsultaDeCodigo(texto: string): Promise<RespuestaAi | null> {
+  const match = texto.match(CODIGO_PACTO)
+  if (!match || !/\d/.test(match[1])) return null
+
+  const codigo = `CC-${match[1].toUpperCase()}`
+  const pacto = await orderService.getVerifiableByCode(codigo)
+
+  if (!pacto) {
+    return {
+      mensaje: `Busqué el código ${codigo} y no aparece ningún acuerdo registrado. Revisa que esté completo: son los ocho caracteres que van debajo del QR del comprobante.`,
+      tipo: 'conversacion',
+      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos', 'Ver oficios cercanos'],
+    }
+  }
+
+  const acuerdo: AcuerdoTratoSeguroAi = {
+    codigo: pacto.codigo,
+    servicio: pacto.title,
+    negocioNombre: pacto.business.name,
+    negocioId: pacto.business.id,
+    precioEstimado: pacto.precio_total,
+    anticipoMaximo: pacto.anticipo,
+    saldoContraEntrega: pacto.saldo_contra_entrega,
+    modalidad: pacto.service_location_type,
+    orderId: pacto.order_id,
+    estado: pacto.status,
+    esParticipante: pacto.nivel === 'participante',
+    esEjemplo: pacto.ejemplo,
+  }
+
+  const estado = (ORDER_STATUS_LABEL[pacto.status] ?? pacto.status).toLowerCase()
+  const monto = formatCurrency(pacto.precio_total)
+
+  if (pacto.nivel === 'participante') {
+    return {
+      mensaje: `Sí, el acuerdo ${pacto.codigo} está asociado a tu cuenta. Es con ${pacto.business.name}, por ${monto}, y hoy figura como ${estado}.`,
+      tipo: 'acuerdo_trato_seguro',
+      acuerdo,
+      sugerencias: ['Ver el comprobante completo', '¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos'],
+    }
+  }
+
+  return {
+    mensaje: `El acuerdo ${pacto.codigo} existe y está registrado con ${pacto.business.name}, por ${monto}. Como no participas en ese trato, no puedo mostrarte el nombre ni la dirección del vecino.`,
+    tipo: 'acuerdo_trato_seguro',
+    acuerdo,
+    sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos', 'Ver mis pedidos'],
+  }
+}
+
 export async function enviarMensajeAsistente(
   mensaje: string,
   historial: MensajeChat[] = [],
   contexto?: ContextoUsuarioCopiloto
 ): Promise<RespuestaAi> {
+  // Un código se consulta antes de hablar: si existe, si es del usuario y en
+  // qué estado está. Los motores no vuelven a tocar ese caso.
+  const respuestaCodigo = await responderConsultaDeCodigo(mensaje)
+  if (respuestaCodigo) return respuestaCodigo
+
+
   // La ubicación ya viene resuelta: quien declara dónde está pasa antes por
   // `resolverUbicacionDeclarada`, que la guarda. Aquí solo se lee, nunca se
   // adivina a partir del texto.

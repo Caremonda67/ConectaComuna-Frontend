@@ -190,7 +190,7 @@ export default function ClientDashboard() {
           <div className="mt-4 rounded-xl bg-brand-50 border border-brand-200 p-3">
             <p className="text-sm text-brand-800">
               ¿Tienes un oficio? Activa tu cuenta de negocio y empieza a recibir clientes de
-              la comuna.
+              tu barrio.
             </p>
             {errorActivacion && (
               <p className="mt-2 text-xs font-medium text-rose-600 dark:text-rose-400">{errorActivacion}</p>

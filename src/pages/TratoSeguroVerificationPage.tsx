@@ -24,7 +24,7 @@ export default function TratoSeguroVerificationPage() {
 
   usePageMeta({
     title: pactoActivo ? `Pacto Verificado #${pactoActivo.codigo} | ConectaComuna` : 'Verificador de Trato Seguro Comunal',
-    description: 'Comprueba la autenticidad de pactos de servicio vecinales, anticipos con tope del 50% y mediación JAC.',
+    description: 'Comprueba que un pacto de servicio vecinal existe, con qué negocio se hizo y cuánto se acordó de anticipo.',
   })
 
   useEffect(() => {
@@ -79,20 +79,19 @@ export default function TratoSeguroVerificationPage() {
   const urlQr = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${encodeURIComponent(urlParaQr)}`
 
   const mensajeWhatsApp = pactoActivo
-    ? `🤝 *Comprobante de Trato Seguro Verificado - ConectaComuna*
+    ? `🤝 *Comprobante de Trato Seguro - ConectaComuna*
 *Código:* #${pactoActivo.codigo}
 *Emprendedor:* ${pactoActivo.business.name} (${pactoActivo.business.phone || 'Comuna'})
-*Cliente:* ${pactoActivo.client.name}
-*Servicio:* ${pactoActivo.title}
+${pactoActivo.client ? `*Cliente:* ${pactoActivo.client.name}\n` : ''}*Servicio:* ${pactoActivo.title}
 *Modalidad:* ${pactoActivo.service_location_type === 'home_delivery' ? 'A domicilio' : 'En taller/local'}
 💰 *Valor total:* ${formatCurrency(pactoActivo.precio_total)}
-💵 *Anticipo abonado (máx. 50%):* ${formatCurrency(pactoActivo.anticipo)} (${pactoActivo.porcentaje_anticipo}%)
+💵 *Anticipo registrado (máx. 50%):* ${formatCurrency(pactoActivo.anticipo)} (${pactoActivo.porcentaje_anticipo}%)
 🧾 *Saldo contra entrega:* ${formatCurrency(pactoActivo.saldo_contra_entrega)}
 
-🛡️ *Verificación oficial comunal:*
+🔎 *Verificación pública:*
 ${urlActual}
 
-_Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta de Acción Comunal (JAC)._`
+_Pacto registrado en ConectaComuna. La entrega y el pago del saldo se acuerdan directamente entre las partes._`
     : ''
 
   const compartirWhatsApp = () => {
@@ -195,7 +194,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
             Verifica un acuerdo o comprobante vecinal
           </h2>
           <p className="text-sm text-ink-600 leading-relaxed max-w-xl">
-            Ingresa el código oficial o escanea el código QR para comprobar la autenticidad, el tope máximo del 50% de anticipo y el respaldo de la JAC.
+            Ingresa el código oficial o escanea el QR para comprobar que el acuerdo existe, con qué negocio se hizo y cuánto quedó de anticipo.
           </p>
         </div>
 
@@ -208,7 +207,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
               type="text"
               value={codigoBuscado}
               onChange={(e) => setCodigoBuscado(e.target.value)}
-              placeholder="Ej: CC-ORD-1 o CC-E9894D7D..."
+              placeholder="Ej: CC-93E416F2..."
               className="w-full min-h-12 pl-12 pr-4 rounded-xl border-2 border-brand-300 dark:border-brand-300 bg-white dark:bg-cream-100 text-ink-900 font-mono font-bold tracking-wider text-base uppercase placeholder:text-ink-400 placeholder:normal-case focus:border-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/20 transition-all"
               aria-label="Código de comprobante Trato Seguro"
             />
@@ -225,20 +224,13 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
         </form>
 
         <div className="pt-3 border-t border-ink-200 dark:border-ink-700 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-400">
-          <span className="font-medium text-ink-700 dark:text-ink-700">Códigos de prueba para jurados y vecinos:</span>
+          <span className="font-medium text-ink-700 dark:text-ink-700">Ejemplos para probar el verificador:</span>
           <button
             type="button"
-            onClick={() => { setCodigoBuscado('CC-93E416F2'); navigate('/trato-seguro/verificar/CC-93E416F2') }}
+            onClick={() => { setCodigoBuscado('CC-DEMO2026'); navigate('/trato-seguro/verificar/CC-DEMO2026') }}
             className="px-2.5 py-1.5 rounded-lg bg-cream-200 dark:bg-cream-300 hover:bg-brand-50 dark:hover:bg-brand-900/60 text-ink-900 dark:text-white font-mono font-bold border border-ink-300 dark:border-ink-500 transition-colors cursor-pointer text-xs"
           >
-            CC-93E416F2
-          </button>
-          <button
-            type="button"
-            onClick={() => { setCodigoBuscado('CC-E9894D7D'); navigate('/trato-seguro/verificar/CC-E9894D7D') }}
-            className="px-2.5 py-1.5 rounded-lg bg-cream-200 dark:bg-cream-300 hover:bg-brand-50 dark:hover:bg-brand-900/60 text-ink-900 dark:text-white font-mono font-bold border border-ink-300 dark:border-ink-500 transition-colors cursor-pointer text-xs"
-          >
-            CC-E9894D7D
+            CC-DEMO2026
           </button>
           <button
             type="button"
@@ -274,7 +266,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
               🛡️ Por qué es importante esta verificación:
             </p>
             <p className="leading-relaxed">
-              En ConectaComuna todo acuerdo vecinal queda registrado para protegerte contra cobros abusivos o pérdidas. Si alguien te pide más del 50% de anticipo por WhatsApp sin comprobante oficial en nuestra plataforma, abstente de pagar y contacta a tu facilitador o comité de la JAC.
+              Un acuerdo registrado deja constancia del negocio, del trabajo y del anticipo, pero no mueve dinero. Si alguien te pide más del 50% de anticipo por fuera de la plataforma, no pagues y cuéntaselo al equipo de Conecta Comuna desde la ficha del negocio.
             </p>
           </div>
         </div>
@@ -283,6 +275,12 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
       {/* Estado: Pacto Encontrado y Verificado */}
       {!cargando && pactoActivo && (
         <article className="card overflow-hidden shadow-xl border border-ink-200 bg-white dark:bg-cream-50 print:shadow-none print:border-none">
+          {pactoActivo.ejemplo && (
+            <div className="bg-amber-100 dark:bg-amber-950/70 border-b border-amber-300 dark:border-amber-800 px-6 py-3 text-xs text-amber-900 dark:text-amber-200">
+              <strong>Este es un pacto de ejemplo.</strong> Sirve para mostrar cómo se ve un comprobante; no corresponde a un trabajo real ni a una persona real.
+            </div>
+          )}
+
           {/* Cabecera oficial del comprobante */}
           <div className="bg-brand-700 dark:bg-brand-100 px-6 py-5 border-b border-brand-800 dark:border-brand-200 print:bg-white">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -290,7 +288,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 <SelloOficialComunal size="md" className="shrink-0 drop-shadow-md" />
                 <div>
                   <span className="block font-extrabold text-[11px] uppercase tracking-widest text-emerald-200 dark:text-brand-700">
-                    Sello Oficial de Autenticidad
+                    Registro de Trato Seguro
                   </span>
                   <h1 className="text-xl sm:text-2xl font-extrabold text-white dark:text-ink-900">
                     Pacto Vecinal de Trato Seguro
@@ -314,7 +312,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 {getEstadoBadge(pactoActivo.status).texto}
               </span>
               <span className="text-xs text-white/90 dark:text-ink-700 font-medium">
-                Tope máximo de anticipo protegido: <strong className="font-bold text-white dark:text-ink-900">50%</strong>
+                Tope de anticipo registrado: <strong className="font-bold text-white dark:text-ink-900">50%</strong>
               </span>
             </div>
           </div>
@@ -361,21 +359,37 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                   <span className="text-xs font-bold text-ink-500 block uppercase tracking-wider">
                     Vecino Solicitante (Cliente)
                   </span>
-                  <p className="font-bold text-base text-ink-900">
-                    {pactoActivo.client.name}
-                  </p>
-                  {pactoActivo.client.phone_masked && (
-                    <p className="text-xs text-ink-600">
-                      Teléfono verificado: <span className="font-mono font-medium text-ink-800">{pactoActivo.client.phone_masked}</span>
-                    </p>
-                  )}
-                  <p className="text-xs text-ink-600">
-                    Modalidad acordada: <span className="font-medium text-ink-800">{pactoActivo.service_location_type === 'home_delivery' ? '🛵 A domicilio' : '🏠 En taller / local'}</span>
-                  </p>
-                  {pactoActivo.delivery_address && (
-                    <p className="text-xs text-ink-600">
-                      Dirección acordada: <span className="font-medium text-ink-800">{pactoActivo.delivery_address}</span>
-                    </p>
+                  {pactoActivo.client ? (
+                    <>
+                      <p className="font-bold text-base text-ink-900">
+                        {pactoActivo.client.name}
+                      </p>
+                      {pactoActivo.client.phone_masked && (
+                        <p className="text-xs text-ink-600">
+                          Teléfono verificado: <span className="font-mono font-medium text-ink-800">{pactoActivo.client.phone_masked}</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-ink-600">
+                        Modalidad acordada: <span className="font-medium text-ink-800">{pactoActivo.service_location_type === 'home_delivery' ? '🛵 A domicilio' : '🏠 En taller / local'}</span>
+                      </p>
+                      {pactoActivo.delivery_address && (
+                        <p className="text-xs text-ink-600">
+                          Dirección acordada: <span className="font-medium text-ink-800">{pactoActivo.delivery_address}</span>
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-base text-ink-900">
+                        Datos reservados
+                      </p>
+                      <p className="text-xs text-ink-600 leading-relaxed">
+                        El nombre y la dirección del vecino solo los ven las dos partes del acuerdo. Este código confirma que el pacto existe, pero no quién lo pidió.
+                      </p>
+                      <p className="text-xs text-ink-600">
+                        Modalidad acordada: <span className="font-medium text-ink-800">{pactoActivo.service_location_type === 'home_delivery' ? '🛵 A domicilio' : '🏠 En taller / local'}</span>
+                      </p>
+                    </>
                   )}
                 </div>
               </div>
@@ -407,7 +421,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
             {/* Blindaje Económico: 50% máx */}
             <section aria-labelledby="economico-titulo" className="space-y-3">
               <h2 id="economico-titulo" className="text-xs font-bold uppercase tracking-wider text-ink-500">
-                Condiciones Económicas Protegidas (Trato Seguro)
+                Condiciones económicas del acuerdo
               </h2>
               <div className="rounded-xl border border-brand-200 dark:border-brand-200 bg-brand-50/70 dark:bg-brand-50 p-5 space-y-3">
                 <div className="flex justify-between items-center text-sm">
@@ -438,19 +452,19 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                 </div>
 
                 <div className="rounded-lg bg-emerald-100/80 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 p-3 text-xs text-emerald-950 dark:text-emerald-200 leading-relaxed">
-                  🛡️ <strong>Regla de oro del Trato Seguro:</strong> En ConectaComuna el saldo se paga únicamente cuando el trabajo ha sido terminado y entregado a entera satisfacción del cliente.
+                  🛡️ <strong>Cómo funciona el pago:</strong> el anticipo no puede quedar registrado por encima del 50% del precio. El saldo se paga contra entrega, directamente al emprendedor. ConectaComuna no cobra, retiene ni devuelve dinero.
                 </div>
               </div>
             </section>
 
-            {/* Cláusula de Mediación Vecinal JAC */}
-            <section aria-labelledby="jac-titulo" className="rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 p-5 space-y-2">
+            {/* Cláusula de mediación comunitaria */}
+            <section aria-labelledby="mediacion-titulo" className="rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/40 p-5 space-y-2">
               <div className="flex items-center gap-2 text-teal-900 dark:text-teal-200 font-bold text-sm">
                 <UI_ICONS.handshake size={18} />
-                <h3 id="jac-titulo">Cláusula de Respaldo Comunal y Mediación Vecinal</h3>
+                <h3 id="mediacion-titulo">Qué pasa si algo sale mal</h3>
               </div>
               <p className="text-xs text-teal-950 dark:text-teal-200 leading-relaxed">
-                Este trabajo se rige bajo los principios de buena fe y respeto vecinal. En caso de discrepancia sobre tiempos, materiales o acabado final, ambas partes acuerdan acudir a la mediación amistosa del Comité de Convivencia de la <strong>Junta de Acción Comunal (JAC)</strong> del barrio o a la red de <strong>Facilitadores Comunitarios</strong> antes de cualquier reclamación formal.
+                Cualquiera de las dos partes puede reportar el caso desde la ficha del negocio. El equipo de Conecta Comuna lo revisa con el historial del pedido y, si hace falta, busca a un facilitador del barrio para acompañar la conversación. La plataforma no retiene ni devuelve dinero: eso se acuerda directamente entre las partes.
               </p>
             </section>
 
@@ -480,7 +494,7 @@ _Respaldado por el Trato Seguro Comunal y la mediación comunitaria de la Junta 
                   Código QR de Verificación Pública
                 </h4>
                 <p className="text-xs sm:text-sm text-ink-600 dark:text-ink-700 leading-relaxed">
-                  Cualquier vecino, cliente o líder de la JAC puede escanear este código con su teléfono para corroborar en tiempo real que este acuerdo es auténtico y está protegido por ConectaComuna.
+                  Cualquier vecino puede escanear este código para comprobar que el acuerdo existe, con qué negocio se hizo y cuánto se registró de anticipo. Los datos del cliente quedan reservados.
                 </p>
                 <div className="relative pt-1 flex flex-wrap gap-2 justify-center sm:justify-start">
                   <div className="relative inline-flex w-full sm:w-auto">

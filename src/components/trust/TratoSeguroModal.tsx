@@ -75,7 +75,7 @@ export function TratoSeguroModal({
         {isVerified ? (
           <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-3 text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed">
             <span className="font-semibold block">Negocio verificado en territorio</span>
-            Un facilitador o líder comunitario visitó y validó la existencia física de {businessName} en la comuna.
+            Un facilitador de la red visitó {businessName} y confirmó que existe en la comuna.
           </div>
         ) : (
           <div className="rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/40 p-3 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">

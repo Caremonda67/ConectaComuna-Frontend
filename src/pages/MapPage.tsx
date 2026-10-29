@@ -46,7 +46,7 @@ export default function MapPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Mapa de la comuna</h1>
+      <h1 className="text-xl font-bold">Mapa de tu comuna</h1>
 
       <UbicacionPicker value={ubicacion} onChange={elegirUbicacion} />
 

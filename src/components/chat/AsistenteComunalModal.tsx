@@ -89,8 +89,8 @@ function FormatoTextoMensaje({ texto }: { texto: string }) {
 
 function crearSaludoInicial(barrio?: string | null, esDefinida = false): MensajeChat {
   const descUbi = describirUbicacion(barrio, esDefinida)
-  const saludoZona = esDefinida ? descUbi.enBarrio : 'toda nuestra comuna'
-  const cercaDeTexto = esDefinida ? descUbi.cercaDe : 'en tu zona de la comuna'
+  const saludoZona = esDefinida ? descUbi.enBarrio : 'tu comuna'
+  const cercaDeTexto = esDefinida ? descUbi.cercaDe : 'cerca de ti'
   return {
     id: 'bienvenida',
     emisor: 'asistente',

@@ -20,6 +20,7 @@ const TratoSeguroVerificationPage = lazy(() => import('@/pages/TratoSeguroVerifi
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
+const EquipoPage = lazy(() => import('@/pages/EquipoPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -159,6 +160,16 @@ const router = createBrowserRouter([
           <ProtectedRoute requireFacilitador>
             <Lazy>
               <FacilitatorDashboard />
+            </Lazy>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'panel/equipo',
+        element: (
+          <ProtectedRoute>
+            <Lazy>
+              <EquipoPage />
             </Lazy>
           </ProtectedRoute>
         ),
