@@ -10,6 +10,12 @@ import { ModeracionReportesPanel } from '@/components/trust/ModeracionReportesPa
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
 
+const ETIQUETA_ROL: Record<string, string> = {
+  client: 'Cliente',
+  business: 'Emprendedor',
+  facilitador: 'Facilitador',
+}
+
 export default function FacilitatorDashboard() {
   usePageMeta({
     title: 'Panel de Facilitador Comunitario · ConectaComuna',
@@ -230,7 +236,7 @@ export default function FacilitatorDashboard() {
             )}
             <div className="flex gap-2">
               <dt className="font-medium">Rol:</dt>
-              <dd>Facilitador</dd>
+              <dd>{ETIQUETA_ROL[profile?.account_type ?? 'client']}</dd>
             </div>
           </dl>
         )}

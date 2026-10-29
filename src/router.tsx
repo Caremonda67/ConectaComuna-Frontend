@@ -156,7 +156,7 @@ const router = createBrowserRouter([
       {
         path: 'panel/facilitador',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireFacilitador>
             <Lazy>
               <FacilitatorDashboard />
             </Lazy>

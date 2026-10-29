@@ -7,10 +7,13 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 export function ProtectedRoute({
   children,
   requireBusiness = false,
+  requireFacilitador = false,
   allowIncompleteProfile = false,
 }: {
   children: ReactNode
   requireBusiness?: boolean
+  /** Solo para el panel del facilitador: gestiona negocios ajenos y modera reportes. */
+  requireFacilitador?: boolean
   allowIncompleteProfile?: boolean
 }) {
   const { loading, userId, profile } = useAuth()
@@ -26,6 +29,10 @@ export function ProtectedRoute({
   }
 
   if (requireBusiness && profile?.account_type !== 'business' && profile?.account_type !== 'facilitador') {
+    return <Navigate to="/panel" replace />
+  }
+
+  if (requireFacilitador && profile?.account_type !== 'facilitador') {
     return <Navigate to="/panel" replace />
   }
   return <>{children}</>
