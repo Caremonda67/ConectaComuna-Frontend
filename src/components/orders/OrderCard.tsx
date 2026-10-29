@@ -7,6 +7,7 @@ import { TextAreaField, TextField } from '@/components/ui/Field'
 import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import { UI_ICONS } from '@/components/ui/icons'
+import { anticipoExcedeElTope, anticipoPermitido } from '@/lib/reglas'
 import {
   ORDER_STATUS_LABEL,
   ORDER_STATUS_STYLE,
@@ -84,11 +85,11 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
     if (!onStatusChange) return
     const priceVal = inputFinalPrice ? Number(inputFinalPrice) : order.price_estimate
     const advVal = inputAdvance ? Number(inputAdvance) : 0
-    if (priceVal && advVal > Math.floor(priceVal * 0.5)) {
+    if (priceVal && anticipoExcedeElTope(priceVal, advVal)) {
       // Un alert del navegador sale como diálogo del sistema y rompe el hilo
       // de la pantalla, sobre todo en celular. El aviso va donde está el error.
       setErrorAnticipo(
-        `El anticipo no puede pasar del 50%. Para ${formatCurrency(priceVal)} el tope es ${formatCurrency(Math.floor(priceVal * 0.5))}.`,
+        `El anticipo no puede pasar del 50%. Para ${formatCurrency(priceVal)} el tope es ${formatCurrency(anticipoPermitido(priceVal))}.`,
       )
       return
     }
