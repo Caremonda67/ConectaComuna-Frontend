@@ -52,13 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBusiness(null)
       return
     }
-    setUserId(session.userId)
-    setEmail(session.email)
+    // Todo junto al final: si se publica la sesión antes de tener el perfil,
+    // queda un render con usuario y sin perfil, y el guardia de rutas lo lee
+    // como perfil incompleto y manda a /onboarding a quien ya lo completó.
     const p = await profileService.getById(session.userId)
-    setProfile(p)
     // Un perfil de negocio puede aún no haber creado su ficha: eso lo
     // aprovechamos para el onboarding asistido del perfil.
-    setBusiness(p?.account_type === 'business' ? await businessService.getByOwner(session.userId) : null)
+    const negocio = p?.account_type === 'business' ? await businessService.getByOwner(session.userId) : null
+
+    setUserId(session.userId)
+    setEmail(session.email)
+    setProfile(p)
+    setBusiness(negocio)
     if (p?.account_type === 'business' && !localStorage.getItem(ROLE_KEY)) {
       setActiveRoleState('business')
     }
