@@ -1,5 +1,6 @@
 import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
+import { geocodificar, type UbicacionGeocodificada } from '@/services/direccionService'
 import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
 
 export const BARRIOS_COORDENADAS: Record<string, { barrio: string; lat: number; lng: number }> = {
@@ -38,6 +39,31 @@ export function detectarBarrioEnTexto(texto?: string): { barrio: string; lat: nu
 export function declaraSuUbicacion(texto?: string): boolean {
   if (!texto) return false
   return /\b(estoy|vivo|vivimos|resido|me encuentro|mi barrio|soy de|aquí en|aca en|acá en)\b/i.test(texto)
+}
+
+const DECLARACION =
+  /\b(?:estoy|vivo|vivimos|resido|me encuentro|soy)\s+(?:en|de)\s+(?:el\s+barrio\s+|la\s+localidad\s+|el\s+|la\s+)?(.+)$|\bmi\s+barrio\s+es\s+(.+)$/i
+
+/**
+ * Saca el lugar de una frase como "estoy en Chapinero, Bogotá" y lo busca en
+ * el geocodificador. El diccionario de barrios solo cubre Cali, así que sin
+ * esto quien se conecta desde otra ciudad no tiene forma de decir dónde está.
+ */
+export async function resolverUbicacionDeclarada(
+  texto: string,
+): Promise<UbicacionGeocodificada | null> {
+  const coincidencia = DECLARACION.exec(texto.trim())
+  const lugar = (coincidencia?.[1] ?? coincidencia?.[2] ?? '')
+    .replace(/[.?!¿¡]+$/, '')
+    .trim()
+  if (lugar.length < 3) return null
+
+  try {
+    const hits = await geocodificar(lugar)
+    return hits[0] ?? null
+  } catch {
+    return null
+  }
 }
 
 /**

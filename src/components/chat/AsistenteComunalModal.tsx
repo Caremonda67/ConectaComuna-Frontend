@@ -6,7 +6,13 @@ import { useAuth } from '@/hooks/useAuth'
 import { leerUbicacion, guardarUbicacion } from '@/lib/ubicacion'
 import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { AudioWaveVisualizer } from '@/components/ui/AudioWaveVisualizer'
-import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
+import {
+  enviarMensajeAsistente,
+  describirUbicacion,
+  declaraSuUbicacion,
+  detectarBarrioEnTexto,
+  resolverUbicacionDeclarada,
+} from '@/services/aiService'
 import { reverseGeocodificar } from '@/services/direccionService'
 import { estaEnZonaPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { businessService } from '@/services/businessService'
@@ -287,6 +293,41 @@ export function AsistenteComunalModal() {
       setMensajes((prev) => [...prev, nuevoMensajeUsuario])
       setCargando(true)
 
+      // "Estoy en Chapinero" tiene que funcionar igual que "Estoy en El Rodeo".
+      // El diccionario de barrios solo cubre Cali, así que lo que no reconozca
+      // se resuelve contra el geocodificador antes de seguir.
+      if (declaraSuUbicacion(texto) && !detectarBarrioEnTexto(texto)) {
+        const lugar = await resolverUbicacionDeclarada(texto)
+        if (lugar) {
+          guardarUbicacion({ etiqueta: lugar.etiqueta, center: lugar.center, origen: 'busqueda' })
+          const enPiloto = estaEnZonaPiloto(lugar.center)
+          setCargando(false)
+          setMensajes((prev) => [
+            ...prev,
+            {
+              id: `ubi-declarada-${Date.now()}`,
+              emisor: 'asistente',
+              texto: enPiloto
+                ? `¡Listo vecino! Te ubiqué en ${lugar.etiqueta}. Estos son los oficios más cercanos a tu zona:`
+                : `Te ubiqué en ${lugar.etiqueta}. Por ahora el piloto de ConectaComuna está en la Comuna de Cali, así que en tu zona todavía no hay talleres registrados. Si quieres verlos con distancias reales:`,
+              fecha: new Date(),
+              respuestaEstructurada: {
+                mensaje: '',
+                tipo: 'conversacion',
+                sugerencias: enPiloto
+                  ? ['Negocios más cercanos', '👗 Modista o costurera cerca', '🔑 Cerrajería urgente']
+                  : [
+                      'Ver comercios del piloto (Cali)',
+                      '🎙️ Dictar mi servicio para el catálogo',
+                      '🛡️ ¿Cómo funciona el Trato Seguro?',
+                    ],
+              },
+            },
+          ])
+          return
+        }
+      }
+
       try {
         const contexto: ContextoUsuarioCopiloto = {
           autenticado: !!userId,
@@ -424,12 +465,16 @@ export function AsistenteComunalModal() {
             id: `gps-err-${Date.now()}`,
             emisor: 'asistente',
             texto:
-              'Vecino, no se pudo acceder al GPS del dispositivo (revisa los permisos en tu navegador). Puedes indicarme en qué barrio te encuentras escribiéndolo directamente (por ejemplo: Antonio Nariño, El Rodeo, Nueva Floresta, Vallado):',
+              'Vecino, no se pudo acceder al GPS del dispositivo (revisa los permisos en tu navegador). Escríbeme dónde estás y yo te ubico: sirve el barrio con la ciudad, como «Estoy en Chapinero, Bogotá» o «Estoy en El Rodeo». Si prefieres, toca uno de los barrios del piloto:',
             fecha: new Date(),
             respuestaEstructurada: {
               mensaje: '',
               tipo: 'conversacion',
-              sugerencias: ['Estoy en Antonio Nariño', 'Estoy en El Rodeo', 'Estoy en Nueva Floresta'],
+              sugerencias: [
+                'Estoy en Antonio Nariño',
+                'Estoy en El Rodeo',
+                'Estoy en Nueva Floresta',
+              ],
             },
           },
         ])
