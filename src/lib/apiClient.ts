@@ -70,7 +70,7 @@ export async function apiFetch<T>(endpoint: string, options: OpcionesApi = {}): 
 export async function checkBackendHealth(): Promise<boolean> {
   try {
     const baseUrl = resolveBaseUrl()
-    const res = await fetch(`${baseUrl}/api/salud`, { signal: AbortSignal.timeout(2000) })
+    const res = await fetch(`${baseUrl}/api/salud`, { signal: AbortSignal.timeout(15000) })
     if (!res.ok) return false
 
     const cuerpo = await res.json()
