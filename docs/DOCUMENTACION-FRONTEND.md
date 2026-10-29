@@ -4,7 +4,7 @@
 **Entorno y Compilación:** React 19.2 + TypeScript 5.9 + Vite 8.2  
 **Estilos y Maquetación:** Tailwind CSS v3.4  
 **Enrutamiento:** React Router DOM v7  
-**Cartografía y Biometría:** Leaflet v1.9 + face-api.js  
+**Cartografía y Validación:** Leaflet v1.9 + Verificación Territorial por Facilitadores  
 **Despliegue:** Vercel  
 
 ---
@@ -41,7 +41,7 @@ frontend/src/
 │   ├── facilitadorService.ts # Códigos de vinculación y gestión asistida
 │   └── ordersService.ts      # Envío y seguimiento de pedidos
 ├── components/
-│   ├── auth/                 # FacialVerification, SocialAuthButtons, ProtectedRoute
+│   ├── auth/                 # AuthGate, SocialAuthButtons
 │   ├── map/                  # LazyMap, BusinessMap, UbicacionPicker
 │   ├── navigation/           # NavBar, BottomNav, RoleSwitch
 │   └── ui/                   # Button, Field, Badges, Modal, iconos SVG
@@ -79,10 +79,10 @@ frontend/src/
 - **Decisión:** Usar Leaflet junto a los mosaicos libres de OpenStreetMap, encapsulando la inicialización del mapa dentro de `LazyMap.tsx` mediante `React.lazy` y `Suspense`. Los polígonos y pines solo se cargan cuando el usuario ingresa a la pestaña del mapa o abre el selector de dirección.
 - **Consecuencias:** El bundle inicial se reduce en más de 160 kB, acelerando la carga inicial en redes móviles 3G o 4G débiles.
 
-### ADR-F04: Biometría local en navegador con `face-api.js`
-- **Contexto:** Como identificamos en la encuesta con el emprendedor Alex David, "la confianza de los clientes" es la mayor barrera para vender. Se requería un mecanismo de verificación de identidad sin enviar fotografías biométricas a servidores externos por motivos de privacidad y costo.
-- **Decisión:** Ejecutar `face-api.js` directamente en el navegador del cliente mediante modelos ligeros alojados en `/public/models/`. La prueba de vida (liveness) calcula en tiempo real la relación de aspecto de los ojos (Eye Aspect Ratio - EAR) en el canvas local para confirmar un parpadeo voluntario antes de otorgar el sello de verificación de nivel 1.
-- **Consecuencias:** Cero transferencia de datos biométricos sensibles a la nube, funcionamiento sin costos de API externa y validación de identidad en menos de 3 segundos.
+### ADR-F04: Verificación Territorial por Facilitador Comunitario
+- **Contexto:** En la Fase 0 (entrevistas con Doña Marta, Don Ricardo y Alex David) la barrera principal fue la desconfianza del cliente. Antes de decidir probamos un cotejo automático de identidad en el navegador y no aguantó el parque de dispositivos del barrio: gama baja, sin cámara frontal nítida y con datos prepago.
+- **Decisión:** La confianza se entrega con el **Sello de Verificación en Territorio**, una visita presencial del facilitador al taller o local. Queda registrada en la base con quién la otorgó, la fecha y una nota.
+- **Consecuencias:** Cero fricción técnica para el emprendedor, validación humana de alguien del barrio y funcionamiento en conexiones lentas.
 
 ### ADR-F05: Enfoque mobile-first y accesibilidad barrial
 - **Contexto:** Los datos de campo evidenciaron que el 50% de los emprendedores tiene dificultades con las aplicaciones complejas.

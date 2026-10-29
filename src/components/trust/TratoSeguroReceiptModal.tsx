@@ -139,7 +139,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
           <div className="relative py-2 my-2 border-t-2 border-dashed border-ink-300 dark:border-ink-200 flex items-center justify-between text-xs text-ink-500 select-none">
             <span className="ticket-notch-l" aria-hidden="true" />
             <span className="font-mono text-[10px] font-bold tracking-wider uppercase text-center w-full">
-              ✂️ Talón oficial de acuerdo · ConectaComuna & JAC
+              ✂️ Comprobante de acuerdo · ConectaComuna
             </span>
             <span className="ticket-notch-r" aria-hidden="true" />
           </div>
@@ -165,7 +165,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
             <div className="pt-2 flex items-center justify-between border-t border-ink-200/70 text-xs">
               <div className="flex items-center gap-1.5 text-ink-600">
                 <span className="text-base" aria-hidden="true">🛡️</span>
-                <span className="font-medium text-[11px]">Garantía Vecinal de la JAC</span>
+                <span className="font-medium text-[11px]">Pacto registrado en ConectaComuna</span>
               </div>
               <SelloOficialComunal size="sm" className="origin-right scale-90" />
             </div>
@@ -174,7 +174,7 @@ _Respaldado por el Trato Seguro Comunal: máximo 50% de anticipo y entrega a sat
           <div className="rounded-lg border border-dashed border-ink-300 dark:border-ink-200 p-2.5 text-center text-xs text-ink-600">
             {isPending
               ? 'Trato Seguro: el servicio está registrado y pendiente de confirmación por el taller. Acuerda el precio definitivo y no pagues más del 50% de anticipo.'
-              : 'Trato Seguro: el saldo se paga cuando el trabajo esté terminado y a entera satisfacción. En caso de desacuerdo, acude a tu facilitador o comité vecinal.'}
+              : 'Trato Seguro: el saldo se paga cuando el trabajo esté terminado y a entera satisfacción. Si hay desacuerdo, repórtalo en la ficha del negocio y el equipo de Conecta Comuna revisa el caso.'}
           </div>
         </div>
 

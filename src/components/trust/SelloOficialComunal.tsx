@@ -39,8 +39,8 @@ export function SelloOficialComunal({
     <motion.div
       {...animProps}
       className={cn('inline-flex items-center justify-center select-none shrink-0 drop-shadow-md', className)}
-      title="Sello de Garantía Comunal respaldado por la Junta de Acción Comunal (JAC)"
-      aria-label="Sello Oficial de Trato Seguro Comunal"
+      title="Sello de verificación en territorio de Conecta Comuna"
+      aria-label="Sello de verificación en territorio"
     >
       <svg
         width={conf.width}
@@ -131,7 +131,7 @@ export function SelloOficialComunal({
           fill="#FFFFFF"
           textAnchor="middle"
         >
-          MEDIACIÓN EN EQUIDAD
+          VERIFICACIÓN
         </text>
         <text
           x="60"
@@ -142,7 +142,7 @@ export function SelloOficialComunal({
           fill="#86EFAC"
           textAnchor="middle"
         >
-          LEY 2166 · TOPE 50%
+          EN TERRITORIO
         </text>
 
         {/* Texto inferior arqueado pegado al borde exterior sin invadir el centro */}
@@ -153,7 +153,7 @@ export function SelloOficialComunal({
           className="fill-emerald-200 dark:fill-emerald-300 uppercase"
         >
           <textPath href="#curve-seal-bottom" startOffset="50%" textAnchor="middle">
-            COMISIÓN DE CONVIVENCIA JAC
+            RED DE FACILITADORES
           </textPath>
         </text>
       </svg>

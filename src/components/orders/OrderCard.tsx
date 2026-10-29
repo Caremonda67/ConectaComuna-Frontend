@@ -7,6 +7,7 @@ import { TextAreaField, TextField } from '@/components/ui/Field'
 import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import { UI_ICONS } from '@/components/ui/icons'
+import { anticipoExcedeElTope, anticipoPermitido } from '@/lib/reglas'
 import {
   ORDER_STATUS_LABEL,
   ORDER_STATUS_STYLE,
@@ -35,6 +36,7 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
   // Modales interactivos
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [acceptingOpen, setAcceptingOpen] = useState(false)
+  const [errorAnticipo, setErrorAnticipo] = useState<string | null>(null)
   const [cancellingOpen, setCancellingOpen] = useState(false)
   const [noteOpen, setNoteOpen] = useState(false)
 
@@ -83,10 +85,15 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
     if (!onStatusChange) return
     const priceVal = inputFinalPrice ? Number(inputFinalPrice) : order.price_estimate
     const advVal = inputAdvance ? Number(inputAdvance) : 0
-    if (priceVal && advVal > Math.floor(priceVal * 0.5)) {
-      alert('Por regla del Trato Seguro Comunal, el anticipo no puede superar el 50% del precio acordado.')
+    if (priceVal && anticipoExcedeElTope(priceVal, advVal)) {
+      // Un alert del navegador sale como diálogo del sistema y rompe el hilo
+      // de la pantalla, sobre todo en celular. El aviso va donde está el error.
+      setErrorAnticipo(
+        `El anticipo no puede pasar del 50%. Para ${formatCurrency(priceVal)} el tope es ${formatCurrency(anticipoPermitido(priceVal))}.`,
+      )
       return
     }
+    setErrorAnticipo(null)
     setBusy(true)
     try {
       await onStatusChange('accepted', {
@@ -411,6 +418,14 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
                     )}
                   </span>
                 </div>
+              )}
+              {errorAnticipo && (
+                <p
+                  role="alert"
+                  className="rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-2.5 text-xs font-medium text-rose-800 dark:text-rose-300"
+                >
+                  {errorAnticipo}
+                </p>
               )}
               <div className="flex gap-2 pt-1">
                 <Button type="submit" size="sm" loading={busy} fullWidth>

@@ -148,7 +148,7 @@ export function ReportBusinessModal({
             </div>
             <h2 className="text-lg font-bold text-ink-900">Reporte recibido</h2>
             <p className="text-xs text-ink-600 leading-relaxed">
-              Gracias por cuidar la seguridad de nuestra comuna. El equipo de facilitadores y la administración revisarán la información de {businessName}.
+              Gracias por cuidar la seguridad de la comuna. El equipo de Conecta Comuna revisará la información de {businessName} y, si hace falta, pedirá el acompañamiento de un facilitador del barrio.
             </p>
             <Button
               onClick={handleCloseModal}

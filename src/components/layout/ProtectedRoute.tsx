@@ -7,10 +7,13 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 export function ProtectedRoute({
   children,
   requireBusiness = false,
+  requireFacilitador = false,
   allowIncompleteProfile = false,
 }: {
   children: ReactNode
   requireBusiness?: boolean
+  /** Solo para el panel del facilitador: gestiona negocios ajenos y responde reportes. */
+  requireFacilitador?: boolean
   allowIncompleteProfile?: boolean
 }) {
   const { loading, userId, profile } = useAuth()
@@ -19,13 +22,25 @@ export function ProtectedRoute({
   if (loading) return <CardSkeletonList count={3} />
   if (!userId) return <Navigate to="/entrar" state={{ from: location.pathname }} replace />
 
-  // Guardia de Onboarding: Si el usuario no tiene un perfil completo (especialmente el rol),
-  // lo redirigimos a completar sus datos antes de entrar al panel.
-  if (!allowIncompleteProfile && (!profile || !profile.full_name || !profile.account_type)) {
+  // Guardia de Onboarding: si el usuario no tiene perfil completo o no ha finalizado
+  // el onboarding (como en altas con Google que entran con rol por defecto),
+  // se le orienta a /onboarding para confirmar rol, teléfono y barrio.
+  const faltaOnboarding =
+    !allowIncompleteProfile &&
+    (!profile ||
+      !profile.full_name ||
+      !profile.account_type ||
+      profile.onboarding_completado === false)
+
+  if (faltaOnboarding) {
     return <Navigate to="/onboarding" replace />
   }
 
   if (requireBusiness && profile?.account_type !== 'business' && profile?.account_type !== 'facilitador') {
+    return <Navigate to="/panel" replace />
+  }
+
+  if (requireFacilitador && profile?.account_type !== 'facilitador') {
     return <Navigate to="/panel" replace />
   }
   return <>{children}</>

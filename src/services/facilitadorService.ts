@@ -140,23 +140,30 @@ export const facilitadorService = {
   },
 
   /**
-   * Genera un codigo de 6 digitos para que el emprendedor lo comparta con su facilitador.
+   * Genera un código de un solo uso para que el dueño se lo pase a su
+   * facilitador. La base arma los 8 caracteres, les pone vencimiento de 24
+   * horas y borra el anterior.
    */
   async generarCodigo(negocioId: string): Promise<string> {
-    const codigo = String(Math.floor(100000 + Math.random() * 900000))
     if (isDemoMode) {
+      const codigo = Array.from({ length: 8 }, () =>
+        'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)],
+      ).join('')
+      const expiraEn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       mutateDb((d) => {
         const b = d.businesses.find((x: Business) => x.id === negocioId)
-        if (b) b.codigo_apadrinamiento = codigo
+        if (b) {
+          b.codigo_apadrinamiento = codigo
+          b.codigo_apadrinamiento_expira_en = expiraEn
+        }
       })
       return delay(codigo, 200)
     }
-    const { error } = await requireSupabase()
-      .from('businesses')
-      .update({ codigo_apadrinamiento: codigo })
-      .eq('id', negocioId)
-    if (error) throw error
-    return codigo
+    const { data, error } = await requireSupabase().rpc('generar_codigo_apadrinamiento', {
+      p_negocio: negocioId,
+    })
+    if (error) throw new Error(error.message)
+    return data as string
   },
 
   /**
@@ -164,65 +171,56 @@ export const facilitadorService = {
    */
   async vincularConCodigo(facilitadorId: string, codigo: string): Promise<FacilitadorNegocio> {
     if (isDemoMode) {
-      const negocio = readDb().businesses.find((b: Business) => b.codigo_apadrinamiento === codigo)
+      const limpio = codigo.trim().toUpperCase()
+      const negocio = readDb().businesses.find(
+        (b: Business) => b.codigo_apadrinamiento?.trim().toUpperCase() === limpio,
+      )
       if (!negocio) throw new Error('Código no válido. Verifica con el dueño del negocio.')
+
+      if (
+        negocio.codigo_apadrinamiento_expira_en &&
+        new Date(negocio.codigo_apadrinamiento_expira_en).getTime() < Date.now()
+      ) {
+        throw new Error('Ese código venció. Pídele al dueño que genere uno nuevo.')
+      }
+
       const existente = readDb().vinculaciones.find(
         (v) => v.facilitador_id === facilitadorId && v.negocio_id === negocio.id,
       )
-      if (existente) throw new Error('Ya tienes una vinculación con este negocio.')
+      if (existente && existente.estado_vinculacion === 'aprobado') {
+        throw new Error('Ya tienes una vinculación activa con este negocio.')
+      }
+
       const nueva: FacilitadorNegocio = {
-        id: uid('fac'),
+        id: existente?.id ?? uid('fac'),
         negocio_id: negocio.id,
         facilitador_id: facilitadorId,
         estado_vinculacion: 'aprobado',
-        creado_en: new Date().toISOString(),
+        creado_en: existente?.creado_en ?? new Date().toISOString(),
       }
-      mutateDb((d) => d.vinculaciones.push(nueva))
+      mutateDb((d) => {
+        if (existente) {
+          const idx = d.vinculaciones.findIndex((v) => v.id === existente.id)
+          if (idx >= 0) d.vinculaciones[idx].estado_vinculacion = 'aprobado'
+        } else {
+          d.vinculaciones.push(nueva)
+        }
+        // El código se gasta: se borra igual que en PostgreSQL
+        const b = d.businesses.find((x: Business) => x.id === negocio.id)
+        if (b) {
+          b.codigo_apadrinamiento = null
+          b.codigo_apadrinamiento_expira_en = null
+        }
+      })
       return delay(nueva, 300)
     }
-    // Buscar el negocio por codigo
-    const { data: negocios, error: busqError } = await requireSupabase()
-      .from('businesses')
-      .select('id')
-      .eq('codigo_apadrinamiento', codigo)
-      .limit(1)
-    if (busqError) throw busqError
-    if (!negocios || negocios.length === 0) throw new Error('Código no válido. Verifica con el dueño del negocio.')
-
-    const negocioId = negocios[0].id
-
-    // Si ya existe registro previo, actualizarlo a aprobado o notificar
-    const { data: existente } = await requireSupabase()
-      .from('facilitadores_negocio')
-      .select('id, estado_vinculacion')
-      .eq('facilitador_id', facilitadorId)
-      .eq('negocio_id', negocioId)
-      .maybeSingle()
-
-    if (existente) {
-      if (existente.estado_vinculacion === 'aprobado') {
-        throw new Error('Ya tienes una vinculación activa con este negocio.')
-      }
-      const { data, error } = await requireSupabase()
-        .from('facilitadores_negocio')
-        .update({ estado_vinculacion: 'aprobado' })
-        .eq('id', existente.id)
-        .select()
-        .single()
-      if (error) throw error
-      return data as FacilitadorNegocio
-    }
-
-    const { data, error } = await requireSupabase()
-      .from('facilitadores_negocio')
-      .insert({
-        facilitador_id: facilitadorId,
-        negocio_id: negocioId,
-        estado_vinculacion: 'aprobado',
-      })
-      .select()
-      .single()
-    if (error) throw error
+    // El código lo entrega el dueño, así que vale como autorización: la función
+    // de la base busca el negocio, revisa si ya hay vinculación y la deja
+    // aprobada. Hacerlo desde el cliente choca con las políticas de la tabla.
+    const { data, error } = await requireSupabase().rpc('vincular_facilitador_por_codigo', {
+      p_codigo: codigo.trim(),
+    })
+    if (error) throw new Error(error.message)
     return data as FacilitadorNegocio
   },
 }

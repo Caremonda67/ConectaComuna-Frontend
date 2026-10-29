@@ -23,6 +23,7 @@ export interface SignUpInput {
 export interface AuthSession {
   userId: string
   email: string
+  requiresEmailConfirmation?: boolean
 }
 
 export type SocialProvider = 'google' | 'facebook'
@@ -33,7 +34,8 @@ export const authService = {
       const db = readDb()
       if (!db.sessionUserId) return null
       const profile = db.profiles.find((p) => p.id === db.sessionUserId)
-      return profile ? { userId: profile.id, email: `${profile.id}@demo.co` } : null
+      const email = (profile as { email?: string } | undefined)?.email || (profile ? `${profile.id}@demo.co` : '')
+      return profile ? { userId: profile.id, email } : null
     }
     const { data, error } = await requireSupabase().auth.getSession()
     if (error) throw error
@@ -47,12 +49,18 @@ export const authService = {
   async signIn(email: string, password: string): Promise<AuthSession> {
     if (isDemoMode) {
       const db = readDb()
-      const profile = db.profiles.find((p) => `${p.id}@demo.co` === email)
-      
+      const limpio = email.trim().toLowerCase()
+      const profile = db.profiles.find((p) => {
+        const idCo = `${p.id}@demo.co`.toLowerCase() === limpio
+        const idDirecto = p.id.toLowerCase() === limpio
+        const correoGuardado = (p as { email?: string })?.email?.toLowerCase() === limpio
+        return idCo || idDirecto || correoGuardado
+      })
+
       if (!profile) {
         throw new Error('Ese correo demo no existe. Usa user-facilitador@demo.co, user-negocio@demo.co o user-cliente@demo.co')
       }
-      
+
       mutateDb((d) => {
         d.sessionUserId = profile.id
       })
@@ -69,7 +77,7 @@ export const authService = {
   async signUp(input: SignUpInput): Promise<AuthSession> {
     if (isDemoMode) {
       const id = uid('user')
-      const profile: Profile = {
+      const profile: Profile & { email?: string } = {
         id,
         full_name: input.fullName,
         phone: input.phone ?? null,
@@ -78,12 +86,13 @@ export const authService = {
         neighborhood: input.neighborhood ?? null,
         onboarding_completado: true,
         created_at: new Date().toISOString(),
+        email: input.email.trim().toLowerCase(),
       }
       mutateDb((d) => {
-        d.profiles.push(profile)
+        d.profiles.push(profile as Profile)
         d.sessionUserId = id
       })
-      return delay({ userId: id, email: input.email })
+      return delay({ userId: id, email: input.email, requiresEmailConfirmation: false })
     }
 
     const { data, error } = await requireSupabase().auth.signUp({
@@ -101,7 +110,12 @@ export const authService = {
     })
     if (error) throw new Error(translateAuthError(error.message))
     if (!data.user) throw new Error('No se pudo crear la cuenta.')
-    return { userId: data.user.id, email: data.user.email ?? input.email }
+    const requiresEmailConfirmation = !data.session
+    return {
+      userId: data.user.id,
+      email: data.user.email ?? input.email,
+      requiresEmailConfirmation,
+    }
   },
 
   /**

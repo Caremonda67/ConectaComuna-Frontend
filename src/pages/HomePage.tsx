@@ -14,7 +14,8 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
-import { DEFAULT_RADIUS_KM } from '@/lib/env'
+import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
+import { leerUbicacion } from '@/lib/ubicacion'
 
 export default function HomePage() {
   usePageMeta({
@@ -24,11 +25,17 @@ export default function HomePage() {
   })
 
   const { profile } = useAuth()
-  const { position, status, request } = useGeolocation()
+  const { lectura, status, request } = useGeolocation()
+
+  // La portada ignoraba la ubicación que la persona ya había elegido en
+  // Explorar o en el asistente, así que volvía a mostrar Cali al regresar.
+  const ubicacionElegida = leerUbicacion()
+  const lat = ubicacionElegida?.center.lat ?? lectura?.lat ?? COMUNA_CENTER.lat
+  const lng = ubicacionElegida?.center.lng ?? lectura?.lng ?? COMUNA_CENTER.lng
 
   const filters = useMemo(
-    () => ({ center: position, radiusKm: DEFAULT_RADIUS_KM, sort: 'rating' as const }),
-    [position],
+    () => ({ center: { lat, lng }, radiusKm: DEFAULT_RADIUS_KM, sort: 'rating' as const }),
+    [lat, lng],
   )
 
   const { data, loading, error, reload } = useAsync(
@@ -191,7 +198,9 @@ export default function HomePage() {
               En tu comuna, la palabra vale y el trabajo se respeta
             </h2>
             <p className="text-sm sm:text-base text-ink-600 dark:text-ink-300 leading-relaxed">
-              Todos los oficios y servicios solicitados a través de ConectaComuna cuentan con el <strong>Trato Seguro</strong>: máximo 50% de anticipo, precio pactado con comprobante digital QR y acompañamiento de la Junta de Acción Comunal (JAC).
+              Cuando un trabajo se pacta por ConectaComuna puedes dejar un <strong>comprobante de Trato Seguro</strong>:
+              el anticipo no pasa del 50%, el precio queda escrito y cualquiera puede verificar el código.
+              Si algo sale mal, el equipo de Conecta Comuna revisa el caso con las dos partes.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link to="/trato-seguro">
@@ -210,10 +219,10 @@ export default function HomePage() {
           <div className="shrink-0 flex flex-col items-center justify-center p-4 rounded-2xl bg-white/90 dark:bg-cream-100/80 border border-brand-200/80 dark:border-brand-900/50 shadow-warm-sm text-center">
             <SelloOficialComunal size="lg" />
             <p className="mt-2 text-xs font-bold text-ink-800 tracking-wide uppercase">
-              Garantía Comunal Activa
+              Verificación en territorio
             </p>
             <p className="text-[11px] text-ink-500">
-              Junta de Acción Comunal Cali
+              Red de facilitadores del barrio
             </p>
           </div>
         </div>

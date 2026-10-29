@@ -1,49 +1,94 @@
 import { apiFetch } from '@/lib/apiClient'
 import { leerUbicacion } from '@/lib/ubicacion'
-import type { ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
+import { resolverLugar } from '@/lib/lugares'
+import { businessService } from '@/services/businessService'
+import { orderService } from '@/services/orderService'
+import { categoryLabel } from '@/data/categories'
+import { COMUNA_CENTER } from '@/lib/env'
+import { ORDER_STATUS_LABEL, formatCurrency } from '@/lib/utils'
+import type { UbicacionGeocodificada } from '@/services/direccionService'
+import type { BusinessWithDistance } from '@/types'
+import type { AcuerdoTratoSeguroAi, ContextoUsuarioCopiloto, MensajeChat, RespuestaAi } from '@/types/ai'
 
-export const BARRIOS_COORDENADAS: Record<string, { barrio: string; lat: number; lng: number }> = {
-  'antonio nariño': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
-  'antonio narino': { barrio: 'Antonio Nariño', lat: 3.4365, lng: -76.5255 },
-  'el rodeo': { barrio: 'El Rodeo', lat: 3.4401, lng: -76.5209 },
-  'nueva floresta': { barrio: 'Nueva Floresta', lat: 3.4342, lng: -76.5281 },
-  'vallado': { barrio: 'Vallado', lat: 3.4140, lng: -76.5050 },
-  'san judas': { barrio: 'San Judas', lat: 3.4215, lng: -76.5120 },
-  'ciudad córdoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
-  'ciudad cordoba': { barrio: 'Ciudad Córdoba', lat: 3.4180, lng: -76.5080 },
-  'mariano ramos': { barrio: 'Mariano Ramos', lat: 3.4130, lng: -76.5160 },
-  'república de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
-  'republica de israel': { barrio: 'República de Israel', lat: 3.4240, lng: -76.5170 },
+/**
+ * ¿El usuario está diciendo dónde está, o solo mencionó un barrio de paso?
+ * Sin esta distinción, escribir "mi prima vive en El Rodeo" bastaba para
+ * reubicar a alguien que está en Bogotá.
+ */
+export function declaraSuUbicacion(texto?: string): boolean {
+  if (!texto) return false
+  return /\b(estoy|vivo|vivimos|resido|me encuentro|mi barrio|soy de|aquí en|aca en|acá en)\b/i.test(texto)
 }
 
-export function detectarBarrioEnTexto(texto?: string): { barrio: string; lat: number; lng: number } | null {
-  if (!texto) return null
-  const t = texto.toLowerCase()
-  for (const [clave, datos] of Object.entries(BARRIOS_COORDENADAS)) {
-    if (t.includes(clave)) {
-      return datos
-    }
-  }
-  return null
+// Ojo con los artículos: quitar un "el" suelto convierte "El Rodeo" en
+// "Rodeo", que el geocodificador resuelve en otra ciudad. Solo se recortan
+// los encabezados que no forman parte del nombre.
+const DECLARACION =
+  /\b(?:estoy|vivo|vivimos|resido|me encuentro|soy)\s+(?:en|de)\s+(?:el\s+barrio\s+|la\s+localidad\s+|el\s+municipio\s+(?:de\s+)?)?(.+)$|\bmi\s+barrio\s+es\s+(.+)$/i
+
+/**
+ * Saca el lugar de una frase como "estoy en Chapinero, Bogotá" y lo busca en
+ * el geocodificador. El diccionario de barrios solo cubre Cali, así que sin
+ * esto quien se conecta desde otra ciudad no tiene forma de decir dónde está.
+ */
+export async function resolverUbicacionDeclarada(
+  texto: string,
+): Promise<UbicacionGeocodificada | null> {
+  const coincidencia = DECLARACION.exec(texto.trim())
+  const lugar = (coincidencia?.[1] ?? coincidencia?.[2] ?? '')
+    .replace(/[.?!¿¡]+$/, '')
+    .trim()
+  if (!lugar) return null
+  return resolverLugar(lugar)
 }
 
 /**
  * Traduce la etiqueta de ubicación para que suene 100% natural y humana.
  */
 export function describirUbicacion(barrio?: string | null, esDefinida = true) {
-  if (!esDefinida || !barrio || barrio === 'Comuna' || barrio === 'Cali' || barrio.toLowerCase().includes('mi ubicación') || barrio.toLowerCase().includes('mi ubicacion')) {
+  if (
+    !esDefinida ||
+    !barrio ||
+    barrio === 'Comuna' ||
+    barrio.toLowerCase().includes('mi ubicación') ||
+    barrio.toLowerCase().includes('mi ubicacion')
+  ) {
     return {
-      cercaDe: 'en nuestra comuna',
-      enBarrio: 'toda nuestra comuna',
+      cercaDe: 'en la zona',
+      enBarrio: 'tu zona',
       etiquetaCorta: 'Comuna',
       esDefinida: false,
     }
   }
 
+  const b = barrio.trim()
+  const limpio = b.replace(/^barrio\s+/i, '')
+
+  // Si es un punto en el mapa o coordenadas
+  if (/^punto\s+/i.test(limpio) || /^\(?-?\d+\.\d+/.test(limpio)) {
+    return {
+      cercaDe: 'cerca de este punto',
+      enBarrio: 'el punto marcado',
+      etiquetaCorta: 'Punto en el mapa',
+      esDefinida: true,
+    }
+  }
+
+  // Si tiene ciudad o coma (ej: "Quinta Paredes, Bogotá", "Junín, Cali", "El Poblado, Medellín")
+  if (limpio.includes(',')) {
+    return {
+      cercaDe: `cerca de ${limpio}`,
+      enBarrio: limpio,
+      etiquetaCorta: limpio,
+      esDefinida: true,
+    }
+  }
+
+  // Si es un barrio tradicional
   return {
-    cercaDe: `cerca del barrio ${barrio}`,
-    enBarrio: `el barrio ${barrio}`,
-    etiquetaCorta: `Barrio ${barrio}`,
+    cercaDe: `cerca del barrio ${limpio}`,
+    enBarrio: `el barrio ${limpio}`,
+    etiquetaCorta: limpio,
     esDefinida: true,
   }
 }
@@ -52,56 +97,41 @@ export function describirUbicacion(barrio?: string | null, esDefinida = true) {
  * Respaldo local inteligente en el navegador si no hay conexión al backend.
  * Replica la máquina de estados, el contexto del usuario y las reglas lógicas.
  */
+/** Palabras con las que un vecino nombra cada oficio al pedirlo. */
+const PALABRAS_POR_CATEGORIA: Record<string, string[]> = {
+  costura: ['modista', 'costurera', 'costura', 'ropa', 'pantalon', 'pantalón', 'basta', 'dobladillo', 'vestido', 'cierre', 'confecc'],
+  cerrajeria: ['cerrajer', 'llave', 'chapa', 'candado', 'cerradura', 'guarda'],
+  tecnologia: ['celular', 'pantalla', 'computador', 'tecnic', 'técnic', 'bateria', 'batería'],
+  belleza: ['barber', 'peluquer', 'corte de cabello', 'uñas', 'unas', 'manicure', 'pedicure'],
+  comida: ['comida', 'almuerzo', 'empanada', 'cholado', 'desayuno'],
+  ropa: ['ropa americana', 'venta de ropa'],
+  domicilios: ['domicilio', 'mandado', 'encomienda'],
+  construccion: ['albañil', 'albanil', 'obra', 'plomer', 'pintura'],
+}
+
+/** Detecta qué oficio está pidiendo la persona, por las palabras que usa. */
+function categoriaPedida(texto: string): string | null {
+  for (const [slug, palabras] of Object.entries(PALABRAS_POR_CATEGORIA)) {
+    if (palabras.some((p) => texto.includes(p))) return slug
+  }
+  return null
+}
+
 function generarRespuestaLocal(
   mensaje: string,
   barrioParam?: string | null,
   historial: MensajeChat[] = [],
-  contexto?: ContextoUsuarioCopiloto
+  contexto?: ContextoUsuarioCopiloto,
+  negociosReales: BusinessWithDistance[] = []
 ): RespuestaAi {
   const texto = mensaje.toLowerCase().trim()
-  const barrioDetectado = detectarBarrioEnTexto(texto)
   const tieneUbicacionExplicita = !!(
-    barrioDetectado ||
-    (contexto?.ubicacion?.esDefinida && contexto?.ubicacion?.barrio && contexto.ubicacion.barrio !== 'Comuna' && contexto.ubicacion.barrio !== 'Cali') ||
-    (barrioParam && barrioParam !== 'Comuna' && barrioParam !== 'Cali')
+    (contexto?.ubicacion?.esDefinida && contexto?.ubicacion?.barrio && contexto.ubicacion.barrio !== 'Comuna') ||
+    (barrioParam && barrioParam !== 'Comuna')
   )
 
-  const barrio = barrioDetectado?.barrio || (tieneUbicacionExplicita ? (barrioParam || contexto?.ubicacion?.barrio || null) : null)
+  const barrio = tieneUbicacionExplicita ? (barrioParam || contexto?.ubicacion?.barrio || null) : null
   const descUbi = describirUbicacion(barrio, tieneUbicacionExplicita)
-
-  // 0a. Detección y confirmación explícita al indicar barrio por texto
-  if (barrioDetectado && (texto.includes('estoy') || texto.includes('vivo') || texto.includes('barrio') || texto.startsWith('en ') || texto === barrioDetectado.barrio.toLowerCase())) {
-    return {
-      mensaje: `¡Listo vecino! He fijado tu ubicación en el barrio ${barrioDetectado.barrio}. Estos son los oficios más cercanos a tu zona:`,
-      tipo: 'negocios',
-      ubicacionDetectada: {
-        barrio: barrioDetectado.barrio,
-        lat: barrioDetectado.lat,
-        lng: barrioDetectado.lng,
-      },
-      negociosSugeridos: [
-        {
-          id: 'biz-1',
-          nombre: 'Costuras Doña Marta',
-          categoria: 'costura',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3009876543',
-          distanciaMetros: 420,
-          verificado: true,
-        },
-        {
-          id: 'biz-2',
-          nombre: 'Carpintería y Muebles Don Jaime',
-          categoria: 'carpinteria',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3157778899',
-          distanciaMetros: 480,
-          verificado: true,
-        },
-      ],
-      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
-    }
-  }
 
   // 0b. Pregunta por cercanía ("cuál es el comercio más cercano") cuando la ubicación aún no está definida
   const esPreguntaCercania =
@@ -118,43 +148,10 @@ function generarRespuestaLocal(
 
   if (esPreguntaCercania && !tieneUbicacionExplicita) {
     return {
-      mensaje: `Vecino, aún no conozco tu barrio o ubicación exacta en la comuna para calcularte distancias precisas. Puedes activar tu ubicación con el botón de GPS o indicarme en qué barrio te encuentras (por ejemplo: Antonio Nariño, El Rodeo, Nueva Floresta, Vallado).\n\nMientras tanto, aquí tienes algunos oficios y talleres destacados de la comuna:`,
-      tipo: 'negocios',
-      negociosSugeridos: [
-        {
-          id: 'biz-1',
-          nombre: 'Uñas de Kelly',
-          categoria: 'manicure',
-          barrio: 'El Rodeo',
-          whatsapp: '3145558899',
-          distanciaMetros: null,
-          verificado: false,
-        },
-        {
-          id: 'biz-2',
-          nombre: 'Costuras Doña Marta',
-          categoria: 'costura',
-          barrio: 'Antonio Nariño',
-          whatsapp: '3009876543',
-          distanciaMetros: null,
-          verificado: true,
-        },
-        {
-          id: 'biz-3',
-          nombre: 'TecnoFix Celulares',
-          categoria: 'tecnologia',
-          barrio: 'Nueva Floresta',
-          whatsapp: '3129990011',
-          distanciaMetros: null,
-          verificado: false,
-        },
-      ],
-      sugerencias: [
-        '📍 Usar mi ubicación actual',
-        'Estoy en El Rodeo',
-        'Estoy en Antonio Nariño',
-        'Estoy en Nueva Floresta',
-      ],
+      mensaje: `Vecino, todavía no sé dónde estás para calcularte distancias. Toca el botón de ubicación o escríbeme tu barrio con la ciudad, por ejemplo "Estoy en El Rodeo, Cali".\n\nCon eso te muestro los oficios registrados, ordenados por cercanía.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/explorar',
+      sugerencias: ['📍 Usar mi ubicación actual', 'Ver oficios cerca', 'Ver en el mapa'],
     }
   }
 
@@ -197,39 +194,7 @@ function generarRespuestaLocal(
     }
   }
 
-  // 2b. Detección directa de código oficial de Trato Seguro (ej: CC-93E416, CC-ORD-1)
-  const matchCodigo = texto.match(/\b(CC-[A-Z0-9]{4,10})\b/i)
-  if (matchCodigo) {
-    const cod = matchCodigo[1].toUpperCase()
-    const pedidoRelacionado = (contexto?.pedidosActivos || []).find(
-      (p) => p.codigo.toUpperCase() === cod || (p.id && p.id.toUpperCase().startsWith(cod.replace('CC-', '')))
-    )
-
-    let detalle = `¡He ubicado el acuerdo ${cod} en el registro comunal!`
-    if (pedidoRelacionado) {
-      const est =
-        pedidoRelacionado.estado === 'pending'
-          ? 'Pendiente de inicio'
-          : pedidoRelacionado.estado === 'accepted'
-          ? 'Pacto aceptado por el taller'
-          : pedidoRelacionado.estado === 'in_progress'
-          ? 'Trabajo en ejecución'
-          : pedidoRelacionado.estado === 'completed'
-          ? 'Finalizado y entregado'
-          : pedidoRelacionado.estado
-      const contra = pedidoRelacionado.rol === 'comerciante' ? `Cliente: ${pedidoRelacionado.contraparte}` : `Taller: ${pedidoRelacionado.contraparte}`
-      detalle += `\n• Trabajo: ${pedidoRelacionado.titulo}\n• ${contra}\n• Estado: ${est}\n• Valor: $ ${Number(pedidoRelacionado.monto).toLocaleString('es-CO')} COP`
-    }
-
-    return {
-      mensaje: `${detalle}\n\nToca el botón para consultar el comprobante oficial con código QR y verificación en tiempo real:`,
-      tipo: 'navegacion',
-      rutaNavegacion: `/trato-seguro/verificar/${cod}`,
-      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos activos', 'Ver oficios cercanos'],
-    }
-  }
-
-  // 2c. Consulta de pedidos o acuerdos del usuario ("mis pedidos", "cómo va mi pedido", etc.)
+  // 2b. Consulta de pedidos o acuerdos del usuario ("mis pedidos", "cómo va mi pedido", etc.)
   const esConsultaMisPedidos =
     texto.includes('mis pedidos') ||
     texto.includes('mi pedido') ||
@@ -558,29 +523,19 @@ function generarRespuestaLocal(
   ) {
     if (texto.includes('verificar') || texto.includes('código') || texto.includes('codigo')) {
       return {
-        mensaje: `Puedes verificar la autenticidad de cualquier acuerdo vecinal escaneando su código QR o buscando su código oficial (por ejemplo CC-ORD-1). Aquí puedes consultar el comprobante en tiempo real:`,
+        mensaje: `Puedes verificar la autenticidad de cualquier acuerdo vecinal escaneando su código QR o buscando su código oficial (el negocio te lo entrega al aceptar). Aquí puedes consultar el comprobante en tiempo real:`,
         tipo: 'navegacion',
         rutaNavegacion: '/trato-seguro/verificar',
-        sugerencias: ['Verificar CC-ORD-1', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
+        sugerencias: ['Ver un comprobante', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
       }
     }
 
     if (texto.includes('pactar') || texto.includes('hacer acuerdo') || texto.includes('crear acuerdo')) {
-      const precioBase = 45000
-      const anticipoMax = 22500
       return {
-        mensaje: `¡Excelente iniciativa, ${nombreUsuario}! He estructurado la ficha de Pacto de Trato Seguro. Cumple con la regla comunal: máximo 50% de anticipo para materiales y saldo contra entrega a entera satisfacción:`,
-        tipo: 'acuerdo_trato_seguro',
-        acuerdo: {
-          codigo: 'CC-ORD-1',
-          servicio: 'Servicio de oficio comunal acordado',
-          negocioNombre: 'Taller Comunitario',
-          precioEstimado: precioBase,
-          anticipoMaximo: anticipoMax,
-          saldoContraEntrega: precioBase - anticipoMax,
-          modalidad: 'workshop',
-        },
-        sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+        mensaje: `El pacto se arma desde la ficha del negocio: eliges el oficio, acuerdan el precio y el anticipo no puede pasar del 50%. Cuando el negocio acepta, el pedido queda con su código y su QR.`,
+        tipo: 'navegacion',
+        rutaNavegacion: '/trato-seguro',
+        sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver oficios cerca', '¿Qué pasa si hay un desacuerdo?'],
       }
     }
 
@@ -595,18 +550,10 @@ function generarRespuestaLocal(
     }
 
     return {
-      mensaje: `¡Hola vecino! El Trato Seguro Comunal es el pacto de confianza de nuestro barrio:\n1. 🛡️ Ningún anticipo para compra de materiales puede superar el 50% del total acordado.\n2. 🧾 Todo queda registrado por escrito con código de verificación oficial y código QR escaneable.\n3. 🤝 Si surge algún desacuerdo, cuentas con el respaldo de mediación comunitaria de la Junta de Acción Comunal (JAC) antes de cualquier conflicto.`,
-      tipo: 'acuerdo_trato_seguro',
-      acuerdo: {
-        codigo: 'CC-ORD-1',
-        servicio: 'Servicio de mantenimiento y arreglo',
-        negocioNombre: 'Taller Comunal',
-        precioEstimado: 45000,
-        anticipoMaximo: 22500,
-        saldoContraEntrega: 22500,
-        modalidad: 'workshop',
-      },
-      sugerencias: ['Verificar comprobante oficial', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
+      mensaje: `El Trato Seguro Comunal es el pacto de confianza del barrio:\n1. Ningún anticipo para materiales pasa del 50% del total acordado.\n2. Todo queda por escrito, con código de verificación y QR.\n3. Si algo sale mal, reportas el caso desde la ficha del negocio y el equipo de Conecta Comuna lo revisa con las dos partes.\n\nEl pacto se crea desde la ficha del negocio, no desde este chat.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/trato-seguro',
+      sugerencias: ['Ver oficios cerca', '¿Qué pasa si hay un desacuerdo?', 'Ver en el mapa'],
     }
   }
 
@@ -618,7 +565,7 @@ function generarRespuestaLocal(
     texto.includes('mediacion')
   ) {
     return {
-      mensaje: `Si surge algún inconveniente o retraso con un trabajo, ConectaComuna promueve la mediación comunitaria a través de los líderes de la Junta de Acción Comunal (JAC) y los facilitadores del barrio, buscando siempre un acuerdo amistoso y justo.`,
+      mensaje: `Si surge algún inconveniente o retraso con un trabajo, repórtalo desde la ficha del negocio. El equipo de Conecta Comuna revisa el caso con las dos partes y, si hace falta, pide a un facilitador del barrio que acompañe la conversación.`,
       tipo: 'conversacion',
       sugerencias: ['¿Cómo funciona el Trato Seguro?', '¿Qué es el facilitador?', 'Ver oficios cercanos'],
     }
@@ -633,7 +580,7 @@ function generarRespuestaLocal(
     texto.includes('adulto mayor')
   ) {
     return {
-      mensaje: `El Facilitador Comunitario es un familiar o vecino joven de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 6 letras para vincularlo de inmediato.`,
+      mensaje: `El Facilitador Comunitario es un familiar o vecino de confianza que apoya a los adultos mayores o artesanos a gestionar su catálogo y fotos. En el panel de negocio encuentras un código de 8 caracteres para vincularlo.`,
       tipo: 'conversacion',
       sugerencias: ['Crear negocio para publicar', '¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos'],
     }
@@ -733,7 +680,131 @@ function generarRespuestaLocal(
     }
   }
 
-  // 17. Saludo o mensaje general de orientación
+  // 16b. Consulta directa de los talleres del piloto territorial en Cali
+  const esPeticionPiloto =
+    texto.includes('comercios del piloto') ||
+    texto.includes('oficios del piloto') ||
+    texto.includes('negocios del piloto') ||
+    texto.includes('piloto en cali') ||
+    texto.includes('piloto de cali')
+
+  if (esPeticionPiloto) {
+    return {
+      mensaje: `Los oficios del piloto están en el directorio y se actualizan solos. Te llevo a la lista para que veas los que hay registrados hoy, con su barrio y su contacto.`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/explorar',
+      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Dictar mi servicio para el catálogo'],
+    }
+  }
+
+  // 17. Saludos o preguntas de cortesía
+  const esSaludo =
+    /^(hola|buen[ao]s? (d[ií]as?|tardes?|noches?)|qu[eé] tal|c[oó]mo est[aá]s?|saludos)/i.test(texto) ||
+    texto === 'hola' ||
+    texto.startsWith('hola ') ||
+    texto.includes('cómo estás') ||
+    texto.includes('como estas')
+
+  if (esSaludo) {
+    return {
+      mensaje: `¡Hola, vecino! Qué gusto saludarte. Por acá todo muy bien en la comuna, listos para colaborarte en lo que necesites hoy. ¿Buscas algún oficio de confianza o te ayudo con tu negocio?`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', 'Ver en el mapa'],
+    }
+  }
+
+  // 18. Capacidades y qué puede hacer
+  const esPreguntaCapacidades =
+    /qu[eé] puedes hacer|para qu[eé] sirves|c[oó]mo me puedes ayudar|qu[eé] funciones tienes|qu[eé] haces|en qu[eé] me puedes colaborar/i.test(texto)
+
+  if (esPreguntaCapacidades) {
+    return {
+      mensaje: `¡Con mucho gusto, vecino! Como copiloto comunal de ConectaComuna, puedo colaborarte con:\n\n• 📍 Encontrar oficios de confianza: modistas, cerrajeros, barberías, comidas y arreglos cerca de ${descUbi.enBarrio}.\n• 🎙️ Dictar tus servicios por voz: si tienes un oficio y no tienes tiempo de escribir, me dices qué haces y cuánto cobras para armar tu catálogo.\n• 🛡️ Trato Seguro: acordar trabajos con la regla comunal del 50% de anticipo para compra de repuestos y saldo contra entrega.\n• 🗺️ Mapa de talleres: ubicar los emprendedores de la comuna en el mapa interactivo.\n\n¿Por cuál te gustaría empezar?`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', '🛡️ ¿Cómo funciona el Trato Seguro?', 'Ver en el mapa'],
+    }
+  }
+
+  // 19. Solicitud de ayuda general
+  const esPedidoAyuda =
+    /^(necesito ayuda|ayuda|ay[uú]dame|auxilio|no s[eé] qu[eé] hacer|no entiendo|orientaci[oó]n)/i.test(texto) ||
+    texto === 'necesito ayuda' ||
+    texto === 'ayuda'
+
+  if (esPedidoAyuda) {
+    return {
+      mensaje: `¡Tranquilo, vecino! Aquí estamos para darte una mano. Cuéntame qué necesitas o elige una de estas opciones:\n\n1. 🔍 Buscar a alguien de confianza (costura, arreglo, cerrajería, comida).\n2. 🎙️ Publicar tu propio oficio o negocio en el catálogo comunal.\n3. 🛡️ Consultar el estado de tus pedidos o cómo funciona el Trato Seguro.\n\n¿Cuál de estas necesitas?`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', '¿Cómo funciona el Trato Seguro?'],
+    }
+  }
+
+  // 20. Agradecimiento
+  const esAgradecimiento =
+    /^(gracias|muchas gracias|mil gracias|vale gracias|te lo agradezco|listo gracias|ok gracias)/i.test(texto) ||
+    texto === 'gracias' ||
+    texto.startsWith('gracias ')
+
+  if (esAgradecimiento) {
+    return {
+      mensaje: `¡Con el mayor de los gustos, vecino! Para eso estamos en la comuna: apoyarnos entre vecinos y mover los oficios de nuestro barrio. Si necesitas algo más, aquí estaré.`,
+      tipo: 'conversacion',
+      sugerencias: ['Buscar otro oficio', 'Ver en el mapa', '¿Cómo funciona el Trato Seguro?'],
+    }
+  }
+
+  // 21. Pregunta de identidad
+  const esPreguntaIdentidad =
+    /qui[eé]n eres|quien eres|eres un robot|eres una ia|eres un bot/i.test(texto)
+
+  if (esPreguntaIdentidad) {
+    return {
+      mensaje: `Soy el Asistente Comunal de ConectaComuna, tu copiloto barrial para los habitantes y artesanos de la comuna en Cali. Te ayudo a encontrar oficios cercanos, pactar trabajos seguros con el 50% de anticipo y publicar tus servicios con la voz.`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', 'Ver en el mapa'],
+    }
+  }
+
+  // 21b. Búsqueda de un oficio sin backend. Es la pregunta más común y antes
+  // caía en el mensaje genérico, justo cuando Render estaba despertando.
+  const categoria = categoriaPedida(texto)
+  if (categoria) {
+    const delOficio = negociosReales.filter((n) => n.category === categoria)
+    if (delOficio.length > 0) {
+      return {
+        mensaje: `Vecino, esto es lo que tenemos de ${categoryLabel(categoria).toLowerCase()} ${descUbi.cercaDe}:`,
+        tipo: 'negocios',
+        negociosSugeridos: delOficio.slice(0, 3).map((n) => ({
+          id: n.id,
+          nombre: n.name,
+          categoria: n.category,
+          barrio: n.neighborhood,
+          whatsapp: n.whatsapp,
+          distanciaMetros: n.distanceKm != null ? Math.round(n.distanceKm * 1000) : null,
+          verificado: n.verification_status === 'verified',
+        })),
+        sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
+      }
+    }
+    // Sin resultados no inventamos talleres: mandamos al directorio real.
+    return {
+      mensaje: `Vecino, por ahora no tengo talleres de ${categoryLabel(categoria).toLowerCase()} registrados ${descUbi.cercaDe}. Puedes revisar el directorio completo por si hay alguno en otra zona:`,
+      tipo: 'navegacion',
+      rutaNavegacion: `/explorar?categoria=${categoria}`,
+      sugerencias: ['Ver en el mapa', 'Buscar otro oficio'],
+    }
+  }
+
+  // 22. Mensaje conversacional de seguimiento (cuando ya hay historial)
+  if (historial && historial.length > 0) {
+    return {
+      mensaje: `Te escucho con atención, vecino. Cuéntame un poco más de lo que necesitas (por ejemplo: el tipo de arreglo, oficio o duda que tengas) y con gusto te oriento de inmediato.`,
+      tipo: 'conversacion',
+      sugerencias: ['Oficios cerca de mí', '🎙️ Dictar mi servicio para el catálogo', 'Ver en el mapa'],
+    }
+  }
+
+  // 23. Saludo o mensaje general de orientación (solo al inicio)
   return {
     mensaje: `¡Hola ${nombreUsuario}! Soy tu Asistente Comunal para ${descUbi.enBarrio}. Estoy aquí para ayudarte a:\n• 📍 Encontrar oficios de confianza cerca de tu ubicación actual.\n• 🎙️ Dictar y publicar tus servicios con la voz para tu catálogo.\n• 🛡️ Explicarte el Trato Seguro y las garantías vecinales.\n\n¿En qué te colaboro hoy?`,
     tipo: 'conversacion',
@@ -744,22 +815,84 @@ function generarRespuestaLocal(
 /**
  * Envía un mensaje al Asistente Comunal con contexto completo del usuario y de la pantalla.
  */
+const CODIGO_PACTO = /\bcc[-_\s]?([a-z0-9][a-z0-9-]{2,30})\b/i
+
+/**
+ * Resuelve un código de Trato Seguro contra la base antes de decir nada.
+ * Devuelve null cuando el mensaje no trae un código, para que siga el motor
+ * normal. Sin esta consulta el asistente afirmaba haber encontrado acuerdos
+ * que nadie había buscado.
+ */
+export async function responderConsultaDeCodigo(texto: string): Promise<RespuestaAi | null> {
+  const match = texto.match(CODIGO_PACTO)
+  if (!match || !/\d/.test(match[1])) return null
+
+  const codigo = `CC-${match[1].toUpperCase()}`
+  const pacto = await orderService.getVerifiableByCode(codigo)
+
+  if (!pacto) {
+    return {
+      mensaje: `Busqué el código ${codigo} y no aparece ningún acuerdo registrado. Revisa que esté completo: son los ocho caracteres que van debajo del QR del comprobante.`,
+      tipo: 'conversacion',
+      sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos', 'Ver oficios cercanos'],
+    }
+  }
+
+  const acuerdo: AcuerdoTratoSeguroAi = {
+    codigo: pacto.codigo,
+    servicio: pacto.title,
+    negocioNombre: pacto.business.name,
+    negocioId: pacto.business.id,
+    precioEstimado: pacto.precio_total,
+    anticipoMaximo: pacto.anticipo,
+    saldoContraEntrega: pacto.saldo_contra_entrega,
+    modalidad: pacto.service_location_type,
+    orderId: pacto.order_id,
+    estado: pacto.status,
+    esParticipante: pacto.nivel === 'participante',
+    esEjemplo: pacto.ejemplo,
+  }
+
+  const estado = (ORDER_STATUS_LABEL[pacto.status] ?? pacto.status).toLowerCase()
+  const monto = formatCurrency(pacto.precio_total)
+
+  if (pacto.nivel === 'participante') {
+    return {
+      mensaje: `Sí, el acuerdo ${pacto.codigo} está asociado a tu cuenta. Es con ${pacto.business.name}, por ${monto}, y hoy figura como ${estado}.`,
+      tipo: 'acuerdo_trato_seguro',
+      acuerdo,
+      sugerencias: ['Ver el comprobante completo', '¿Cómo funciona el Trato Seguro?', 'Ver mis pedidos'],
+    }
+  }
+
+  return {
+    mensaje: `El acuerdo ${pacto.codigo} existe y está registrado con ${pacto.business.name}, por ${monto}. Como no participas en ese trato, no puedo mostrarte el nombre ni la dirección del vecino.`,
+    tipo: 'acuerdo_trato_seguro',
+    acuerdo,
+    sugerencias: ['¿Cómo funciona el Trato Seguro?', 'Ver oficios cercanos', 'Ver mis pedidos'],
+  }
+}
+
 export async function enviarMensajeAsistente(
   mensaje: string,
   historial: MensajeChat[] = [],
   contexto?: ContextoUsuarioCopiloto
 ): Promise<RespuestaAi> {
-  const ubicacionElegida = leerUbicacion()
-  const barrioDetectado = detectarBarrioEnTexto(mensaje)
-  const esDefinida = !!(
-    barrioDetectado ||
-    contexto?.ubicacion?.esDefinida ||
-    ubicacionElegida?.etiqueta
-  )
+  // Un código se consulta antes de hablar: si existe, si es del usuario y en
+  // qué estado está. Los motores no vuelven a tocar ese caso.
+  const respuestaCodigo = await responderConsultaDeCodigo(mensaje)
+  if (respuestaCodigo) return respuestaCodigo
 
-  const barrio = barrioDetectado?.barrio || contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
-  const lat = barrioDetectado?.lat || contexto?.ubicacion?.lat || ubicacionElegida?.center.lat || null
-  const lng = barrioDetectado?.lng || contexto?.ubicacion?.lng || ubicacionElegida?.center.lng || null
+
+  // La ubicación ya viene resuelta: quien declara dónde está pasa antes por
+  // `resolverUbicacionDeclarada`, que la guarda. Aquí solo se lee, nunca se
+  // adivina a partir del texto.
+  const ubicacionElegida = leerUbicacion()
+  const esDefinida = !!(contexto?.ubicacion?.esDefinida || ubicacionElegida?.etiqueta)
+
+  const barrio = contexto?.ubicacion?.barrio || ubicacionElegida?.etiqueta || null
+  const lat = contexto?.ubicacion?.lat ?? ubicacionElegida?.center.lat ?? null
+  const lng = contexto?.ubicacion?.lng ?? ubicacionElegida?.center.lng ?? null
 
   const historialFormateado = historial.slice(-6).map((m) => ({
     rol: m.emisor === 'usuario' ? 'user' : 'model',
@@ -775,11 +908,26 @@ export async function enviarMensajeAsistente(
         ubicacion: { barrio, lat, lng, esDefinida },
         contexto,
       }),
+      // Si Render está arrancando, mejor responder con el motor local que
+      // dejar la conversación congelada un minuto.
+      signal: AbortSignal.timeout(20000),
     })
 
     return respuesta
   } catch (error) {
     console.warn('Backend de IA no disponible, empleando motor local de respaldo:', error)
-    return generarRespuestaLocal(mensaje, barrio, historial, contexto)
+    // Los negocios salen de Supabase, no de una lista de ejemplo: con datos
+    // inventados las tarjetas llevaban a fichas que no existen.
+    let negociosReales: BusinessWithDistance[] = []
+    try {
+      negociosReales = await businessService.search({
+        center: lat != null && lng != null ? { lat, lng } : COMUNA_CENTER,
+        radiusKm: 25,
+        sort: 'distance',
+      })
+    } catch {
+      // Sin red tampoco hay negocios; el motor responde sin tarjetas.
+    }
+    return generarRespuestaLocal(mensaje, barrio, historial, contexto, negociosReales)
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BARRIOS_COMUNA } from '@/services/direccionService'
+import { reverseGeocodificar } from '@/services/direccionService'
 
 export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onError: (msg: string) => void) {
   const [loading, setLoading] = useState(false)
@@ -25,23 +25,19 @@ export function useNeighborhoodLocator(onSuccess: (barrio: string) => void, onEr
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}&zoom=18&addressdetails=1`
-          )
-          if (!res.ok) throw new Error('Nominatim error')
-          const data = await res.json()
-          
-          const barrio = data.address?.neighbourhood || data.address?.suburb || data.address?.residential || data.address?.city_district || ''
-          
-          if (barrio) {
-            onSuccess(barrio)
+          const geo = await reverseGeocodificar({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          })
+          if (geo.etiqueta && !geo.etiqueta.startsWith('Punto (')) {
+            onSuccess(geo.etiqueta)
           } else {
-            // Fallback al barrio más cercano de la comuna
-            onSuccess(BARRIOS_COMUNA[0].nombre)
+            // Rellenar con un barrio de Cali sería peor que no rellenar: el
+            // usuario terminaría con un barrio ajeno guardado en su perfil.
+            onError('Ubicamos tu señal pero no pudimos nombrar el barrio. Escríbelo tú o elige uno sugerido.')
           }
         } catch {
-          // Si el servicio de nombres externos falla, usamos el barrio principal de la comuna
-          onSuccess(BARRIOS_COMUNA[0].nombre)
+          onError('El servicio de mapas no respondió. Escribe tu barrio o elige uno sugerido.')
         } finally {
           setLoading(false)
         }

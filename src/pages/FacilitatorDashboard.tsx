@@ -6,8 +6,15 @@ import { facilitadorService } from '@/services/facilitadorService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
 import { Button } from '@/components/ui/Button'
+import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
+
+const ETIQUETA_ROL: Record<string, string> = {
+  client: 'Cliente',
+  business: 'Emprendedor',
+  facilitador: 'Facilitador',
+}
 
 export default function FacilitatorDashboard() {
   usePageMeta({
@@ -36,6 +43,7 @@ export default function FacilitatorDashboard() {
   const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
   const [notaVerificacion, setNotaVerificacion] = useState('')
   const [guardandoVerif, setGuardandoVerif] = useState(false)
+  const [errorVerif, setErrorVerif] = useState<string | null>(null)
 
   useEffect(() => {
     if (userId) {
@@ -85,6 +93,7 @@ export default function FacilitatorDashboard() {
   async function handleConfirmarVerificacion(negocioId: string) {
     if (!profile) return
     setGuardandoVerif(true)
+    setErrorVerif(null)
     try {
       await businessService.verificarTerritorialmente(
         negocioId,
@@ -96,16 +105,23 @@ export default function FacilitatorDashboard() {
         const data = await facilitadorService.getNegociosVinculados(userId)
         setVinculaciones(data)
       }
+    } catch (e) {
+      setErrorVerif(e instanceof Error ? e.message : 'No pudimos guardar el sello. Intenta de nuevo.')
     } finally {
       setGuardandoVerif(false)
     }
   }
 
   async function handleRevocarVerificacion(negocioId: string) {
-    await businessService.revocarVerificacion(negocioId)
-    if (userId) {
-      const data = await facilitadorService.getNegociosVinculados(userId)
-      setVinculaciones(data)
+    setErrorVerif(null)
+    try {
+      await businessService.revocarVerificacion(negocioId)
+      if (userId) {
+        const data = await facilitadorService.getNegociosVinculados(userId)
+        setVinculaciones(data)
+      }
+    } catch (e) {
+      setErrorVerif(e instanceof Error ? e.message : 'No pudimos retirar el sello. Intenta de nuevo.')
     }
   }
 
@@ -220,7 +236,7 @@ export default function FacilitatorDashboard() {
             )}
             <div className="flex gap-2">
               <dt className="font-medium">Rol:</dt>
-              <dd>Facilitador</dd>
+              <dd>{ETIQUETA_ROL[profile?.account_type ?? 'client']}</dd>
             </div>
           </dl>
         )}
@@ -238,6 +254,12 @@ export default function FacilitatorDashboard() {
             {vinculaciones.length} {vinculaciones.length === 1 ? 'negocio' : 'negocios'}
           </span>
         </div>
+
+        {errorVerif && (
+          <p role="alert" className="rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950/60 dark:text-rose-200">
+            {errorVerif}
+          </p>
+        )}
 
         {vinculaciones.length === 0 ? (
           <div className="card p-6 text-center">
@@ -386,16 +408,16 @@ export default function FacilitatorDashboard() {
       <section className="card p-4">
         <h2 className="font-bold text-ink-900 mb-2">Vincular con un emprendedor</h2>
         <p className="text-sm text-ink-500 mb-3">
-          Pídele al dueño del negocio su código de apadrinamiento de 6 dígitos e ingrésalo aquí.
+          Pídele al dueño del negocio el código de apadrinamiento. Son 8 caracteres y vence en 24 horas.
         </p>
         <div className="flex gap-2">
           <input
             type="text"
-            maxLength={6}
-            placeholder="Ej: 482915"
+            maxLength={8}
+            placeholder="Ej: 4F8A2C91"
             value={codigo}
             onChange={(e) => {
-              setCodigo(e.target.value.replace(/\D/g, ''))
+              setCodigo(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))
               setErrorCodigo(null)
               setExitoCodigo(false)
             }}
@@ -403,7 +425,7 @@ export default function FacilitatorDashboard() {
           />
           <Button
             loading={vinculando}
-            disabled={codigo.length !== 6}
+            disabled={codigo.length !== 8}
             onClick={vincular}
             className="shrink-0"
           >
@@ -414,17 +436,17 @@ export default function FacilitatorDashboard() {
           <p className="mt-2 text-sm text-rose-700">{errorCodigo}</p>
         )}
         {exitoCodigo && (
-          <p className="mt-2 text-sm text-green-700">¡Vinculación exitosa! Ya puedes administrar el negocio.</p>
+          <p className="mt-2 text-sm text-green-700">Quedaste vinculado. Ya puedes acompañar a este negocio.</p>
         )}
       </section>
 
-
+      {userId && <ReportesComunitariosPanel modo="acompanante" usuarioId={userId} />}
 
       <section className="card p-4 bg-brand-50 border-brand-100">
         <h3 className="font-bold text-brand-900 mb-2">¿Cómo apadrinar a un emprendedor?</h3>
         <ol className="list-decimal list-inside text-sm text-brand-800 space-y-1">
           <li>Pídele al dueño del negocio que genere un código en su panel.</li>
-          <li>Ingresa ese código de 6 dígitos en el campo de arriba.</li>
+          <li>Ingresa ese código de 8 caracteres en el campo de arriba.</li>
           <li>¡Listo! Podrás ayudarle a actualizar sus fotos y precios desde aquí.</li>
         </ol>
       </section>

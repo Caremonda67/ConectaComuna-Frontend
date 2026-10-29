@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ChevronDown, LocateFixed, MapPin, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { LazyMap } from '@/components/map/LazyMap'
 import { cn } from '@/lib/utils'
 import { COMUNA_CENTER } from '@/lib/env'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { geocodificar, BARRIOS_COMUNA, type UbicacionGeocodificada } from '@/services/direccionService'
+import {
+  geocodificar,
+  reverseGeocodificar,
+  BARRIOS_COMUNA,
+  type UbicacionGeocodificada,
+} from '@/services/direccionService'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { UbicacionElegida } from '@/lib/ubicacion'
 import type { Coordinates } from '@/types'
@@ -21,15 +26,25 @@ interface Props {
  * búsqueda de negocios.
  */
 export function UbicacionPicker({ value, onChange }: Props) {
-  const { position, status, request } = useGeolocation()
+  const { lectura, status, request } = useGeolocation()
   const [abierto, setAbierto] = useState(false)
   const [texto, setTexto] = useState('')
   const [sugerencias, setSugerencias] = useState<UbicacionGeocodificada[]>([])
   const [buscando, setBuscando] = useState(false)
   const [verMapa, setVerMapa] = useState(false)
   const [picked, setPicked] = useState<Coordinates | null>(null)
+  const [identificandoPunto, setIdentificandoPunto] = useState(false)
   const [gpsActivo, setGpsActivo] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const resolviendoGpsRef = useRef(false)
+  const montadoRef = useRef(true)
+
+  useEffect(() => {
+    montadoRef.current = true
+    return () => {
+      montadoRef.current = false
+    }
+  }, [])
 
   const cerrar = () => {
     setAbierto(false)
@@ -49,17 +64,24 @@ export function UbicacionPicker({ value, onChange }: Props) {
   useEffect(() => {
     const query = texto.trim()
     if (query.length < 2) return
+    // Nominatim admite una consulta por segundo. Con 250 ms una persona
+    // escribiendo normal se comía el límite y recibía 429, que la pantalla
+    // mostraba como "sin coincidencias".
+    let vigente = true
     const timeout = setTimeout(async () => {
       try {
         const hits = await geocodificar(query)
-        setSugerencias(hits)
+        if (vigente) setSugerencias(hits)
       } catch {
-        setError('No pudimos geolocalizar esa dirección. Prueba con el nombre de un barrio.')
+        if (vigente) setError('El buscador de direcciones no responde. Marca el punto en el mapa.')
       } finally {
-        setBuscando(false)
+        if (vigente) setBuscando(false)
       }
-    }, 250)
-    return () => clearTimeout(timeout)
+    }, 650)
+    return () => {
+      vigente = false
+      clearTimeout(timeout)
+    }
   }, [texto])
 
   const usarGps = () => {
@@ -71,15 +93,26 @@ export function UbicacionPicker({ value, onChange }: Props) {
 
   useEffect(() => {
     if (!gpsActivo) return
-    if (status === 'granted') {
-      // Diferimos a un tick: el cambio de estado se aplica tras el render,
-      // sin cascada dentro del efecto.
-      const t = setTimeout(() => {
-        setGpsActivo(false)
-        onChange({ etiqueta: 'Mi ubicación', center: position, origen: 'gps' })
-        cerrar()
-      }, 0)
-      return () => clearTimeout(t)
+    if (status === 'granted' && lectura) {
+      // El resultado se aplica cuando vuelve Nominatim. No se puede apagar
+      // `gpsActivo` antes de esperar: eso reejecuta este efecto, dispara su
+      // propia limpieza y la respuesta llega sin nadie que la reciba.
+      if (resolviendoGpsRef.current) return undefined
+      resolviendoGpsRef.current = true
+
+      void (async () => {
+        let etiqueta = 'Mi ubicación'
+        try {
+          const geo = await reverseGeocodificar(lectura)
+          if (geo?.etiqueta) etiqueta = geo.etiqueta
+        } catch {}
+        resolviendoGpsRef.current = false
+        if (montadoRef.current) {
+          onChange({ etiqueta, center: lectura, origen: 'gps' })
+          cerrar()
+        }
+      })()
+      return undefined
     }
     if (status === 'insecure_context') {
       const t = setTimeout(() => {
@@ -103,12 +136,25 @@ export function UbicacionPicker({ value, onChange }: Props) {
       return () => clearTimeout(t)
     }
     return undefined
-  }, [gpsActivo, status, position, onChange])
+  }, [gpsActivo, status, lectura, onChange])
 
-  const usarPuntoDelMapa = () => {
+  const usarPuntoDelMapa = async () => {
     if (!picked) return
-    onChange({ etiqueta: 'Punto elegido en el mapa', center: picked, origen: 'mapa' })
-    cerrar()
+    setIdentificandoPunto(true)
+    try {
+      const geo = await reverseGeocodificar(picked)
+      onChange({ etiqueta: geo.etiqueta, center: picked, origen: 'mapa' })
+      cerrar()
+    } catch {
+      onChange({
+        etiqueta: `Punto (${picked.lat.toFixed(4)}, ${picked.lng.toFixed(4)})`,
+        center: picked,
+        origen: 'mapa',
+      })
+      cerrar()
+    } finally {
+      setIdentificandoPunto(false)
+    }
   }
 
   return (
@@ -159,7 +205,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
           {/* Accesos directos a barrios de la comuna en 1 toque */}
           <div className="rounded-xl border border-ink-100 dark:border-ink-200 bg-cream-50 dark:bg-cream-100 p-2.5 space-y-1.5">
             <span className="text-[11px] font-semibold text-ink-600 uppercase tracking-wider block">
-              Barrios de la comuna (1 toque)
+              Barrios del piloto (1 toque)
             </span>
             <div className="flex flex-wrap gap-1.5">
               {BARRIOS_COMUNA.map((b) => (
@@ -220,7 +266,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
                 className="mt-2 divide-y divide-ink-100 dark:divide-ink-200 rounded-xl border border-ink-200 bg-white dark:bg-cream-100 overflow-hidden"
               >
                 {sugerencias.map((s) => (
-                  <li key={s.etiqueta}>
+                  <li key={`${s.etiqueta}|${s.center.lat},${s.center.lng}`}>
                     <button
                       type="button"
                       role="option"
@@ -255,10 +301,23 @@ export function UbicacionPicker({ value, onChange }: Props) {
                 pickedPosition={picked}
                 onPick={setPicked}
               />
-              <Button fullWidth disabled={!picked} onClick={usarPuntoDelMapa}>
-                Usar este punto
+              {picked && (
+                <div className="flex items-center gap-1.5 text-xs text-ink-600 bg-cream-100 dark:bg-cream-200 p-2 rounded-lg">
+                  <MapPin size={13} className="text-brand-600 shrink-0" />
+                  <span className="truncate">
+                    Punto marcado: {picked.lat.toFixed(4)}, {picked.lng.toFixed(4)}
+                  </span>
+                </div>
+              )}
+              <Button
+                fullWidth
+                disabled={!picked}
+                loading={identificandoPunto}
+                onClick={usarPuntoDelMapa}
+              >
+                {identificandoPunto ? 'Identificando ubicación…' : 'Usar este punto'}
               </Button>
-              <p className="text-xs text-ink-500">Toca el mapa donde quieras buscar.</p>
+              <p className="text-xs text-ink-500">Toca el mapa en cualquier lugar para ubicarte.</p>
             </div>
           )}
 

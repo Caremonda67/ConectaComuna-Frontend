@@ -1,15 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
 import { businessService } from '@/services/businessService'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { BusinessFiltersBar } from '@/components/business/BusinessFiltersBar'
 import { UbicacionPicker } from '@/components/location/UbicacionPicker'
-import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
+import { useUbicacionElegida } from '@/hooks/useUbicacionElegida'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
+import { estaFueraDelPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
@@ -19,20 +20,12 @@ import type { BusinessFilters, CategorySlug } from '@/types'
  */
 export default function ExplorePage() {
   usePageMeta({
-    title: 'Explorar oficios en la comuna',
+    title: 'Explorar oficios en tu comuna',
     description: 'Directorio barrial de oficios y servicios en Cali. Filtra por categoría, ubicación y disponibilidad.',
   })
 
   const [params, setParams] = useSearchParams()
-  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
-
-  const elegirUbicacion = useCallback(
-    (u: UbicacionElegida) => {
-      guardarUbicacion(u)
-      setUbicacion(u)
-    },
-    [],
-  )
+  const [ubicacion, elegirUbicacion] = useUbicacionElegida()
 
   const filters: BusinessFilters = useMemo(
     () => ({
@@ -47,6 +40,8 @@ export default function ExplorePage() {
     }),
     [params, ubicacion],
   )
+
+  const fueraDelPiloto = estaFueraDelPiloto(ubicacion?.center)
 
   const { data, loading, error, reload } = useAsync(
     () => businessService.search(filters),
@@ -106,12 +101,16 @@ export default function ExplorePage() {
       {!loading && !error && (data?.length ?? 0) === 0 && (
         <EmptyState
           title={
-            filters.openNow
+            fueraDelPiloto
+              ? `No hay negocios registrados aún en ${ubicacion?.etiqueta}`
+              : filters.openNow
               ? 'No hay negocios abiertos en este momento'
               : 'No encontramos negocios con esos filtros'
           }
           description={
-            filters.openNow
+            fueraDelPiloto
+              ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes explorar los oficios y talleres del piloto con un toque:'
+              : filters.openNow
               ? 'En este horario los talleres se encuentran cerrados. Desactiva «Solo abiertos ahora» para ver todos los oficios disponibles y coordinar por WhatsApp.'
               : filters.wholesaleOnly
                 ? 'No encontramos opciones con venta al por mayor para esta combinación. Desactiva el filtro mayorista o prueba en otra categoría.'
@@ -121,6 +120,16 @@ export default function ExplorePage() {
           }
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">
+              {fueraDelPiloto && (
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    elegirUbicacion({ ...PUNTO_PILOTO, origen: 'busqueda' })
+                  }
+                >
+                  Ver comercios del piloto (Cali)
+                </Button>
+              )}
               {filters.openNow && (
                 <Button variant="primary" onClick={() => onChange({ openNow: false })}>
                   Ver todos los negocios

@@ -20,6 +20,7 @@ const TratoSeguroVerificationPage = lazy(() => import('@/pages/TratoSeguroVerifi
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
 const PrivacyPage = lazy(() => import('@/pages/legal/PrivacyPage'))
 const FacilitatorDashboard = lazy(() => import('@/pages/FacilitatorDashboard'))
+const EquipoPage = lazy(() => import('@/pages/EquipoPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 
 function Lazy({ children }: { children: React.ReactNode }) {
@@ -73,22 +74,6 @@ const router = createBrowserRouter([
       },
       {
         path: 'trato-seguro/verificar',
-        element: (
-          <Lazy>
-            <TratoSeguroVerificationPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'verificar-trato/:codigo',
-        element: (
-          <Lazy>
-            <TratoSeguroVerificationPage />
-          </Lazy>
-        ),
-      },
-      {
-        path: 'verificar-trato',
         element: (
           <Lazy>
             <TratoSeguroVerificationPage />
@@ -172,9 +157,19 @@ const router = createBrowserRouter([
       {
         path: 'panel/facilitador',
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requireFacilitador>
             <Lazy>
               <FacilitatorDashboard />
+            </Lazy>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'panel/equipo',
+        element: (
+          <ProtectedRoute>
+            <Lazy>
+              <EquipoPage />
             </Lazy>
           </ProtectedRoute>
         ),

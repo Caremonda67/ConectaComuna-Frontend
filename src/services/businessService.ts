@@ -1,6 +1,5 @@
 import { requireSupabase } from '@/lib/supabase'
-import { isDemoMode, env } from '@/lib/env'
-import { apiFetch } from '@/lib/apiClient'
+import { isDemoMode } from '@/lib/env'
 import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Business, BusinessFilters, BusinessWithDistance, EstadoReporte, ReporteComunitario, Review } from '@/types'
@@ -216,10 +215,34 @@ export const businessService = {
       return delay(merged)
     }
 
-    // RLS: policy "businesses_owner_write" con `auth.uid() = owner_id`.
-    const { data, error } = await requireSupabase()
+    const supabase = requireSupabase()
+    // Si ya existe el negocio (por id o por owner_id), se actualiza con UPDATE.
+    // Usar `.upsert()` en PostgREST dispara la comprobación de INSERT, la cual
+    // bloquea a los facilitadores autorizados porque su auth.uid() no es el owner_id.
+    let existingId: string | null = (input as { id?: string }).id ?? null
+    if (!existingId) {
+      const { data: found } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', ownerId)
+        .maybeSingle()
+      if (found?.id) existingId = found.id
+    }
+
+    if (existingId) {
+      const { data, error } = await supabase
+        .from('businesses')
+        .update(input)
+        .eq('id', existingId)
+        .select()
+        .single()
+      if (error) throw error
+      return data as Business
+    }
+
+    const { data, error } = await supabase
       .from('businesses')
-      .upsert({ ...input, owner_id: ownerId }, { onConflict: 'owner_id' })
+      .insert({ ...input, owner_id: ownerId })
       .select()
       .single()
     if (error) throw error
@@ -297,16 +320,14 @@ export const businessService = {
       return delay(undefined, 250)
     }
 
-    try {
-      await requireSupabase()
-        .from('businesses')
-        .update({
-          verification_status: 'verified',
-        })
-        .eq('id', negocioId)
-    } catch (e) {
-      console.warn('Actualización remota de verificación:', e)
-    }
+    // El sello lo aplica una función de la base: comprueba que quien firma sea
+    // un facilitador vinculado y escribe estado, nombre, fecha y nota de campo.
+    // El trigger de protección no permite ese update a mano.
+    const { error } = await requireSupabase().rpc('otorgar_sello_territorial', {
+      p_negocio: negocioId,
+      p_nota: notaLimpia,
+    })
+    if (error) throw new Error(error.message)
   },
 
   /**
@@ -338,16 +359,10 @@ export const businessService = {
       return delay(undefined, 250)
     }
 
-    try {
-      await requireSupabase()
-        .from('businesses')
-        .update({
-          verification_status: 'unverified',
-        })
-        .eq('id', negocioId)
-    } catch (e) {
-      console.warn('Actualización remota de revocación:', e)
-    }
+    const { error } = await requireSupabase().rpc('revocar_sello_territorial', {
+      p_negocio: negocioId,
+    })
+    if (error) throw new Error(error.message)
   },
 
   /**
@@ -364,92 +379,65 @@ export const businessService = {
       creado_en: fecha,
     }
 
-    // Persistir localmente
-    try {
-      const raw = localStorage.getItem('cc_reportes_local')
-      const arr: ReporteComunitario[] = raw ? JSON.parse(raw) : []
-      arr.unshift(nuevo)
-      localStorage.setItem('cc_reportes_local', JSON.stringify(arr))
-
-      const reportesNegocio = arr.filter((r) => r.negocio_id === reporte.negocio_id)
-      if (reportesNegocio.length >= 2) {
-        localStorage.setItem(
-          `cc_verif_${reporte.negocio_id}`,
-          JSON.stringify({
-            status: 'under_review',
-            by: null,
-            note: 'Bajo observación comunitaria por reportes vecinales',
-            date: fecha,
-          }),
-        )
-      }
-    } catch {}
-
     if (isDemoMode) {
+      // El negocio solo entra bajo observación cuando el equipo confirma dos reportes,
+      // no cuando entran reportes pendientes.
       mutateDb((d) => {
         d.reportes.push({
           ...nuevo,
           estado: 'pendiente',
         })
-        const b = d.businesses.find((x) => x.id === reporte.negocio_id)
-        if (b) {
-          b.report_count = (b.report_count ?? 0) + 1
-          if (b.report_count >= 2) {
-            b.verification_status = 'under_review'
-          }
-        }
       })
       return delay(undefined, 300)
     }
 
-    if (env.apiUrl) {
-      try {
-        await apiFetch('/api/reports', {
-          method: 'POST',
-          body: JSON.stringify({
-            negocio_id: reporte.negocio_id,
-            motivo: reporte.motivo,
-            descripcion: reporte.descripcion ?? null,
-          }),
-        })
-        return
-      } catch (err) {
-        console.warn('API Express no disponible, usando PostgREST directo:', err)
-      }
-    }
-
-    try {
-      await requireSupabase()
-        .from('reportes_comunitarios')
-        .insert({
-          negocio_id: reporte.negocio_id,
-          reportado_por_id: reporte.reportado_por_id,
-          motivo: reporte.motivo,
-          descripcion: reporte.descripcion,
-          estado: 'pendiente',
-        })
-    } catch {}
+    const { error } = await requireSupabase()
+      .from('reportes_comunitarios')
+      .insert({
+        negocio_id: reporte.negocio_id,
+        reportado_por_id: reporte.reportado_por_id,
+        motivo: reporte.motivo,
+        descripcion: reporte.descripcion,
+        estado: 'pendiente',
+      })
+    if (error) throw error
   },
 
   /**
-   * Lista los reportes registrados para seguimiento y mediación comunitaria.
+   * Lista los reportes que la cuenta tiene permitido ver. La base decide el
+   * alcance: el equipo ve todo, el dueño y su facilitador solo sus negocios.
+   * El nombre de quien reporta solo viaja para el equipo; al negocio no le
+   * sirve para responder y puede exponerlo a represalias.
    */
-  async listarReportes(negocioId?: string): Promise<ReporteComunitario[]> {
-    let localList: ReporteComunitario[] = []
-    try {
-      const raw = localStorage.getItem('cc_reportes_local')
-      if (raw) localList = JSON.parse(raw)
-    } catch {}
-
+  async listarReportes(
+    negocioId?: string,
+    incluirReportante = false,
+  ): Promise<ReporteComunitario[]> {
     if (isDemoMode) {
       const db = readDb()
-      let list = [...localList, ...db.reportes]
+      let list = [...db.reportes]
       if (negocioId) {
         list = list.filter((r) => r.negocio_id === negocioId)
+      } else if (!incluirReportante && db.sessionUserId) {
+        // En vista de facilitador, filtrar únicamente por los negocios que apadrina
+        const vinculados = new Set(
+          db.vinculaciones
+            .filter((v) => v.facilitador_id === db.sessionUserId && v.estado_vinculacion === 'aprobado')
+            .map((v) => v.negocio_id),
+        )
+        list = list.filter((r) => vinculados.has(r.negocio_id))
       }
       const hydrated = list.map((r) => {
         const b = db.businesses.find((x) => x.id === r.negocio_id)
-        const p = db.profiles.find((x) => x.id === r.reportado_por_id)
+        const p = incluirReportante
+          ? db.profiles.find((x) => x.id === r.reportado_por_id)
+          : undefined
+        const respuestas = db.respuestas
+          .filter((x) => x.reporte_id === r.id)
+          .map((x) => ({
+            ...x,
+            autor: db.profiles.find((perfil) => perfil.id === x.autor_id) ?? null,
+          }))
         return {
           ...r,
           estado: r.estado ?? 'pendiente',
@@ -469,44 +457,62 @@ export const businessService = {
                 phone: p.phone,
               }
             : null,
+          respuestas,
         }
       })
       return delay(hydrated.sort((a, b) => b.creado_en.localeCompare(a.creado_en)), 200)
     }
 
-    try {
-      let query = requireSupabase()
-        .from('reportes_comunitarios')
-        .select(
-          '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone)',
-        )
-        .order('creado_en', { ascending: false })
-        .limit(50)
+    const base =
+      '*, negocio:businesses(id, name, category, phone, verification_status), respuestas:reporte_respuestas(id, autor_id, mensaje, creado_en, autor:profiles!reporte_respuestas_autor_id_fkey(id, full_name))'
+    const conReportante =
+      '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone), respuestas:reporte_respuestas(id, autor_id, mensaje, creado_en, autor:profiles!reporte_respuestas_autor_id_fkey(id, full_name))'
 
-      if (negocioId) {
-        query = query.eq('negocio_id', negocioId)
-      }
+    const consulta = incluirReportante
+      ? requireSupabase().from('reportes_comunitarios').select(conReportante)
+      : requireSupabase().from('reportes_comunitarios').select(base)
 
-      const { data, error } = await query
-      if (!error && data && data.length > 0) {
-        const ids = new Set((data as ReporteComunitario[]).map((r) => r.id))
-        const unicos = localList.filter((r) => !ids.has(r.id))
-        return [...unicos, ...(data as ReporteComunitario[])].sort((a, b) =>
-          b.creado_en.localeCompare(a.creado_en),
-        )
-      }
-    } catch {}
-
-    return localList.filter((r) => !negocioId || r.negocio_id === negocioId)
+    const filtrada = negocioId ? consulta.eq('negocio_id', negocioId) : consulta
+    const { data, error } = await filtrada
+      .order('creado_en', { ascending: false })
+      .limit(50)
+    if (error) throw error
+    return (data ?? []) as ReporteComunitario[]
   },
 
   /**
-   * Actualiza el estado de resolución de un reporte comunitario.
+   * Deja la versión del negocio o de su facilitador dentro del reporte. Solo
+   * puede escribir quien tiene acceso al caso, y eso lo valida la base.
+   */
+  async responderReporte(reporteId: string, autorId: string, mensaje: string): Promise<void> {
+    const texto = mensaje.trim()
+    if (texto.length < 5) throw new Error('Escribe al menos una frase para que se entienda la respuesta.')
+
+    if (isDemoMode) {
+      const nueva = {
+        id: uid('resp'),
+        reporte_id: reporteId,
+        autor_id: autorId,
+        mensaje: texto,
+        creado_en: new Date().toISOString(),
+      }
+      mutateDb((d) => d.respuestas.push(nueva))
+      return delay(undefined, 200)
+    }
+
+    const { error } = await requireSupabase()
+      .from('reporte_respuestas')
+      .insert({ reporte_id: reporteId, autor_id: autorId, mensaje: texto })
+    if (error) throw error
+  },
+
+  /**
+   * Resuelve un reporte. Solo el equipo de Conecta Comuna puede hacerlo; el
+   * autor de la decisión y la fecha los pone la base.
    */
   async actualizarEstadoReporte(
     reporteId: string,
     estado: EstadoReporte,
-    moderadoPorId?: string,
     notas?: string,
   ): Promise<void> {
     if (isDemoMode) {
@@ -514,23 +520,24 @@ export const businessService = {
         const rep = d.reportes.find((r) => r.id === reporteId)
         if (rep) {
           rep.estado = estado
-          rep.moderado_por_id = moderadoPorId ?? null
           rep.notas_moderacion = notas ?? null
           rep.actualizado_en = new Date().toISOString()
-        }
-      })
-      try {
-        const raw = localStorage.getItem('cc_reportes_local')
-        if (raw) {
-          const parsed: ReporteComunitario[] = JSON.parse(raw)
-          const idx = parsed.findIndex((r) => r.id === reporteId)
-          if (idx >= 0) {
-            parsed[idx].estado = estado
-            parsed[idx].notas_moderacion = notas ?? null
-            localStorage.setItem('cc_reportes_local', JSON.stringify(parsed))
+
+          // Recalcular contador y observación igual que el trigger PostgreSQL refresh_business_reports
+          const b = d.businesses.find((x) => x.id === rep.negocio_id)
+          if (b) {
+            const confirmados = d.reportes.filter(
+              (r) => r.negocio_id === rep.negocio_id && r.estado === 'revisado',
+            ).length
+            b.report_count = confirmados
+            if (confirmados >= 2 && b.verification_status !== 'under_review') {
+              b.verification_status = 'under_review'
+            } else if (confirmados < 2 && b.verification_status === 'under_review') {
+              b.verification_status = b.verification_date ? 'verified' : 'unverified'
+            }
           }
         }
-      } catch {}
+      })
       return delay(undefined, 200)
     }
 
@@ -538,53 +545,20 @@ export const businessService = {
       .from('reportes_comunitarios')
       .update({
         estado,
-        moderado_por_id: moderadoPorId ?? null,
         notas_moderacion: notas ?? null,
-        actualizado_en: new Date().toISOString(),
       })
       .eq('id', reporteId)
     if (error) throw error
   },
 
-  /**
-   * Cambia el estado de verificación u observación de un negocio ante reportes.
-   */
-  async cambiarEstadoObservacionNegocio(
-    negocioId: string,
-    nuevoEstado: 'under_review' | 'verified' | 'unverified',
-    nota?: string,
-  ): Promise<void> {
-    if (isDemoMode) {
-      mutateDb((d) => {
-        const b = d.businesses.find((x) => x.id === negocioId)
-        if (b) {
-          b.verification_status = nuevoEstado
-          b.verification_note = nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null)
-          b.verification_date = new Date().toISOString()
-        }
-      })
-      try {
-        localStorage.setItem(
-          `cc_verif_${negocioId}`,
-          JSON.stringify({
-            status: nuevoEstado,
-            by: 'Moderación Comunitaria',
-            note: nota ?? (nuevoEstado === 'under_review' ? 'Bajo observación comunitaria' : null),
-            date: new Date().toISOString(),
-          }),
-        )
-      } catch {}
-      return delay(undefined, 200)
+  /** Cuenta corta del equipo que media los reportes. No es un rol del producto. */
+  async esEquipoConecta(): Promise<boolean> {
+    if (isDemoMode) return true
+    const { data, error } = await requireSupabase().rpc('es_equipo_conecta')
+    if (error) {
+      console.warn('No se pudo comprobar si la cuenta es del equipo:', error.message)
+      return false
     }
-
-    const { error } = await requireSupabase()
-      .from('businesses')
-      .update({
-        verification_status: nuevoEstado,
-        verification_note: nota ?? null,
-        verification_date: new Date().toISOString(),
-      })
-      .eq('id', negocioId)
-    if (error) throw error
+    return Boolean(data)
   },
 }

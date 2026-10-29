@@ -43,6 +43,7 @@ export default function RegisterPage() {
   const fromState = (location.state as { from?: string } | null)?.from
   const [accountType, setAccountType] = useState<AccountType>('client')
   const [serverError, setServerError] = useState<string | null>(null)
+  const [confirmacionPendiente, setConfirmacionPendiente] = useState<string | null>(null)
 
   const {
     register,
@@ -62,7 +63,7 @@ export default function RegisterPage() {
   async function onSubmit(values: Values) {
     setServerError(null)
     try {
-      await signUp({
+      const res = await signUp({
         email: values.email,
         password: values.password,
         fullName: values.fullName,
@@ -70,16 +71,37 @@ export default function RegisterPage() {
         neighborhood: values.neighborhood || undefined,
         accountType,
       })
-      const destino =
-        accountType === 'business'
-          ? '/panel/negocio'
-          : accountType === 'facilitador'
-            ? '/panel/facilitador'
-            : '/panel'
+      if (res?.requiresEmailConfirmation) {
+        setConfirmacionPendiente(values.email)
+        return
+      }
+      const destino = accountType === 'business' ? '/panel/negocio' : '/panel'
       navigate(destino, { replace: true })
     } catch (e) {
       setServerError(e instanceof Error ? e.message : 'No pudimos crear tu cuenta.')
     }
+  }
+
+  if (confirmacionPendiente) {
+    return (
+      <div className="mx-auto max-w-sm space-y-4 text-center py-6 card p-6">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+          <UI_ICONS.mail size={28} />
+        </div>
+        <h1 className="text-2xl font-extrabold text-ink-900">Revisa tu correo</h1>
+        <p className="text-sm text-ink-600 leading-relaxed">
+          Hemos enviado un enlace de confirmación a <strong className="text-ink-900">{confirmacionPendiente}</strong>.
+          Ábrelo para activar tu cuenta e ingresar de inmediato a la comuna.
+        </p>
+        <Link
+          to="/entrar"
+          state={fromState ? { from: fromState } : undefined}
+          className="btn btn-primary w-full inline-block mt-2"
+        >
+          Ir a iniciar sesión
+        </Link>
+      </div>
+    )
   }
 
   return (
@@ -90,7 +112,7 @@ export default function RegisterPage() {
         <legend className="mb-2 text-sm font-medium text-ink-700">
           ¿Cómo vas a usar ConectaComuna?
         </legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <TypeCard
             active={accountType === 'client'}
             onClick={() => setAccountType('client')}
@@ -105,14 +127,10 @@ export default function RegisterPage() {
             title="Negocio"
             description="Ofrezco mi oficio"
           />
-          <TypeCard
-            active={accountType === 'facilitador'}
-            onClick={() => setAccountType('facilitador')}
-            icon={UI_ICONS.person}
-            title="Facilitador"
-            description="Apoyo a negocios"
-          />
         </div>
+        <p className="mt-2 text-xs text-ink-500">
+          Las cuentas de facilitador comunitario las asigna el equipo de Conecta Comuna.
+        </p>
       </fieldset>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-3">

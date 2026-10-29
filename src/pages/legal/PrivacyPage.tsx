@@ -257,8 +257,8 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong>Cartografía y geocodificación abierta (OpenStreetMap / Nominatim):</strong> Las búsquedas
-              por nombre de barrio envían consultas acotadas al perímetro geográfico de Cali (viewbox local)
-              para ubicar las coordenadas de referencia del mapa, identificando las peticiones conforme a la
+              por nombre de barrio y la lectura del punto que marcas en el mapa envían consultas acotadas a
+              Colombia para obtener las coordenadas de referencia, identificando las peticiones conforme a la
               política de uso de la fundación OpenStreetMap.
             </li>
             <li>

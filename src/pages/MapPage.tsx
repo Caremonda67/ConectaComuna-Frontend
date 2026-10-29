@@ -6,10 +6,12 @@ import { businessService } from '@/services/businessService'
 import { LazyMap } from '@/components/map/LazyMap'
 import { BusinessCard } from '@/components/business/BusinessCard'
 import { UbicacionPicker } from '@/components/location/UbicacionPicker'
-import { guardarUbicacion, leerUbicacion, type UbicacionElegida } from '@/lib/ubicacion'
+import { useUbicacionElegida } from '@/hooks/useUbicacionElegida'
 import { CardSkeletonList, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
+import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER } from '@/lib/env'
+import { estaFueraDelPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { CATEGORIES } from '@/data/categories'
 import type { CategorySlug } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
@@ -24,16 +26,13 @@ export default function MapPage() {
   const [searchParams] = useSearchParams()
   const catParam = (searchParams.get('categoria') || searchParams.get('cat')) as CategorySlug | null
 
-  const [ubicacion, setUbicacion] = useState<UbicacionElegida | null>(leerUbicacion)
+  const [ubicacion, elegirUbicacion] = useUbicacionElegida()
   const [category, setCategory] = useState<CategorySlug | 'all'>(catParam || 'all')
   const [radiusKm, setRadiusKm] = useState(5)
 
-  const elegirUbicacion = (u: UbicacionElegida) => {
-    guardarUbicacion(u)
-    setUbicacion(u)
-  }
-
   const center = ubicacion?.center ?? COMUNA_CENTER
+
+  const fueraDelPiloto = estaFueraDelPiloto(ubicacion?.center)
 
   const filters = useMemo(
     () => ({ category, center, radiusKm, sort: 'distance' as const }),
@@ -47,7 +46,7 @@ export default function MapPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Mapa de la comuna</h1>
+      <h1 className="text-xl font-bold">Mapa de tu comuna</h1>
 
       <UbicacionPicker value={ubicacion} onChange={elegirUbicacion} />
 
@@ -108,8 +107,26 @@ export default function MapPage() {
         {!loading && !error && (data?.length ?? 0) === 0 && (
           <EmptyState
             icon={UI_ICONS.map}
-            title="Ningún negocio en este radio"
-            description="Amplía el radio de búsqueda para ver más opciones."
+            title={
+              fueraDelPiloto
+                ? `No hay talleres registrados en ${ubicacion?.etiqueta}`
+                : 'Ningún negocio en este radio'
+            }
+            description={
+              fueraDelPiloto
+                ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes ver los oficios del piloto en el mapa con un toque:'
+                : 'Amplía el radio de búsqueda para ver más opciones.'
+            }
+            action={
+              fueraDelPiloto ? (
+                <Button
+                  variant="primary"
+                  onClick={() => elegirUbicacion({ ...PUNTO_PILOTO, origen: 'busqueda' })}
+                >
+                  Ver talleres del piloto (Cali)
+                </Button>
+              ) : undefined
+            }
           />
         )}
         <div className="grid gap-3">

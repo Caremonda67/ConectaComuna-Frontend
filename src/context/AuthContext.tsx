@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { authService, type SignUpInput, type SocialProvider } from '@/services/authService'
+import { authService, type AuthSession, type SignUpInput, type SocialProvider } from '@/services/authService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
 import type { ActiveRole, Business, Profile } from '@/types'
@@ -22,7 +22,7 @@ interface AuthContextValue {
   isDual: boolean
   setActiveRole: (role: ActiveRole) => void
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (input: SignUpInput) => Promise<void>
+  signUp: (input: SignUpInput) => Promise<AuthSession>
   signInWithOAuth: (provider: SocialProvider, returnTo?: string) => Promise<void>
   signOut: () => Promise<void>
   refresh: () => Promise<void>
@@ -52,13 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setBusiness(null)
       return
     }
-    setUserId(session.userId)
-    setEmail(session.email)
+    // Todo junto al final: si se publica la sesión antes de tener el perfil,
+    // queda un render con usuario y sin perfil, y el guardia de rutas lo lee
+    // como perfil incompleto y manda a /onboarding a quien ya lo completó.
     const p = await profileService.getById(session.userId)
-    setProfile(p)
     // Un perfil de negocio puede aún no haber creado su ficha: eso lo
     // aprovechamos para el onboarding asistido del perfil.
-    setBusiness(p?.account_type === 'business' ? await businessService.getByOwner(session.userId) : null)
+    const negocio = p?.account_type === 'business' ? await businessService.getByOwner(session.userId) : null
+
+    setUserId(session.userId)
+    setEmail(session.email)
+    setProfile(p)
+    setBusiness(negocio)
     if (p?.account_type === 'business' && !localStorage.getItem(ROLE_KEY)) {
       setActiveRoleState('business')
     }
@@ -104,9 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadUser()
       },
       async signUp(input) {
-        await authService.signUp(input)
+        const session = await authService.signUp(input)
         setActiveRole(input.accountType)
         await loadUser()
+        return session
       },
       async signInWithOAuth(provider, returnTo) {
         await authService.signInWithOAuth(provider, returnTo)

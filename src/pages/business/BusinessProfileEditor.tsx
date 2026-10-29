@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
+import { reverseGeocodificar } from '@/services/direccionService'
 import { DAY_NAMES } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
@@ -161,6 +162,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
     control,
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -178,7 +180,28 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
   const [position, setPosition] = useState<Coordinates>(
     managedBusiness ? { lat: managedBusiness.lat, lng: managedBusiness.lng } : COMUNA_CENTER,
   )
+  const [resolviendoBarrio, setResolviendoBarrio] = useState(false)
   const [photos, setPhotos] = useState<string[]>(managedBusiness?.photos ?? [])
+
+  /**
+   * El barrio sale del punto que la persona marca, no de lo que escriba. Así
+   * "El Rodeo", "el rodeo" y "Barrio El Rodeo" dejan de ser tres zonas
+   * distintas, y la ciudad entra sola para quien no está en Cali.
+   */
+  async function marcarPunto(punto: Coordinates) {
+    setPosition(punto)
+    setResolviendoBarrio(true)
+    try {
+      const geo = await reverseGeocodificar(punto)
+      if (geo?.etiqueta && !geo.etiqueta.startsWith('Punto (')) {
+        setValue('neighborhood', geo.etiqueta, { shouldDirty: true })
+      }
+    } catch {
+      // Sin red el campo queda como estaba y la persona lo escribe.
+    } finally {
+      setResolviendoBarrio(false)
+    }
+  }
   const [hours, setHours] = useState<BusinessHours[]>(
     managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours(),
   )
@@ -267,7 +290,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           <div>
             <span className="font-semibold block text-sm">Tu negocio cuenta con el Sello de Verificación en Territorio</span>
             <span className="text-emerald-800 dark:text-emerald-300">
-              {managedBusiness.verification_note || 'Validado en persona en la comuna por un facilitador o líder comunal.'}
+              {managedBusiness.verification_note || 'Validado en persona en la comuna por un facilitador de la red.'}
             </span>
           </div>
         </div>
@@ -279,7 +302,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           <div>
             <span className="font-semibold block text-sm text-ink-900">¿Cómo obtener el Sello de Verificación en Territorio?</span>
             <p className="mt-0.5 text-ink-600 leading-relaxed">
-              Los facilitadores comunitarios y líderes de la Junta de Acción Comunal validan presencialmente que tu negocio o taller existe físicamente en el barrio. Comparte tu código de apadrinamiento con tu facilitador asignado para registrar tu visita.
+              Un facilitador de la red visita tu negocio o taller y confirma que existe en el barrio. Para eso necesita el código de apadrinamiento que generas más abajo; él registra la visita y queda el sello.
             </p>
           </div>
         </div>
@@ -330,7 +353,16 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           error={errors.address?.message}
           {...register('address')}
         />
-        <TextField label="Barrio" error={errors.neighborhood?.message} {...register('neighborhood')} />
+        <TextField
+          label="Barrio"
+          hint={
+            resolviendoBarrio
+              ? 'Leyendo el punto del mapa…'
+              : 'Se completa solo al mover el punto. Puedes corregirlo si tu barrio se llama de otra forma.'
+          }
+          error={errors.neighborhood?.message}
+          {...register('neighborhood')}
+        />
 
         <div>
           <p className="mb-1 text-sm font-medium text-ink-700">
@@ -340,7 +372,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             center={position}
             pickable
             pickedPosition={position}
-            onPick={setPosition}
+            onPick={marcarPunto}
             showUser={false}
             height="260px"
             zoom={16}

@@ -152,36 +152,41 @@ export default function OnboardingPage() {
           <label className="block text-sm font-medium text-ink-700">
             ¿Cómo quieres usar la app?
           </label>
-          <div className="grid grid-cols-1 gap-2">
-            {(['client', 'business', 'facilitador'] as AccountType[]).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setFormData({ ...formData, accountType: type })}
-                className={`flex items-center justify-between rounded-xl border p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer select-none ${
-                  formData.accountType === type
-                    ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500 shadow-xs'
-                    : 'border-ink-200 bg-white dark:bg-cream-50 hover:bg-cream-100 dark:hover:bg-cream-200 hover:border-ink-300'
-                }`}
-              >
-                <div>
-                  <p className="font-semibold capitalize text-ink-900">
-                    {type === 'client' ? 'Cliente / Vecino' : type === 'business' ? 'Emprendedor' : 'Facilitador'}
-                  </p>
-                  <p className="text-xs text-ink-500">
-                    {type === 'client'
-                      ? 'Quiero buscar y contratar servicios en mi barrio.'
-                      : type === 'business'
-                        ? 'Quiero registrar mi negocio y ofrecer mis productos.'
-                        : 'Quiero ayudar a otros emprendedores a digitalizarse.'}
-                  </p>
-                </div>
-                <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${formData.accountType === type ? 'border-brand-500 bg-brand-500' : 'border-ink-300'}`}>
-                  {formData.accountType === type && <div className="h-2 w-2 rounded-full bg-white" />}
-                </div>
-              </button>
-            ))}
-          </div>
+          {formData.accountType === 'facilitador' ? (
+            <p className="rounded-xl border border-brand-200 bg-brand-50 p-3.5 text-sm text-brand-900">
+              Tu cuenta es de facilitador comunitario. Esa asignación la hace el equipo de Conecta
+              Comuna, así que aquí solo completas tus datos.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 gap-2">
+              {(['client', 'business'] as AccountType[]).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, accountType: type })}
+                  className={`flex items-center justify-between rounded-xl border p-3.5 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer select-none ${
+                    formData.accountType === type
+                      ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500 shadow-xs'
+                      : 'border-ink-200 bg-white dark:bg-cream-50 hover:bg-cream-100 dark:hover:bg-cream-200 hover:border-ink-300'
+                  }`}
+                >
+                  <div>
+                    <p className="font-semibold capitalize text-ink-900">
+                      {type === 'client' ? 'Cliente / Vecino' : 'Emprendedor'}
+                    </p>
+                    <p className="text-xs text-ink-500">
+                      {type === 'client'
+                        ? 'Quiero buscar y contratar servicios en mi barrio.'
+                        : 'Quiero registrar mi negocio y ofrecer mis productos.'}
+                    </p>
+                  </div>
+                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center ${formData.accountType === type ? 'border-brand-500 bg-brand-500' : 'border-ink-300'}`}>
+                    {formData.accountType === type && <div className="h-2 w-2 rounded-full bg-white" />}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && <p className="text-sm text-rose-600">{error}</p>}
