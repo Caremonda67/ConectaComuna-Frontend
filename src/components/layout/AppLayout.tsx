@@ -3,7 +3,8 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
-import { isDemoMode } from '@/lib/env'
+import { checkBackendHealth } from '@/lib/apiClient'
+import { env, isDemoMode } from '@/lib/env'
 import { cn } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import { usePendingOrdersCount } from '@/hooks/usePendingOrdersCount'
@@ -21,6 +22,13 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const prefersReduced = useReducedMotion()
+
+  // Despierta el backend en la primera visita. En el plan gratuito de Render el
+  // arranque tarda cerca de un minuto y quien abre el asistente lo pagaría.
+  useEffect(() => {
+    if (!env.apiUrl) return
+    void checkBackendHealth()
+  }, [])
 
   const topNav = [
     { to: '/', label: 'Inicio', end: true },
