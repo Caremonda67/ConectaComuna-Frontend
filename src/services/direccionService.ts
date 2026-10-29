@@ -134,6 +134,36 @@ export const direccionService = {
   },
 }
 
+/** Último recurso cuando no hay nombre para unas coordenadas. */
+function puntoSinNombre(coords: Coordinates): string {
+  return `Punto (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
+}
+
+/**
+ * Arma "Barrio, Ciudad" a partir de los campos que devuelve Nominatim.
+ * La respuesta trae el mismo lugar bajo nombres distintos según el país y el
+ * tipo de vía, por eso la cascada de alternativas.
+ */
+function etiquetarDireccion(
+  address: Record<string, string> | undefined,
+  respaldo: string,
+): string {
+  const a = address || {}
+  const barrio =
+    a.neighbourhood || a.suburb || a.residential || a.quarter || a.amenity || a.road || ''
+  const rawCiudad =
+    a.city || a.town || a.village || a.municipality || a.county || a.state || ''
+  const ciudad = rawCiudad
+    .replace(/^perímetro urbano\s+/gi, '')
+    .replace(/\s+ciudad$/gi, '')
+    .trim()
+
+  if (barrio && ciudad && !barrio.toLowerCase().includes(ciudad.toLowerCase())) {
+    return `${barrio}, ${ciudad}`
+  }
+  return barrio || ciudad || respaldo
+}
+
 /** Convierte el texto del usuario ("El Rodeo", "Calle 26 Bogotá", "Corferias") en puntos. */
 export async function geocodificar(texto: string): Promise<UbicacionGeocodificada[]> {
   const q = texto.trim()
@@ -159,41 +189,10 @@ export async function geocodificar(texto: string): Promise<UbicacionGeocodificad
         address?: Record<string, string>
       }>
       if (Array.isArray(data) && data.length > 0) {
-        return data.map((r) => {
-          const a = r.address || {}
-          const barrio =
-            a.neighbourhood ||
-            a.suburb ||
-            a.residential ||
-            a.quarter ||
-            a.amenity ||
-            a.road ||
-            ''
-          const rawCiudad =
-            a.city ||
-            a.town ||
-            a.village ||
-            a.municipality ||
-            a.county ||
-            a.state ||
-            ''
-          const ciudad = rawCiudad
-            .replace(/^perímetro urbano\s+/gi, '')
-            .replace(/\s+ciudad$/gi, '')
-            .trim()
-
-          let etiqueta = ''
-          if (barrio && ciudad && !barrio.toLowerCase().includes(ciudad.toLowerCase())) {
-            etiqueta = `${barrio}, ${ciudad}`
-          } else {
-            etiqueta = barrio || ciudad || r.display_name
-          }
-
-          return {
-            etiqueta,
-            center: { lat: Number(r.lat), lng: Number(r.lon) },
-          }
-        })
+        return data.map((r) => ({
+          etiqueta: etiquetarDireccion(r.address, r.display_name),
+          center: { lat: Number(r.lat), lng: Number(r.lon) },
+        }))
       }
     }
   } catch (err) {
@@ -224,37 +223,8 @@ export async function reverseGeocodificar(coords: Coordinates): Promise<Ubicacio
         display_name?: string
         address?: Record<string, string>
       }
-      const a = data.address || {}
-      const barrio =
-        a.neighbourhood ||
-        a.suburb ||
-        a.residential ||
-        a.quarter ||
-        a.amenity ||
-        a.road ||
-        ''
-      const rawCiudad =
-        a.city ||
-        a.town ||
-        a.village ||
-        a.municipality ||
-        a.county ||
-        a.state ||
-        ''
-      const ciudad = rawCiudad
-        .replace(/^perímetro urbano\s+/gi, '')
-        .replace(/\s+ciudad$/gi, '')
-        .trim()
-
-      let etiqueta = ''
-      if (barrio && ciudad && !barrio.toLowerCase().includes(ciudad.toLowerCase())) {
-        etiqueta = `${barrio}, ${ciudad}`
-      } else {
-        etiqueta = barrio || ciudad || data.display_name || `Punto (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
-      }
-
       return {
-        etiqueta,
+        etiqueta: etiquetarDireccion(data.address, data.display_name || puntoSinNombre(coords)),
         center: coords,
       }
     }
@@ -262,8 +232,5 @@ export async function reverseGeocodificar(coords: Coordinates): Promise<Ubicacio
     console.warn('Reverse geocodificación no disponible, usando coordenadas:', err)
   }
 
-  return {
-    etiqueta: `Punto (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`,
-    center: coords,
-  }
+  return { etiqueta: puntoSinNombre(coords), center: coords }
 }

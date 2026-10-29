@@ -17,7 +17,7 @@ export type GeoStatus =
  * o permitimos selección rápida sin dejar la pantalla en blanco ni tirar errores fatales.
  */
 export function useGeolocation() {
-  const [position, setPosition] = useState<Coordinates>(COMUNA_CENTER)
+  const [lectura, setLectura] = useState<Coordinates | null>(null)
   const [status, setStatus] = useState<GeoStatus>('idle')
 
   const request = useCallback(() => {
@@ -40,7 +40,7 @@ export function useGeolocation() {
     setStatus('locating')
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setLectura({ lat: pos.coords.latitude, lng: pos.coords.longitude })
         setStatus('granted')
       },
       (err) => {
@@ -64,5 +64,13 @@ export function useGeolocation() {
       .catch(() => {})
   }, [request])
 
-  return { position, status, request, isFallback: status !== 'granted' }
+  return {
+    /** Lectura real del GPS, o `null` mientras no haya una. */
+    lectura,
+    /** Lectura real si la hay; si no, el centro de la comuna para no dejar el mapa en blanco. */
+    position: lectura ?? COMUNA_CENTER,
+    status,
+    request,
+    isFallback: lectura === null,
+  }
 }

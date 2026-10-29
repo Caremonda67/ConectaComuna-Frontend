@@ -8,7 +8,7 @@ import { UI_ICONS, CATEGORY_ICONS } from '@/components/ui/icons'
 import { AudioWaveVisualizer } from '@/components/ui/AudioWaveVisualizer'
 import { enviarMensajeAsistente, describirUbicacion } from '@/services/aiService'
 import { reverseGeocodificar } from '@/services/direccionService'
-import { COMUNA_CENTER } from '@/lib/env'
+import { estaEnZonaPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
 import { orderService } from '@/services/orderService'
@@ -375,8 +375,7 @@ export function AsistenteComunalModal() {
     setCargando(true)
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        const { latitude, longitude } = pos.coords
-        const coords = { lat: latitude, lng: longitude }
+        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude }
 
         let etiqueta = 'Mi ubicación actual'
         try {
@@ -391,11 +390,7 @@ export function AsistenteComunalModal() {
         })
         setCargando(false)
 
-        // Comprobar si las coordenadas están en el Valle/Cali (lat ~3.25 a 3.65, lng ~-76.7 a -76.35)
-        const estaEnZonaPiloto =
-          latitude >= 3.25 && latitude <= 3.65 && longitude >= -76.7 && longitude <= -76.35
-
-        if (estaEnZonaPiloto) {
+        if (estaEnZonaPiloto(coords)) {
           void manejarEnvio(`He compartido mi ubicación GPS en ${etiqueta}`)
         } else {
           setMensajes((prev) => [
@@ -450,11 +445,7 @@ export function AsistenteComunalModal() {
         return
       }
       if (chip.includes('Ver comercios del piloto (Cali)') || chip.includes('comercios del piloto')) {
-        guardarUbicacion({
-          etiqueta: 'Nueva Floresta, Cali',
-          center: COMUNA_CENTER,
-          origen: 'busqueda',
-        })
+        guardarUbicacion({ ...PUNTO_PILOTO, origen: 'busqueda' })
         void manejarEnvio('Muéstrame los oficios del piloto en Cali')
         return
       }

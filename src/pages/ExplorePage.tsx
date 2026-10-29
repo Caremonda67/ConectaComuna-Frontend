@@ -10,7 +10,7 @@ import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
-import { distanceKm } from '@/lib/utils'
+import { estaFueraDelPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { BusinessFilters, CategorySlug } from '@/types'
 
@@ -49,10 +49,7 @@ export default function ExplorePage() {
     [params, ubicacion],
   )
 
-  const estaFueraDeCali = useMemo(() => {
-    if (!ubicacion?.center) return false
-    return distanceKm(ubicacion.center, COMUNA_CENTER) > 35
-  }, [ubicacion])
+  const fueraDelPiloto = estaFueraDelPiloto(ubicacion?.center)
 
   const { data, loading, error, reload } = useAsync(
     () => businessService.search(filters),
@@ -112,14 +109,14 @@ export default function ExplorePage() {
       {!loading && !error && (data?.length ?? 0) === 0 && (
         <EmptyState
           title={
-            estaFueraDeCali
+            fueraDelPiloto
               ? `No hay negocios registrados aún en ${ubicacion?.etiqueta}`
               : filters.openNow
               ? 'No hay negocios abiertos en este momento'
               : 'No encontramos negocios con esos filtros'
           }
           description={
-            estaFueraDeCali
+            fueraDelPiloto
               ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes explorar los oficios y talleres del piloto con un toque:'
               : filters.openNow
               ? 'En este horario los talleres se encuentran cerrados. Desactiva «Solo abiertos ahora» para ver todos los oficios disponibles y coordinar por WhatsApp.'
@@ -131,15 +128,11 @@ export default function ExplorePage() {
           }
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {estaFueraDeCali && (
+              {fueraDelPiloto && (
                 <Button
                   variant="primary"
                   onClick={() =>
-                    elegirUbicacion({
-                      etiqueta: 'Nueva Floresta, Cali',
-                      center: COMUNA_CENTER,
-                      origen: 'busqueda',
-                    })
+                    elegirUbicacion({ ...PUNTO_PILOTO, origen: 'busqueda' })
                   }
                 >
                   Ver comercios del piloto (Cali)

@@ -26,7 +26,7 @@ interface Props {
  * búsqueda de negocios.
  */
 export function UbicacionPicker({ value, onChange }: Props) {
-  const { position, status, request } = useGeolocation()
+  const { lectura, status, request } = useGeolocation()
   const [abierto, setAbierto] = useState(false)
   const [texto, setTexto] = useState('')
   const [sugerencias, setSugerencias] = useState<UbicacionGeocodificada[]>([])
@@ -77,18 +77,18 @@ export function UbicacionPicker({ value, onChange }: Props) {
 
   useEffect(() => {
     if (!gpsActivo) return
-    if (status === 'granted') {
+    if (status === 'granted' && lectura) {
       let cancelado = false
       const t = setTimeout(() => {
         setGpsActivo(false)
         void (async () => {
           let etiqueta = 'Mi ubicación'
           try {
-            const geo = await reverseGeocodificar(position)
+            const geo = await reverseGeocodificar(lectura)
             if (geo?.etiqueta) etiqueta = geo.etiqueta
           } catch {}
           if (!cancelado) {
-            onChange({ etiqueta, center: position, origen: 'gps' })
+            onChange({ etiqueta, center: lectura, origen: 'gps' })
             cerrar()
           }
         })()
@@ -120,7 +120,7 @@ export function UbicacionPicker({ value, onChange }: Props) {
       return () => clearTimeout(t)
     }
     return undefined
-  }, [gpsActivo, status, position, onChange])
+  }, [gpsActivo, status, lectura, onChange])
 
   const usarPuntoDelMapa = async () => {
     if (!picked) return

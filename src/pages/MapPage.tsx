@@ -11,7 +11,7 @@ import { CardSkeletonList, Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER } from '@/lib/env'
-import { distanceKm } from '@/lib/utils'
+import { estaFueraDelPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { CATEGORIES } from '@/data/categories'
 import type { CategorySlug } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
@@ -37,10 +37,7 @@ export default function MapPage() {
 
   const center = ubicacion?.center ?? COMUNA_CENTER
 
-  const estaFueraDeCali = useMemo(() => {
-    if (!ubicacion?.center) return false
-    return distanceKm(ubicacion.center, COMUNA_CENTER) > 35
-  }, [ubicacion])
+  const fueraDelPiloto = estaFueraDelPiloto(ubicacion?.center)
 
   const filters = useMemo(
     () => ({ category, center, radiusKm, sort: 'distance' as const }),
@@ -116,26 +113,20 @@ export default function MapPage() {
           <EmptyState
             icon={UI_ICONS.map}
             title={
-              estaFueraDeCali
+              fueraDelPiloto
                 ? `No hay talleres registrados en ${ubicacion?.etiqueta}`
                 : 'Ningún negocio en este radio'
             }
             description={
-              estaFueraDeCali
+              fueraDelPiloto
                 ? 'ConectaComuna opera actualmente su fase piloto territorial en la Comuna de Cali. Puedes ver los oficios del piloto en el mapa con un toque:'
                 : 'Amplía el radio de búsqueda para ver más opciones.'
             }
             action={
-              estaFueraDeCali ? (
+              fueraDelPiloto ? (
                 <Button
                   variant="primary"
-                  onClick={() =>
-                    elegirUbicacion({
-                      etiqueta: 'Nueva Floresta, Cali',
-                      center: COMUNA_CENTER,
-                      origen: 'busqueda',
-                    })
-                  }
+                  onClick={() => elegirUbicacion({ ...PUNTO_PILOTO, origen: 'busqueda' })}
                 >
                   Ver talleres del piloto (Cali)
                 </Button>
