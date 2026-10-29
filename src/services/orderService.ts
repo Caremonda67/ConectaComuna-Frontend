@@ -145,9 +145,10 @@ function hydrate(order: Order): Order {
 }
 
 /**
- * ¿Quien consulta el código participa en el pacto? Solo el cliente y el dueño
- * del taller ven el nombre y la dirección del vecino. Cualquier otro, incluido
- * quien no ha iniciado sesión, se queda en el nivel público.
+ * Parte del pacto son dos personas: quien pidió el trabajo y quien lo hace.
+ * Nadie más ve el nombre ni la dirección del vecino, tampoco el facilitador
+ * que apadrina al taller: el cliente pactó con el taller, no con él. Mismo
+ * criterio que `verificar_pedido_publico` en la base.
  */
 function participaEnPacto(order: Order): boolean {
   const db = readDb()
@@ -155,15 +156,7 @@ function participaEnPacto(order: Order): boolean {
   if (!quien) return false
   if (order.client_id === quien) return true
   const negocio = db.businesses.find((b) => b.id === order.business_id)
-  if (negocio?.owner_id === quien) return true
-  // Mismo criterio que `verificar_pedido_publico` en la base: el facilitador
-  // aprobado del taller también media en sus pactos.
-  return db.vinculaciones.some(
-    (v) =>
-      v.negocio_id === order.business_id &&
-      v.facilitador_id === quien &&
-      v.estado_vinculacion === 'aprobado',
-  )
+  return negocio?.owner_id === quien
 }
 
 function pactoDesdePedido(order: Order): PactoVerificado {
