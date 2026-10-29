@@ -6,6 +6,7 @@ import { facilitadorService } from '@/services/facilitadorService'
 import { profileService } from '@/services/profileService'
 import { businessService } from '@/services/businessService'
 import { Button } from '@/components/ui/Button'
+import { ModeracionReportesPanel } from '@/components/trust/ModeracionReportesPanel'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
 
@@ -419,6 +420,8 @@ export default function FacilitatorDashboard() {
       </section>
 
 
+
+      {userId && <ModeracionReportesPanel facilitadorId={userId} />}
 
       <section className="card p-4 bg-brand-50 border-brand-100">
         <h3 className="font-bold text-brand-900 mb-2">¿Cómo apadrinar a un emprendedor?</h3>

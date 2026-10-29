@@ -364,28 +364,30 @@ export const businessService = {
       creado_en: fecha,
     }
 
-    // Persistir localmente
-    try {
-      const raw = localStorage.getItem('cc_reportes_local')
-      const arr: ReporteComunitario[] = raw ? JSON.parse(raw) : []
-      arr.unshift(nuevo)
-      localStorage.setItem('cc_reportes_local', JSON.stringify(arr))
-
-      const reportesNegocio = arr.filter((r) => r.negocio_id === reporte.negocio_id)
-      if (reportesNegocio.length >= 2) {
-        localStorage.setItem(
-          `cc_verif_${reporte.negocio_id}`,
-          JSON.stringify({
-            status: 'under_review',
-            by: null,
-            note: 'Bajo observación comunitaria por reportes vecinales',
-            date: fecha,
-          }),
-        )
-      }
-    } catch {}
-
     if (isDemoMode) {
+      // Solo en demo el umbral se lleva en el navegador. Contra la base real
+      // lo resuelve el trigger `refresh_business_reports`, que cuenta los
+      // reportes de todos los vecinos y no los de este dispositivo.
+      try {
+        const raw = localStorage.getItem('cc_reportes_local')
+        const arr: ReporteComunitario[] = raw ? JSON.parse(raw) : []
+        arr.unshift(nuevo)
+        localStorage.setItem('cc_reportes_local', JSON.stringify(arr))
+
+        const reportesNegocio = arr.filter((r) => r.negocio_id === reporte.negocio_id)
+        if (reportesNegocio.length >= 2) {
+          localStorage.setItem(
+            `cc_verif_${reporte.negocio_id}`,
+            JSON.stringify({
+              status: 'under_review',
+              by: null,
+              note: 'Bajo observación comunitaria por reportes vecinales',
+              date: fecha,
+            }),
+          )
+        }
+      } catch {}
+
       mutateDb((d) => {
         d.reportes.push({
           ...nuevo,
@@ -418,30 +420,29 @@ export const businessService = {
       }
     }
 
-    try {
-      await requireSupabase()
-        .from('reportes_comunitarios')
-        .insert({
-          negocio_id: reporte.negocio_id,
-          reportado_por_id: reporte.reportado_por_id,
-          motivo: reporte.motivo,
-          descripcion: reporte.descripcion,
-          estado: 'pendiente',
-        })
-    } catch {}
+    const { error } = await requireSupabase()
+      .from('reportes_comunitarios')
+      .insert({
+        negocio_id: reporte.negocio_id,
+        reportado_por_id: reporte.reportado_por_id,
+        motivo: reporte.motivo,
+        descripcion: reporte.descripcion,
+        estado: 'pendiente',
+      })
+    if (error) throw error
   },
 
   /**
    * Lista los reportes registrados para seguimiento y mediación comunitaria.
    */
   async listarReportes(negocioId?: string): Promise<ReporteComunitario[]> {
-    let localList: ReporteComunitario[] = []
-    try {
-      const raw = localStorage.getItem('cc_reportes_local')
-      if (raw) localList = JSON.parse(raw)
-    } catch {}
-
     if (isDemoMode) {
+      let localList: ReporteComunitario[] = []
+      try {
+        const raw = localStorage.getItem('cc_reportes_local')
+        if (raw) localList = JSON.parse(raw)
+      } catch {}
+
       const db = readDb()
       let list = [...localList, ...db.reportes]
       if (negocioId) {
@@ -474,30 +475,21 @@ export const businessService = {
       return delay(hydrated.sort((a, b) => b.creado_en.localeCompare(a.creado_en)), 200)
     }
 
-    try {
-      let query = requireSupabase()
-        .from('reportes_comunitarios')
-        .select(
-          '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone)',
-        )
-        .order('creado_en', { ascending: false })
-        .limit(50)
+    let query = requireSupabase()
+      .from('reportes_comunitarios')
+      .select(
+        '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone)',
+      )
+      .order('creado_en', { ascending: false })
+      .limit(50)
 
-      if (negocioId) {
-        query = query.eq('negocio_id', negocioId)
-      }
+    if (negocioId) {
+      query = query.eq('negocio_id', negocioId)
+    }
 
-      const { data, error } = await query
-      if (!error && data && data.length > 0) {
-        const ids = new Set((data as ReporteComunitario[]).map((r) => r.id))
-        const unicos = localList.filter((r) => !ids.has(r.id))
-        return [...unicos, ...(data as ReporteComunitario[])].sort((a, b) =>
-          b.creado_en.localeCompare(a.creado_en),
-        )
-      }
-    } catch {}
-
-    return localList.filter((r) => !negocioId || r.negocio_id === negocioId)
+    const { data, error } = await query
+    if (error) throw error
+    return (data ?? []) as ReporteComunitario[]
   },
 
   /**
