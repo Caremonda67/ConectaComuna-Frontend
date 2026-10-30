@@ -15,20 +15,32 @@ const OFICIOS = [
   'a la modista',
   'al cerrajero',
   'a la manicurista',
+  'al carpintero',
+  'al electricista',
   'al de las empanadas',
+  'al que arregla motos',
   'al maestro de obra',
-  'a quien hace tortas',
-  'al peluquero',
+  'al técnico de celular',
+  'a la que hornea rico',
+  'al zapatero remendón',
+  'al maestro plomero',
+  'a la reina del blower',
+  'al del taller de bicis',
+  'a quien suelda rejas',
+  'al que hace mandados',
+  'al pintor de fachadas',
+  'a la vecina repostera',
+  'al que te saca de apuros',
+  'al barbero de confianza',
+  'al tapicero de muebles',
+  'a quien cuida mascotas',
+  'al de la comida casera',
   'a quien repara todo',
-  'al domiciliario',
-  'a quien cocina',
-  'al sastre',
-  'a quien pinta',
 ] as const
 
 /** Para lectores de pantalla: una frase completa y quieta, sin parloteo. */
 export const TITULAR_ACCESIBLE =
-  'Encuentra a la modista, al cerrajero o a la manicurista de tu propio barrio.'
+  'Encuentra a la modista, al cerrajero o a quien repara todo de tu propio barrio.'
 
 export function TitularRotativo() {
   return <TextoRotativo items={OFICIOS} className="block text-brand-600" />

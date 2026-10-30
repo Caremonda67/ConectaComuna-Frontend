@@ -11,7 +11,17 @@ import type { BusinessFilters, CategorySlug } from '@/types'
  * Lo que el buscador se ofrece a buscar. Quien no sabe qué escribir aprende
  * aquí qué se puede pedir, justo en el momento en que le hace falta.
  */
-const EJEMPLOS_BUSQUEDA = ['costura', 'uñas', 'guardas', 'comida casera', 'peluquería'] as const
+const EJEMPLOS_BUSQUEDA = [
+  'costura',
+  'cambio de pantalla',
+  'uñas acrílicas',
+  'cerrajería',
+  'empanadas',
+  'arreglo de ropa',
+  'pintura de casa',
+  'plomería',
+  'taller de motos',
+] as const
 
 interface Props {
   filters: BusinessFilters
