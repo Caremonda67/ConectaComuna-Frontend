@@ -22,24 +22,6 @@ function applySort(list: BusinessWithDistance[], sort: BusinessFilters['sort']) 
   return copy.sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
 }
 
-export function overlayLocalTrust<T extends Business>(b: T): T {
-  if (!isDemoMode) return b
-  try {
-    const raw = localStorage.getItem(`cc_verif_${b.id}`)
-    if (raw) {
-      const v = JSON.parse(raw)
-      return {
-        ...b,
-        verification_status: v.status ?? b.verification_status,
-        verification_by: v.by ?? b.verification_by,
-        verification_note: v.note ?? b.verification_note,
-        verification_date: v.date ?? b.verification_date,
-      }
-    }
-  } catch {}
-  return b
-}
-
 export const businessService = {
   async search(filters: BusinessFilters): Promise<BusinessWithDistance[]> {
     if (isDemoMode) {
@@ -72,7 +54,7 @@ export const businessService = {
       if (filters.center && filters.radiusKm) {
         result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
       }
-      return delay(applySort(result.map(overlayLocalTrust), filters.sort))
+      return delay(applySort(result, filters.sort))
     }
 
     // Filtrado en el servidor: menos bytes viajando, clave con conexiones lentas.
@@ -124,14 +106,14 @@ export const businessService = {
     if (filters.openNow) {
       result = result.filter((b) => getBusinessOpenStatus(b.hours).isOpen)
     }
-    return applySort(result.map(overlayLocalTrust), filters.sort)
+    return applySort(result, filters.sort)
   },
 
   async getById(id: string): Promise<Business | null> {
     if (!id || typeof id !== 'string') return null
     if (isDemoMode) {
       const found = readDb().businesses.find((b) => b.id === id) ?? null
-      return delay(found ? overlayLocalTrust(found) : null, 200)
+      return delay(found ?? null, 200)
     }
 
     // Un UUID no válido (enlace roto en WhatsApp) arroja error 22P02 en Postgres.
@@ -148,7 +130,7 @@ export const businessService = {
         if (error.code === '22P02') return null
         throw error
       }
-      return data ? overlayLocalTrust(data as Business) : null
+      return (data as Business | null) ?? null
     } catch (err: unknown) {
       const errObj = err as { code?: string; message?: string }
       if (errObj?.code === '22P02' || errObj?.message?.includes('invalid input syntax for type uuid')) {

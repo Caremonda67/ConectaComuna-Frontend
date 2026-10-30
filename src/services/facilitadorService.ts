@@ -1,7 +1,7 @@
 import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
-import { businessService, overlayLocalTrust } from './businessService'
+import { businessService } from './businessService'
 import type { Business, FacilitadorNegocio } from '@/types'
 
 const SELECT_RELACIONES =
@@ -48,7 +48,7 @@ export const facilitadorService = {
       .filter((f) => Boolean(f.negocio))
       .map((f) => ({
         vinculacion: f as unknown as FacilitadorNegocio,
-        negocio: overlayLocalTrust(f.negocio as Business),
+        negocio: f.negocio as Business,
       }))
   },
 

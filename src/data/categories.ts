@@ -125,7 +125,7 @@ export const CATEGORIES: Category[] = [
   },
 ]
 
-export const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.slug, c]))
+const CATEGORY_MAP = new Map(CATEGORIES.map((c) => [c.slug, c]))
 
 export function categoryLabel(slug: string): string {
   return CATEGORY_MAP.get(slug as Category['slug'])?.name ?? 'Otros oficios'

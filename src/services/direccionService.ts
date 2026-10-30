@@ -24,7 +24,7 @@ export const BARRIOS_COMUNA = [
   { nombre: 'Centro Comuna 20', center: { lat: 3.4372, lng: -76.5225 } },
 ]
 
-export const LUGARES_DEMO: UbicacionGeocodificada[] = [
+const LUGARES_DEMO: UbicacionGeocodificada[] = [
   { etiqueta: 'El Rodeo', center: { lat: 3.4401, lng: -76.5209 } },
   { etiqueta: 'Antonio Nariño', center: { lat: 3.4365, lng: -76.5255 } },
   { etiqueta: 'Nueva Floresta', center: { lat: 3.4342, lng: -76.5281 } },

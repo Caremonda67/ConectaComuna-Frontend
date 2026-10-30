@@ -31,7 +31,7 @@ export type CategorySlug =
   | 'construccion'
   | 'otros'
 
-export interface CategoryStyle {
+interface CategoryStyle {
   iconBg: string
   hoverBorder: string
   hoverBg: string
@@ -81,7 +81,7 @@ export interface Business {
   rating_avg: number
   rating_count: number
   completed_orders: number
-  verification_status: 'unverified' | 'pending_review' | 'verified' | 'rejected' | 'under_review'
+  verification_status: 'unverified' | 'verified' | 'rejected' | 'under_review'
   verification_by?: string | null
   verification_note?: string | null
   verification_date?: string | null
@@ -103,16 +103,6 @@ export interface ServiceCatalogItem {
   description?: string | null
 }
 
-export interface Producto {
-  id: string
-  negocio_id: string
-  nombre: string
-  descripcion: string
-  precio: number
-  foto_url: string | null
-  disponible: boolean
-  creado_en: string
-}
 
 export interface Order {
   id: string
@@ -216,7 +206,7 @@ export interface BusinessWithDistance extends Business {
   distanceKm: number | null
 }
 
-export type FacilitadorStatus = 'pendiente' | 'aprobado' | 'rechazado'
+type FacilitadorStatus = 'pendiente' | 'aprobado' | 'rechazado'
 
 export interface FacilitadorNegocio {
   id: string

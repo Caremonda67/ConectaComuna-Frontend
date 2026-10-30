@@ -9,7 +9,7 @@ export function rememberAuthFrom(path: string): void {
   }
 }
 
-export function peekAuthFrom(): string | null {
+function peekAuthFrom(): string | null {
   try {
     return sessionStorage.getItem(CLAVE)
   } catch {
