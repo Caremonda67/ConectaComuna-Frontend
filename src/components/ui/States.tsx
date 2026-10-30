@@ -6,11 +6,19 @@ interface EmptyStateProps {
   icon?: LucideIcon
   title: string
   description?: string
+  /** Pista opcional entre la descripción y los botones. No es accionable. */
+  hint?: ReactNode
   action?: ReactNode
 }
 
 /** Estado vacío: nunca dejamos una pantalla en blanco sin explicar qué pasó. */
-export function EmptyState({ icon: Icon = Search, title, description, action }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon = Search,
+  title,
+  description,
+  hint,
+  action,
+}: EmptyStateProps) {
   return (
     <div className="rounded-[14px] border border-dashed border-ink-200 bg-white dark:bg-cream-50 p-8 text-center">
       <span
@@ -21,6 +29,7 @@ export function EmptyState({ icon: Icon = Search, title, description, action }: 
       </span>
       <h3 className="mt-3 text-lg font-semibold text-ink-900">{title}</h3>
       {description && <p className="mt-1 text-sm text-ink-500">{description}</p>}
+      {hint && <div className="mt-3 text-sm text-ink-600">{hint}</div>}
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   )

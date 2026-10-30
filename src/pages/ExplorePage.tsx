@@ -8,11 +8,16 @@ import { UbicacionPicker } from '@/components/location/UbicacionPicker'
 import { useUbicacionElegida } from '@/hooks/useUbicacionElegida'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
+import { TextoRotativo } from '@/components/ui/TextoRotativo'
+import { CATEGORIES } from '@/data/categories'
 import { Button } from '@/components/ui/Button'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
 import { estaFueraDelPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import type { BusinessFilters, CategorySlug } from '@/types'
+
+/** Se leen del catálogo real para que no puedan prometer lo que no existe. */
+const SUGERENCIAS = CATEGORIES.slice(0, 6).map((c) => c.name)
 
 /**
  * Los filtros viven en la URL (useSearchParams): la búsqueda es compartible
@@ -132,6 +137,22 @@ export default function ExplorePage() {
                 : filters.query
                   ? `No hubo coincidencias para «${filters.query}». Revisa la ortografía o limpia los filtros de búsqueda.`
                   : 'Prueba ampliando el radio de búsqueda o cambiando la categoría seleccionada.'
+          }
+          hint={
+            // Un callejón sin salida no dice qué sí existe. Las sugerencias
+            // salen del catálogo real de categorías, no de una lista aparte,
+            // y no son pulsables a propósito: un blanco en movimiento es
+            // peor que ninguno. Los botones de abajo siguen quietos.
+            fueraDelPiloto ? undefined : (
+              <>
+                Prueba con{' '}
+                <TextoRotativo
+                  items={SUGERENCIAS}
+                  etiqueta={`Prueba con ${SUGERENCIAS.join(', ')}.`}
+                  className="inline-block font-semibold text-brand-700"
+                />
+              </>
+            )
           }
           action={
             <div className="flex flex-wrap items-center justify-center gap-2">

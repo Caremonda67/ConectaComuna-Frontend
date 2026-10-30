@@ -4,7 +4,14 @@ import { LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react'
 import { CATEGORIES } from '@/data/categories'
 import { cn } from '@/lib/utils'
 import { UI_ICONS, type LucideIcon } from '@/components/ui/icons'
+import { useRotacion } from '@/hooks/useRotacion'
 import type { BusinessFilters, CategorySlug } from '@/types'
+
+/**
+ * Lo que el buscador se ofrece a buscar. Quien no sabe qué escribir aprende
+ * aquí qué se puede pedir, justo en el momento en que le hace falta.
+ */
+const EJEMPLOS_BUSQUEDA = ['costura', 'uñas', 'guardas', 'comida casera', 'peluquería'] as const
 
 interface Props {
   filters: BusinessFilters
@@ -16,6 +23,11 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
+  // El texto deja de rotar en cuanto la persona toca el campo o escribe algo:
+  // un ejemplo que cambia debajo de quien está tecleando distrae y no ayuda.
+  const [enfocado, setEnfocado] = useState(false)
+  const buscadorQuieto = enfocado || !!filters.query
+  const ejemplo = useRotacion(buscadorQuieto ? 0 : EJEMPLOS_BUSQUEDA.length, 2600)
   const isDraggingRef = useRef(false)
   const startXRef = useRef(0)
   const scrollLeftRef = useRef(0)
@@ -83,9 +95,15 @@ export function BusinessFiltersBar({ filters, onChange, hasLocation }: Props) {
           id="q"
           type="search"
           inputMode="search"
-          placeholder="Busca: costura, uñas, guardas…"
+          placeholder={
+            buscadorQuieto
+              ? 'Busca: costura, uñas, guardas…'
+              : `Busca: ${EJEMPLOS_BUSQUEDA[ejemplo]}…`
+          }
           value={filters.query ?? ''}
           onChange={(e) => onChange({ query: e.target.value })}
+          onFocus={() => setEnfocado(true)}
+          onBlur={() => setEnfocado(false)}
           className="min-h-11 w-full rounded-[10px] border border-ink-200 bg-white dark:bg-cream-50 px-4 text-base text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
         />
       </div>
