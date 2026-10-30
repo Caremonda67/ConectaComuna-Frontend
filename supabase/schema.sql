@@ -1227,3 +1227,15 @@ create policy order_photos_read on storage.objects
     bucket_id = 'order-photos'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
+
+-- Permisos base para cuando el esquema se instala en un Postgres limpio.
+-- Un proyecto nuevo de Supabase ya los trae; uno que se reconstruye a mano,
+-- no, y entonces todo responde 'permission denied for schema public'.
+-- Van al final para cubrir todas las tablas, y los permisos de profiles se
+-- vuelven a cerrar justo después: un 'grant all' abriría el teléfono de todos.
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+
+revoke select on public.profiles from anon, authenticated;
+grant select (id, full_name, avatar_url, account_type, neighborhood) on public.profiles to anon, authenticated;
