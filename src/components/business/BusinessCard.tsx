@@ -77,8 +77,8 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
         {business.rating_count > 0 ? (
           <RatingStars value={business.rating_avg} count={business.rating_count} />
         ) : (
-          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800/60 px-2 py-0.5 text-[11px] font-medium text-brand-800 dark:text-brand-300">
-            <Sprout size={12} className="shrink-0 text-brand-600 dark:text-brand-400" />
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 border border-brand-200 px-2 py-0.5 text-[11px] font-medium text-brand-800">
+            <Sprout size={12} className="shrink-0 text-brand-600" />
             Nuevo en la comuna
           </span>
         )}

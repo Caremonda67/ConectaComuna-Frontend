@@ -190,14 +190,14 @@ export default function HomePage() {
       <section aria-labelledby="trato-seguro-heading" className="card relative overflow-hidden p-6 sm:p-8 border-brand-200 dark:border-brand-900/60 bg-gradient-to-br from-white via-cream-50 to-brand-50/40 dark:from-cream-50 dark:via-cream-100/30 dark:to-brand-950/20 shadow-warm-md">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-3 max-w-xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/40">
+            <div className="inline-flex items-center gap-2 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200">
               <span aria-hidden="true">🤝</span>
               <span>Pacto de Confianza Comunal</span>
             </div>
             <h2 id="trato-seguro-heading" className="text-2xl sm:text-3xl font-extrabold text-ink-900 leading-tight">
               En tu comuna, la palabra vale y el trabajo se respeta
             </h2>
-            <p className="text-sm sm:text-base text-ink-600 dark:text-ink-300 leading-relaxed">
+            <p className="text-sm sm:text-base text-ink-600 leading-relaxed">
               Cuando un trabajo se pacta por ConectaComuna puedes dejar un <strong>comprobante de Trato Seguro</strong>:
               el anticipo no pasa del 50%, el precio queda escrito y cualquiera puede verificar el código.
               Si algo sale mal, el equipo de Conecta Comuna revisa el caso con las dos partes.
