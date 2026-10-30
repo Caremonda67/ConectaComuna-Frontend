@@ -15,7 +15,8 @@ import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
-import { TitularRotativo, TITULAR_ACCESIBLE } from '@/components/home/TitularRotativo'
+import { TitularRotativo, TitularUsuario } from '@/components/home/TitularRotativo'
+import { TITULAR_ACCESIBLE } from '@/components/home/frasesTitular'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
 import { leerUbicacion } from '@/lib/ubicacion'
 
@@ -26,7 +27,7 @@ export default function HomePage() {
       'Directorio comunitario de micro-emprendedores, talleres y servicios locales en Cali. Conecta de vecino a vecino de forma rápida y segura.',
   })
 
-  const { profile } = useAuth()
+  const { profile, activeRole, business } = useAuth()
   const { lectura, status, request } = useGeolocation()
 
   // La portada ignoraba la ubicación que la persona ya había elegido en
@@ -47,11 +48,23 @@ export default function HomePage() {
 
   const featured = data?.slice(0, 4) ?? []
 
+  const primerNombre = profile?.full_name ? profile.full_name.trim().split(/\s+/)[0] : 'vecino'
+
   const ctaDestino = profile
-    ? profile.account_type === 'client'
-      ? '/panel'
-      : '/panel/negocio'
+    ? activeRole === 'business'
+      ? '/panel/negocio'
+      : activeRole === 'facilitador'
+        ? '/panel/facilitador'
+        : '/panel'
     : '/registro'
+
+  const titularAriaLabel = profile
+    ? activeRole === 'business'
+      ? `${business?.name ?? 'Taller de ' + primerNombre}, administra tu negocio de vecino a vecino.`
+      : activeRole === 'facilitador'
+        ? `Hola, ${primerNombre}, apoyo solidario en el territorio.`
+        : `Hola, ${primerNombre}, encuentra servicios de tu propio barrio.`
+    : TITULAR_ACCESIBLE
 
   return (
     <div className="space-y-12">
@@ -61,18 +74,16 @@ export default function HomePage() {
           <p className="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800">
             Directorio de oficios de la comuna
           </p>
-          {/* Quien entra por primera vez no sabía qué era esto: el titular
-              anterior nombraba un valor ("personas reales"), no un uso. Nombrar
-              tres oficios ubica al lector en una sola frase. */}
           <h1
             className="mt-4 text-3xl font-extrabold leading-[1.15] sm:text-4xl lg:text-[2.75rem]"
-            aria-label={profile ? undefined : TITULAR_ACCESIBLE}
+            aria-label={titularAriaLabel}
           >
             {profile ? (
-              <>
-                Hola, {profile.full_name.split(' ')[0]}
-                <span className="block text-brand-600">¿qué necesitas hoy?</span>
-              </>
+              <TitularUsuario
+                nombre={primerNombre}
+                role={activeRole}
+                negocioNombre={business?.name}
+              />
             ) : (
               <>
                 <span aria-hidden="true">Encuentra</span>
@@ -85,7 +96,11 @@ export default function HomePage() {
           </h1>
           <p className="mt-4 max-w-md text-ink-500">
             {profile
-              ? 'Busca el oficio que necesitas entre los negocios de tu zona.'
+              ? activeRole === 'business'
+                ? 'Administra tu catálogo de servicios, recibe pedidos de tus vecinos y pacta con Trato Seguro.'
+                : activeRole === 'facilitador'
+                  ? 'Acompaña y actualiza las fichas de los talleres y oficios de tu red comunitaria.'
+                  : 'Busca el oficio que necesitas entre los negocios y talleres de tu zona.'
               : 'Un directorio de oficios y pequeños negocios de la comuna. Los contactas directo por WhatsApp, sin intermediarios ni comisiones.'}
           </p>
           {/* Dos públicos, no dos botones: decirlo así enseña de un golpe que
@@ -96,7 +111,13 @@ export default function HomePage() {
             </Link>
             <Link to={ctaDestino}>
               <Button size="lg" variant="secondary">
-                {profile ? 'Publicar servicio' : 'Ofrezco mi oficio'}
+                {profile
+                  ? activeRole === 'business'
+                    ? 'Mi panel de negocio'
+                    : activeRole === 'facilitador'
+                      ? 'Panel de facilitador'
+                      : 'Mi cuenta'
+                  : 'Ofrezco mi oficio'}
               </Button>
             </Link>
           </div>
