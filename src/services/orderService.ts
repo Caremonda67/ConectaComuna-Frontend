@@ -5,7 +5,7 @@ import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 
 const SELECT_WITH_RELATIONS =
-  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, phone), review:reviews(id, rating, comment, created_at)'
+  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url), review:reviews(id, rating, comment, created_at)'
 
 function mapDbOrder(raw: any): Order {
   const rawReview = raw.review

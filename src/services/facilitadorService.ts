@@ -5,7 +5,7 @@ import { businessService, overlayLocalTrust } from './businessService'
 import type { Business, FacilitadorNegocio } from '@/types'
 
 const SELECT_RELACIONES =
-  "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos, verification_status), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name, phone)"
+  "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos, verification_status), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name)"
 
 export const facilitadorService = {
   /**
@@ -56,7 +56,7 @@ export const facilitadorService = {
     // RLS: policy 'facilitadores_select_duenos' permite ver solicitudes hacia tu negocio.
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, phone)')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name)')
       .eq('negocio_id', negocioId)
       .eq('estado_vinculacion', 'pendiente')
     if (error) throw error
@@ -132,7 +132,7 @@ export const facilitadorService = {
     }
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, phone)')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name)')
       .eq('negocio_id', negocioId)
       .order('creado_en', { ascending: false })
     if (error) throw error
