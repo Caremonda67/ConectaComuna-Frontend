@@ -4,19 +4,29 @@ import { delay, mutateDb, readDb } from './demoBackend'
 import type { Profile } from '@/types'
 
 export const profileService = {
-  async getById(userId: string): Promise<Profile | null> {
+  /**
+   * Perfil completo de quien tiene la sesión. El teléfono no es legible para
+   * terceros: sale por la función mi_perfil(), que filtra por auth.uid().
+   */
+  async getMine(userId: string): Promise<Profile | null> {
     if (isDemoMode) {
       return delay(readDb().profiles.find((p) => p.id === userId) ?? null, 200)
     }
-    // RLS: "profiles_select_public" permite leer perfiles; la escritura queda
-    // limitada a `auth.uid() = id`.
-    const { data, error } = await requireSupabase()
+
+    const sb = requireSupabase()
+    const { data, error } = await sb.rpc('mi_perfil').maybeSingle()
+    if (!error) return data as Profile | null
+
+    // Transición: mi_perfil() llega con migracion-perfiles-privados-v2.sql.
+    // Mientras esa migración no esté aplicada, se lee la fila propia como antes
+    // para que nadie se quede sin poder entrar a su cuenta.
+    const anterior = await sb
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .maybeSingle()
-    if (error) throw error
-    return data as Profile | null
+    if (anterior.error) throw anterior.error
+    return anterior.data as Profile | null
   },
 
   async update(userId: string, patch: Partial<Profile>): Promise<Profile> {
@@ -28,25 +38,30 @@ export const profileService = {
       return delay(db.profiles.find((p) => p.id === userId)!)
     }
     // 1. Intentar UPDATE primero (permite parches parciales sin violar restricciones NOT NULL de otras columnas)
+    // Solo se pide la llave de vuelta: pedir la fila entera exigiría permiso de
+    // lectura sobre columnas que ya no son legibles (el teléfono).
     const { data: updated, error: updateError } = await requireSupabase()
       .from('profiles')
       .update(patch)
       .eq('id', userId)
-      .select()
+      .select('id')
       .maybeSingle()
 
     if (updateError) throw updateError
-    if (updated) return updated as Profile
 
     // 2. Si la fila no existía aún (ej: primer onboarding), crear mediante upsert
-    const { data, error } = await requireSupabase()
-      .from('profiles')
-      .upsert({ id: userId, ...patch })
-      .select()
-      .single()
+    if (!updated) {
+      const { error } = await requireSupabase()
+        .from('profiles')
+        .upsert({ id: userId, ...patch })
+        .select('id')
+        .single()
+      if (error) throw error
+    }
 
-    if (error) throw error
-    return data as Profile
+    const perfil = await profileService.getMine(userId)
+    if (!perfil) throw new Error('No pudimos leer el perfil recién guardado')
+    return perfil
   },
 
   /** Un cliente que quiere ofrecer servicios pasa a cuenta dual. */

@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react'
+import 'leaflet/dist/leaflet.css'
 import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import { Link } from 'react-router-dom'
