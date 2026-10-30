@@ -294,6 +294,45 @@ html.dark .leaflet-bar a:hover {
   will-change: opacity, transform;
 }
 
+/* Relevo de texto rotativo: efecto vertical suave de desvanecimiento.
+   La palabra entrante sube suavemente con un recorrido vertical sutil y
+   desaceleración elástica suave; la saliente se eleva y desvanece con naturalidad. */
+@keyframes textoRelevoEntra {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes textoRelevoSale {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+    filter: blur(2px);
+  }
+}
+
+.animate-texto-entra {
+  animation: textoRelevoEntra 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform, filter;
+}
+
+.animate-texto-sale {
+  animation: textoRelevoSale 0.48s cubic-bezier(0.35, 0, 0.65, 1) both;
+  will-change: opacity, transform, filter;
+}
+
 /* Ondas interactivas generadas al pulsar el pin del mapa con cobertura completa */
 @keyframes pulse-ripple {
   0% {

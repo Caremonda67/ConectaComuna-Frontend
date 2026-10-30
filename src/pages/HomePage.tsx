@@ -13,7 +13,9 @@ import { SelloOficialComunal } from '@/components/trust/SelloOficialComunal'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { EmptyState, ErrorState } from '@/components/ui/States'
 import { Button } from '@/components/ui/Button'
+import { UI_ICONS } from '@/components/ui/icons'
 import { HomeHeroIllustration } from '@/components/home/HomeHeroIllustration'
+import { TitularRotativo, TITULAR_ACCESIBLE } from '@/components/home/TitularRotativo'
 import { COMUNA_CENTER, DEFAULT_RADIUS_KM } from '@/lib/env'
 import { leerUbicacion } from '@/lib/ubicacion'
 
@@ -57,9 +59,15 @@ export default function HomePage() {
       <section className="grid items-center gap-8 lg:grid-cols-2">
         <div>
           <p className="inline-flex rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800">
-            Tu comuna, más conectada
+            Directorio de oficios de la comuna
           </p>
-          <h1 className="mt-4 text-4xl font-extrabold leading-[1.1] sm:text-5xl">
+          {/* Quien entra por primera vez no sabía qué era esto: el titular
+              anterior nombraba un valor ("personas reales"), no un uso. Nombrar
+              tres oficios ubica al lector en una sola frase. */}
+          <h1
+            className="mt-4 text-3xl font-extrabold leading-[1.15] sm:text-4xl lg:text-[2.75rem]"
+            aria-label={profile ? undefined : TITULAR_ACCESIBLE}
+          >
             {profile ? (
               <>
                 Hola, {profile.full_name.split(' ')[0]}
@@ -67,25 +75,35 @@ export default function HomePage() {
               </>
             ) : (
               <>
-                Servicios locales,
-                <span className="block text-brand-600">personas reales.</span>
+                <span aria-hidden="true">Encuentra</span>
+                <TitularRotativo />
+                <span aria-hidden="true" className="block">
+                  de tu propio barrio.
+                </span>
               </>
             )}
           </h1>
           <p className="mt-4 max-w-md text-ink-500">
-            Conecta con quienes ofrecen y necesitan servicios en tu comuna. Fácil, rápido y
-            seguro.
+            {profile
+              ? 'Busca el oficio que necesitas entre los negocios de tu zona.'
+              : 'Un directorio de oficios y pequeños negocios de la comuna. Los contactas directo por WhatsApp, sin intermediarios ni comisiones.'}
           </p>
+          {/* Dos públicos, no dos botones: decirlo así enseña de un golpe que
+              la plataforma tiene dos lados. */}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link to="/explorar">
-              <Button size="lg">Explorar servicios</Button>
+              <Button size="lg">{profile ? 'Explorar servicios' : 'Necesito un servicio'}</Button>
             </Link>
             <Link to={ctaDestino}>
               <Button size="lg" variant="secondary">
-                Publicar servicio
+                {profile ? 'Publicar servicio' : 'Ofrezco mi oficio'}
               </Button>
             </Link>
           </div>
+          <p className="mt-3 flex items-center gap-2 text-sm text-ink-500">
+            <UI_ICONS.mic aria-hidden="true" size={15} strokeWidth={1.9} className="shrink-0 text-brand-600" />
+            ¿Prefieres hablar? Pídeselo al asistente por voz.
+          </p>
         </div>
 
         {/* Ilustración animada interactiva con servicios orbitando */}
