@@ -685,15 +685,36 @@ function generarRespuestaLocal(
     texto.includes('comercios del piloto') ||
     texto.includes('oficios del piloto') ||
     texto.includes('negocios del piloto') ||
+    texto.includes('talleres del piloto') ||
+    texto.includes('talleres piloto') ||
     texto.includes('piloto en cali') ||
     texto.includes('piloto de cali')
 
   if (esPeticionPiloto) {
+    const delPiloto = negociosReales.slice(0, 3)
+
+    if (delPiloto.length > 0) {
+      return {
+        mensaje: `¡Claro, vecino! Estos son los talleres que hoy están registrados. Puedes ver su oficio, escribirles por WhatsApp o pactar con Trato Seguro:`,
+        tipo: 'negocios',
+        negociosSugeridos: delPiloto.map((n) => ({
+          id: n.id,
+          nombre: n.name,
+          categoria: n.category,
+          barrio: n.neighborhood,
+          whatsapp: n.whatsapp,
+          distanciaMetros: n.distanceKm != null ? Math.round(n.distanceKm * 1000) : null,
+          verificado: n.verification_status === 'verified',
+        })),
+        sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Buscar otro oficio'],
+      }
+    }
+
     return {
-      mensaje: `Los oficios del piloto están en el directorio y se actualizan solos. Te llevo a la lista para que veas los que hay registrados hoy, con su barrio y su contacto.`,
+      mensaje: `Todavía no hay talleres publicados en el directorio. Cuando alguien registre su oficio, aparece aquí y en el mapa.`,
       tipo: 'navegacion',
       rutaNavegacion: '/explorar',
-      sugerencias: ['Ver en el mapa', '¿Cómo funciona el Trato Seguro?', 'Dictar mi servicio para el catálogo'],
+      sugerencias: ['Ver en el mapa', 'Dictar mi servicio para el catálogo'],
     }
   }
 

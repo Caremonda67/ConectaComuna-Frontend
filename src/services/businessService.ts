@@ -454,7 +454,6 @@ export const businessService = {
             ? {
                 id: p.id,
                 full_name: p.full_name,
-                phone: p.phone,
               }
             : null,
           respuestas,
@@ -466,7 +465,7 @@ export const businessService = {
     const base =
       '*, negocio:businesses(id, name, category, phone, verification_status), respuestas:reporte_respuestas(id, autor_id, mensaje, creado_en, autor:profiles!reporte_respuestas_autor_id_fkey(id, full_name))'
     const conReportante =
-      '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name, phone), respuestas:reporte_respuestas(id, autor_id, mensaje, creado_en, autor:profiles!reporte_respuestas_autor_id_fkey(id, full_name))'
+      '*, negocio:businesses(id, name, category, phone, verification_status), reportado_por:profiles!reportes_comunitarios_reportado_por_id_fkey(id, full_name), respuestas:reporte_respuestas(id, autor_id, mensaje, creado_en, autor:profiles!reporte_respuestas_autor_id_fkey(id, full_name))'
 
     const consulta = incluirReportante
       ? requireSupabase().from('reportes_comunitarios').select(conReportante)

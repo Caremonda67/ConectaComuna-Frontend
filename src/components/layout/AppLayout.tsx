@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { useAuth } from '@/hooks/useAuth'
@@ -13,8 +13,27 @@ import type { ActiveRole } from '@/types'
 import { Logo } from './Logo'
 import { SiteFooter } from './SiteFooter'
 import { AsistenteProvider } from '@/context/AsistenteContext'
+import { useAsistente } from '@/hooks/useAsistente'
 import { FloatingChatButton } from '@/components/chat/FloatingChatButton'
-import { AsistenteComunalModal } from '@/components/chat/AsistenteComunalModal'
+
+// El asistente son 1.374 líneas: se descarga la primera vez que alguien lo abre,
+// no en la carga inicial. El botón flotante no lo necesita.
+const AsistenteComunalModal = lazy(() =>
+  import('@/components/chat/AsistenteComunalModal').then((m) => ({
+    default: m.AsistenteComunalModal,
+  })),
+)
+
+function AsistenteBajoDemanda() {
+  const { isOpen } = useAsistente()
+  if (!isOpen) return null
+
+  return (
+    <Suspense fallback={null}>
+      <AsistenteComunalModal />
+    </Suspense>
+  )
+}
 
 export function AppLayout() {
   const { profile, isDual, activeRole, setActiveRole, signOut, loading } = useAuth()
@@ -441,7 +460,7 @@ export function AppLayout() {
 
       {/* Asistente Comunal con IA y soporte de voz para oficios y trámites */}
       <FloatingChatButton />
-      <AsistenteComunalModal />
+      <AsistenteBajoDemanda />
     </div>
     </AsistenteProvider>
   )

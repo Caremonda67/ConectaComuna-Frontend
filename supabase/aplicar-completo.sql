@@ -45,8 +45,24 @@ create policy profiles_select_public on public.profiles
 -- RLS filtra filas, no columnas: sin esto cualquiera con la clave anónima
 -- (que es pública, viaja en el bundle) se lleva el listado de teléfonos.
 revoke select on public.profiles from anon;
-grant select (id, full_name, avatar_url) on public.profiles to anon;
-grant select on public.profiles to authenticated;
+-- Se dejan legibles solo las columnas que la app necesita para pintar un
+-- nombre. El perfil completo, con teléfono, sale por mi_perfil().
+revoke select on public.profiles from authenticated;
+grant select (id, full_name, avatar_url, account_type, neighborhood) on public.profiles to anon, authenticated;
+
+create or replace function public.mi_perfil()
+returns public.profiles
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select * from public.profiles where id = auth.uid()
+$$;
+
+revoke all on function public.mi_perfil() from public;
+revoke all on function public.mi_perfil() from anon;
+grant execute on function public.mi_perfil() to authenticated;
 
 create policy profiles_update_own on public.profiles
   for update using (auth.uid() = id) with check (auth.uid() = id);
@@ -246,7 +262,7 @@ create trigger businesses_sanitize_insert
   for each row execute function public.sanitize_new_business();
 
 -- ---------- STORAGE ----------
-insert into storage.buckets (id, name, public) values ('business-photos', 'business-photos', true);
+insert into storage.buckets (id, name, public) values ('business-photos', 'business-photos', true) on conflict (id) do nothing;
 
 create policy business_photos_insert on storage.objects
   for insert to authenticated with check (

@@ -1,5 +1,6 @@
 @import 'tailwindcss';
-@import 'leaflet/dist/leaflet.css';
+
+/* El CSS de Leaflet lo importa BusinessMap: la portada no lo necesita. */
 
 /**
  * Sistema de diseño ConectaComuna.

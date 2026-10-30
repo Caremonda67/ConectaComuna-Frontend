@@ -272,6 +272,6 @@ export interface ReporteComunitario {
   creado_en: string
   actualizado_en?: string
   negocio?: Pick<Business, 'id' | 'name' | 'category' | 'phone' | 'verification_status'> | null
-  reportado_por?: Pick<Profile, 'id' | 'full_name' | 'phone'> | null
+  reportado_por?: Pick<Profile, 'id' | 'full_name'> | null
   respuestas?: ReporteRespuesta[]
 }

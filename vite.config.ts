@@ -26,9 +26,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('leaflet')) return 'map'
           if (id.includes('@supabase')) return 'supabase'
-          if (id.includes('node_modules/react')) return 'react'
+          // Antes era includes('node_modules/react'), que también atrapaba a
+          // react-leaflet y arrastraba Leaflet a la primera carga.
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|react-hook-form)[\\/]/.test(id)) return 'react'
           return undefined
         },
       },

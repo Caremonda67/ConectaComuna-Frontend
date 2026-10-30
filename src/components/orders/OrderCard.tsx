@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { RatingInput } from '@/components/ui/Rating'
-import { TextAreaField, TextField } from '@/components/ui/Field'
+import { TextAreaField } from '@/components/ui/Field'
 import { CategoryGlyph } from '@/components/ui/CategoryGlyph'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
+import { AceptarPedidoModal } from './AceptarPedidoModal'
+import { CancelarPedidoModal } from './CancelarPedidoModal'
+import { NotaAvanceModal } from './NotaAvanceModal'
 import { UI_ICONS } from '@/components/ui/icons'
-import { anticipoExcedeElTope, anticipoPermitido } from '@/lib/reglas'
 import {
   ORDER_STATUS_LABEL,
   ORDER_STATUS_STYLE,
@@ -33,20 +35,11 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
 
-  // Modales interactivos
+  // Qué modal está abierto. Cada modal se encarga de su propio formulario.
   const [receiptOpen, setReceiptOpen] = useState(false)
   const [acceptingOpen, setAcceptingOpen] = useState(false)
-  const [errorAnticipo, setErrorAnticipo] = useState<string | null>(null)
   const [cancellingOpen, setCancellingOpen] = useState(false)
   const [noteOpen, setNoteOpen] = useState(false)
-
-  // Estados de formularios de acción
-  const [inputFinalPrice, setInputFinalPrice] = useState(
-    order.price_estimate ? String(order.price_estimate) : '',
-  )
-  const [inputAdvance, setInputAdvance] = useState('')
-  const [cancelReason, setCancelReason] = useState('')
-  const [newNote, setNewNote] = useState(order.business_notes ?? '')
 
   const transitions = ORDER_TRANSITIONS[order.status]
   const allowed =
@@ -80,54 +73,33 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
     }
   }
 
-  async function confirmAccept(e: React.FormEvent) {
-    e.preventDefault()
+  async function aceptarPedido(valores: { finalPrice: number; advancePayment: number }) {
     if (!onStatusChange) return
-    const priceVal = inputFinalPrice ? Number(inputFinalPrice) : order.price_estimate
-    const advVal = inputAdvance ? Number(inputAdvance) : 0
-    if (priceVal && anticipoExcedeElTope(priceVal, advVal)) {
-      // Un alert del navegador sale como diálogo del sistema y rompe el hilo
-      // de la pantalla, sobre todo en celular. El aviso va donde está el error.
-      setErrorAnticipo(
-        `El anticipo no puede pasar del 50%. Para ${formatCurrency(priceVal)} el tope es ${formatCurrency(anticipoPermitido(priceVal))}.`,
-      )
-      return
-    }
-    setErrorAnticipo(null)
     setBusy(true)
     try {
-      await onStatusChange('accepted', {
-        finalPrice: priceVal,
-        advancePayment: advVal,
-      })
+      await onStatusChange('accepted', valores)
       setAcceptingOpen(false)
     } finally {
       setBusy(false)
     }
   }
 
-  async function confirmCancel(e: React.FormEvent) {
-    e.preventDefault()
+  async function cancelarPedido(motivo: string) {
     if (!onStatusChange) return
     setBusy(true)
     try {
-      await onStatusChange('cancelled', {
-        cancellationReason: cancelReason.trim() || 'Cancelado por el usuario',
-      })
+      await onStatusChange('cancelled', { cancellationReason: motivo })
       setCancellingOpen(false)
     } finally {
       setBusy(false)
     }
   }
 
-  async function confirmNote(e: React.FormEvent) {
-    e.preventDefault()
+  async function guardarNota(nota: string | null) {
     if (!onStatusChange) return
     setBusy(true)
     try {
-      await onStatusChange(order.status, {
-        businessNotes: newNote.trim() || null,
-      })
+      await onStatusChange(order.status, { businessNotes: nota })
       setNoteOpen(false)
     } finally {
       setBusy(false)
@@ -371,179 +343,33 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
         </div>
       )}
 
-      {/* Modal para aceptar pedido y pactar precio / anticipo */}
+      {/* Aceptar pedido y pactar precio / anticipo */}
       {acceptingOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
-        >
-          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-ink-900">
-              Aceptar pedido y confirmar cotización
-            </h3>
-            <p className="text-xs text-ink-600">
-              El cliente propuso un estimado de <strong>{formatCurrency(order.price_estimate)}</strong>. Puedes confirmarlo o ajustarlo antes de empezar.
-            </p>
-            <form onSubmit={confirmAccept} className="space-y-3">
-              <TextField
-                label="Precio final acordado (COP)"
-                type="number"
-                min="0"
-                step="500"
-                value={inputFinalPrice}
-                onChange={(e) => setInputFinalPrice(e.target.value)}
-                required
-              />
-              <TextField
-                label="Anticipo acordado / recibido (opcional)"
-                type="number"
-                min="0"
-                max={inputFinalPrice ? String(Math.max(0, Math.floor(Number(inputFinalPrice) * 0.5))) : undefined}
-                step="500"
-                value={inputAdvance}
-                onChange={(e) => setInputAdvance(e.target.value)}
-                hint={
-                  inputFinalPrice
-                    ? `Tope Trato Seguro (máx. 50%): hasta ${formatCurrency(Math.floor(Number(inputFinalPrice) * 0.5))}`
-                    : 'Regla Trato Seguro Comunal: Máximo 50% para materiales.'
-                }
-              />
-              {inputFinalPrice && (
-                <div className="rounded-lg bg-cream-50 dark:bg-cream-100 p-2.5 text-xs flex justify-between font-semibold">
-                  <span>Saldo contra entrega:</span>
-                  <span className="text-brand-700">
-                    {formatCurrency(
-                      Math.max(0, Number(inputFinalPrice) - (inputAdvance ? Number(inputAdvance) : 0)),
-                    )}
-                  </span>
-                </div>
-              )}
-              {errorAnticipo && (
-                <p
-                  role="alert"
-                  className="rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/40 p-2.5 text-xs font-medium text-rose-800 dark:text-rose-300"
-                >
-                  {errorAnticipo}
-                </p>
-              )}
-              <div className="flex gap-2 pt-1">
-                <Button type="submit" size="sm" loading={busy} fullWidth>
-                  Confirmar trabajo
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setAcceptingOpen(false)}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AceptarPedidoModal
+          priceEstimate={order.price_estimate}
+          busy={busy}
+          onClose={() => setAcceptingOpen(false)}
+          onConfirm={aceptarPedido}
+        />
       )}
 
-      {/* Modal para cancelar con motivo */}
+      {/* Cancelar con motivo */}
       {cancellingOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
-        >
-          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-rose-700 dark:text-rose-400">
-              ¿Deseas cancelar esta solicitud?
-            </h3>
-            <p className="text-xs text-ink-600">
-              Indica un motivo para que la otra parte comprenda lo ocurrido y se mantenga la confianza en la comuna.
-            </p>
-            <form onSubmit={confirmCancel} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-ink-700 mb-1">
-                  Motivo de cancelación
-                </label>
-                <select
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full rounded-xl border border-ink-200 bg-white dark:bg-cream-50 p-2 text-xs text-ink-900"
-                  required
-                >
-                  <option value="">Selecciona un motivo...</option>
-                  <option value="Sin disponibilidad en la fecha requerida">
-                    Sin disponibilidad en la fecha requerida
-                  </option>
-                  <option value="No cuento con los insumos o materiales necesarios">
-                    No cuento con los insumos o materiales necesarios
-                  </option>
-                  <option value="No se llegó a un acuerdo en el precio">
-                    No se llegó a un acuerdo en el precio
-                  </option>
-                  <option value="El cliente canceló por imprevisto familiar">
-                    El cliente canceló por imprevisto familiar
-                  </option>
-                  <option value="Otro motivo coordinado entre las partes">
-                    Otro motivo coordinado entre las partes
-                  </option>
-                </select>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Button type="submit" size="sm" variant="danger" loading={busy} fullWidth>
-                  Confirmar cancelación
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setCancellingOpen(false)}
-                >
-                  Volver
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <CancelarPedidoModal
+          busy={busy}
+          onClose={() => setCancellingOpen(false)}
+          onConfirm={cancelarPedido}
+        />
       )}
 
-      {/* Modal para nota de avance */}
+      {/* Nota de avance */}
       {noteOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in"
-        >
-          <div className="card w-full max-w-sm max-h-[90dvh] overflow-y-auto p-5 space-y-4 shadow-xl">
-            <h3 className="font-bold text-base text-ink-900">
-              Añadir nota de avance del trabajo
-            </h3>
-            <p className="text-xs text-ink-600">
-              Esta nota la verá el cliente en su panel (ej: "Prenda lista para prueba", "Material comprado").
-            </p>
-            <form onSubmit={confirmNote} className="space-y-3">
-              <TextAreaField
-                label="Nota del taller"
-                value={newNote}
-                onChange={(e) => setNewNote(e.target.value)}
-                placeholder="Ej: Ya compré los hilos y cierres, entrego mañana a las 3:00 p.m."
-                required
-              />
-              <div className="flex gap-2">
-                <Button type="submit" size="sm" loading={busy} fullWidth>
-                  Guardar nota
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setNoteOpen(false)}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <NotaAvanceModal
+          notaInicial={order.business_notes ?? ''}
+          busy={busy}
+          onClose={() => setNoteOpen(false)}
+          onConfirm={guardarNota}
+        />
       )}
 
       {/* Modal de Comprobante de Trato Seguro */}
