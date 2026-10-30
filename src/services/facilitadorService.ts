@@ -7,6 +7,22 @@ import type { Business, FacilitadorNegocio } from '@/types'
 const SELECT_RELACIONES =
   "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos, verification_status), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name)"
 
+/**
+ * El embed trae el contacto en su propia rama; la interfaz espera el teléfono
+ * dentro del facilitador. Se aplana aquí para no ensuciar las pantallas.
+ */
+function conContacto(filas: unknown[]): FacilitadorNegocio[] {
+  return (filas as Array<Record<string, any>>).map((fila) => {
+    const facilitador = fila.facilitador as Record<string, unknown> | null
+    if (!facilitador) return fila as unknown as FacilitadorNegocio
+    const contacto = facilitador.contacto as { phone?: string | null } | null
+    return {
+      ...fila,
+      facilitador: { ...facilitador, phone: contacto?.phone ?? null },
+    } as unknown as FacilitadorNegocio
+  })
+}
+
 export const facilitadorService = {
   /**
    * Negocios vinculados al facilitador (aprobados o en espera), con su estado.
@@ -56,11 +72,11 @@ export const facilitadorService = {
     // RLS: policy 'facilitadores_select_duenos' permite ver solicitudes hacia tu negocio.
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name)')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, contacto:perfil_contacto(phone))')
       .eq('negocio_id', negocioId)
       .eq('estado_vinculacion', 'pendiente')
     if (error) throw error
-    return (data ?? []) as unknown as FacilitadorNegocio[]
+    return conContacto(data ?? [])
   },
 
   /**
@@ -132,11 +148,11 @@ export const facilitadorService = {
     }
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name)')
+      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, contacto:perfil_contacto(phone))')
       .eq('negocio_id', negocioId)
       .order('creado_en', { ascending: false })
     if (error) throw error
-    return (data ?? []) as unknown as FacilitadorNegocio[]
+    return conContacto(data ?? [])
   },
 
   /**

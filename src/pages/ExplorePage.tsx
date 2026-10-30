@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAsync } from '@/hooks/useAsync'
 import { businessService } from '@/services/businessService'
@@ -43,9 +43,24 @@ export default function ExplorePage() {
 
   const fueraDelPiloto = estaFueraDelPiloto(ubicacion?.center)
 
+  // El buscador escribe letra por letra. La URL se actualiza al instante, pero
+  // la consulta espera 250 ms desde la última tecla: antes iba una petición a
+  // Supabase por cada pulsación.
+  const [busquedaDiferida, setBusquedaDiferida] = useState(filters.query)
+
+  useEffect(() => {
+    const espera = setTimeout(() => setBusquedaDiferida(filters.query), 250)
+    return () => clearTimeout(espera)
+  }, [filters.query])
+
+  const filtrosParaBuscar = useMemo(
+    () => (busquedaDiferida === filters.query ? filters : { ...filters, query: busquedaDiferida }),
+    [filters, busquedaDiferida],
+  )
+
   const { data, loading, error, reload } = useAsync(
-    () => businessService.search(filters),
-    [filters],
+    () => businessService.search(filtrosParaBuscar),
+    [filtrosParaBuscar],
   )
 
   const onChange = useCallback(

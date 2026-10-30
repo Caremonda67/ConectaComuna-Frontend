@@ -27,3 +27,6 @@ dist-ssr
 
 
 .env
+
+# Documentacion interna de trabajo: nunca va al repositorio
+docs/

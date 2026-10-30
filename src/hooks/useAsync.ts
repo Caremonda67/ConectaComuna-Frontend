@@ -25,29 +25,33 @@ export function useAsync<T>(
   const fnRef = useRef(fn)
   fnRef.current = fn
 
+  // Cada corrida lleva su número y solo la última puede escribir el estado. Con
+  // una bandera por corrida, dos 'reload' seguidos dejaban ganar a la respuesta
+  // vieja si llegaba de últimas.
+  const corrida = useRef(0)
+
   const run = useCallback(() => {
-    let alive = true
+    const actual = ++corrida.current
     setState((s) => ({ ...s, loading: true, error: null }))
     fnRef
       .current()
       .then((data) => {
-        if (alive) setState({ data, loading: false, error: null })
+        if (actual === corrida.current) setState({ data, loading: false, error: null })
       })
       .catch((err: unknown) => {
-        if (alive)
+        if (actual === corrida.current)
           setState({
             data: null,
             loading: false,
             error: err instanceof Error ? err.message : 'Ocurrió un error inesperado.',
           })
       })
-    return () => {
-      alive = false
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 
-  useEffect(() => run(), [run])
+  useEffect(() => {
+    run()
+  }, [run])
 
   return {
     ...state,

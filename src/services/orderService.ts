@@ -5,13 +5,21 @@ import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 
 const SELECT_WITH_RELATIONS =
-  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url), review:reviews(id, rating, comment, created_at)'
+  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, contacto:perfil_contacto(phone)), review:reviews(id, rating, comment, created_at)'
 
 function mapDbOrder(raw: any): Order {
   const rawReview = raw.review
   const review = Array.isArray(rawReview) ? (rawReview[0] ?? null) : (rawReview ?? null)
+
+  // El teléfono del cliente vive en perfil_contacto, que la base solo entrega a
+  // las partes del pedido. Se aplana aquí para que la tarjeta no sepa de eso.
+  const client = raw.client
+    ? { ...raw.client, phone: raw.client.contacto?.phone ?? null }
+    : null
+
   return {
     ...raw,
+    client,
     photos: raw.photos ?? [],
     review,
   }

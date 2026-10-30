@@ -580,61 +580,10 @@ update public.businesses b
 -- código, así que se reemplazó más abajo en este mismo archivo.
 
 -- ---------- 8. VINCULACIÓN DEL FACILITADOR POR CÓDIGO ----------
--- El código de apadrinamiento lo entrega el dueño del negocio, así que sirve
--- como autorización. La política de la tabla solo deja insertar en 'pendiente',
--- por eso la vinculación directa pasa por esta función.
-create or replace function public.vincular_facilitador_por_codigo(p_codigo text)
-returns public.facilitadores_negocio
-language plpgsql security definer set search_path = public as $$
-declare
-  v_negocio uuid;
-  v_fila public.facilitadores_negocio;
-begin
-  if auth.uid() is null then
-    raise exception 'Necesitas iniciar sesión para vincularte a un negocio';
-  end if;
-
-  if not exists (
-    select 1 from public.profiles
-     where id = auth.uid() and account_type = 'facilitador'
-  ) then
-    raise exception 'Solo una cuenta de facilitador puede apadrinar negocios';
-  end if;
-
-  select id into v_negocio
-    from public.businesses
-   where codigo_apadrinamiento = btrim(coalesce(p_codigo, ''))
-   limit 1;
-
-  if v_negocio is null then
-    raise exception 'Código no válido. Verifica con el dueño del negocio.';
-  end if;
-
-  select * into v_fila
-    from public.facilitadores_negocio
-   where negocio_id = v_negocio and facilitador_id = auth.uid();
-
-  if found and v_fila.estado_vinculacion = 'aprobado' then
-    raise exception 'Ya tienes una vinculación activa con este negocio.';
-  end if;
-
-  if found then
-    update public.facilitadores_negocio
-       set estado_vinculacion = 'aprobado'
-     where id = v_fila.id
-    returning * into v_fila;
-  else
-    insert into public.facilitadores_negocio (negocio_id, facilitador_id, estado_vinculacion)
-    values (v_negocio, auth.uid(), 'aprobado')
-    returning * into v_fila;
-  end if;
-
-  return v_fila;
-end $$;
-
-revoke all on function public.vincular_facilitador_por_codigo(text) from public;
-grant execute on function public.vincular_facilitador_por_codigo(text) to authenticated;
-revoke all on function public.vincular_facilitador_por_codigo(text) from anon;
+-- La función vive más abajo, junto a `generar_codigo_apadrinamiento`, porque
+-- necesita la fecha de vencimiento del código. Aquí había una primera versión
+-- sin esa comprobación ni la de auto-apadrinamiento: se quitó para que el
+-- archivo no describa dos reglas distintas para la misma puerta.
 
 -- ---------- 9. AVISOS EN VIVO DE PEDIDOS ----------
 -- En un proyecto nuevo la tabla no está publicada y los avisos de "pedido
@@ -1240,6 +1189,28 @@ end $$;
 revoke all on function public.vincular_facilitador_por_codigo(text) from public;
 grant execute on function public.vincular_facilitador_por_codigo(text) to authenticated;
 revoke all on function public.vincular_facilitador_por_codigo(text) from anon;
+
+-- La misma regla sobre la tabla, no solo en la puerta: si alguien llega por
+-- otro camino, el dueño sigue sin poder apadrinarse a sí mismo. Un sello que
+-- uno se otorga no le dice nada a nadie.
+create or replace function public.facilitador_no_es_dueno()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if exists (
+    select 1 from public.businesses b
+     where b.id = new.negocio_id
+       and b.owner_id = new.facilitador_id
+  ) then
+    raise exception 'El facilitador de un negocio no puede ser su propio dueño';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists facilitadores_no_autoapadrinar on public.facilitadores_negocio;
+create trigger facilitadores_no_autoapadrinar
+before insert or update on public.facilitadores_negocio
+for each row execute function public.facilitador_no_es_dueno();
 
 -- ---------- 16. EL COMPROBANTE NO SE BORRA CON EL NEGOCIO ----------
 alter table public.orders drop constraint if exists orders_business_id_fkey;
