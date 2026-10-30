@@ -14,7 +14,7 @@ const tones: Record<Badge['tone'], string> = {
   danger: 'bg-rose-100 dark:bg-rose-950/80 text-rose-900 dark:text-rose-100 border-rose-300 dark:border-rose-700 font-semibold',
 }
 
-export function BadgePill({ badge }: { badge: Badge }) {
+function BadgePill({ badge }: { badge: Badge }) {
   const Icon = badge.icon
   return (
     <span

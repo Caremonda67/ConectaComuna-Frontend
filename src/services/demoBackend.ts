@@ -81,7 +81,7 @@ export function readDb(): DemoDb {
   }
 }
 
-export function writeDb(db: DemoDb): void {
+function writeDb(db: DemoDb): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(db))
   } catch {
@@ -99,9 +99,6 @@ export function mutateDb(fn: (db: DemoDb) => void): DemoDb {
   return db
 }
 
-export function resetDb(): void {
-  localStorage.removeItem(KEY)
-}
 
 /** Latencia simulada: nos obliga a construir bien los estados de carga. */
 export function delay<T>(value: T, ms = 350): Promise<T> {

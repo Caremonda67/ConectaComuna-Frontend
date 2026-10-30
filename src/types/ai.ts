@@ -54,7 +54,7 @@ export interface AcuerdoTratoSeguroAi {
   esEjemplo?: boolean
 }
 
-export interface UbicacionDetectadaAi {
+interface UbicacionDetectadaAi {
   barrio: string
   lat: number
   lng: number

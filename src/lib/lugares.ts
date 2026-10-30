@@ -78,5 +78,3 @@ export async function resolverLugar(nombre: string): Promise<UbicacionGeocodific
   }
 }
 
-/** Los barrios del piloto, para ofrecerlos como atajo en la interfaz. */
-export const BARRIOS_PILOTO = ATAJOS_PILOTO

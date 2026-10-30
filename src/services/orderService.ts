@@ -7,6 +7,26 @@ import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 const SELECT_WITH_RELATIONS =
   '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url, contacto:perfil_contacto(phone)), review:reviews(id, rating, comment, created_at)'
 
+const SELECT_SIN_CONTACTO =
+  '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url), review:reviews(id, rating, comment, created_at)'
+
+let hayTablaDeContacto: boolean | null = null
+
+/**
+ * La tabla de contacto llegó con migracion-contacto-perfiles.sql. Si el
+ * despliegue va por delante de la migración, pedirla hace fallar la consulta
+ * entera y el panel se queda en blanco; por eso se pregunta una sola vez por
+ * sesión y se elige el select. Sin la tabla, el pedido se ve igual, sin el
+ * teléfono de la contraparte.
+ */
+async function columnasDePedido(): Promise<string> {
+  if (hayTablaDeContacto === null) {
+    const { error } = await requireSupabase().from('perfil_contacto').select('profile_id').limit(1)
+    hayTablaDeContacto = !error
+  }
+  return hayTablaDeContacto ? SELECT_WITH_RELATIONS : SELECT_SIN_CONTACTO
+}
+
 function mapDbOrder(raw: any): Order {
   const rawReview = raw.review
   const review = Array.isArray(rawReview) ? (rawReview[0] ?? null) : (rawReview ?? null)
@@ -238,7 +258,7 @@ export const orderService = {
     }
     const { data, error } = await requireSupabase()
       .from('orders')
-      .select(SELECT_WITH_RELATIONS)
+      .select(await columnasDePedido())
       .eq('client_id', clientId)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -257,7 +277,7 @@ export const orderService = {
     }
     const { data, error } = await requireSupabase()
       .from('orders')
-      .select(SELECT_WITH_RELATIONS)
+      .select(await columnasDePedido())
       .eq('business_id', businessId)
       .order('created_at', { ascending: false })
     if (error) throw error
@@ -383,7 +403,7 @@ export const orderService = {
     const { data, error } = await supabase
       .from('orders')
       .insert(payload)
-      .select(SELECT_WITH_RELATIONS)
+      .select(await columnasDePedido())
       .single()
     if (error) throw error
     return mapDbOrder(data)
@@ -427,7 +447,7 @@ export const orderService = {
     // y el cliente para pintar la tarjeta.
     const { data, error: errorLectura } = await requireSupabase()
       .from('orders')
-      .select(SELECT_WITH_RELATIONS)
+      .select(await columnasDePedido())
       .eq('id', orderId)
       .single()
     if (errorLectura) throw errorLectura
@@ -442,7 +462,7 @@ export const orderService = {
     }
     const { data, error } = await requireSupabase()
       .from('orders')
-      .select(SELECT_WITH_RELATIONS)
+      .select(await columnasDePedido())
       .eq('id', orderId)
       .maybeSingle()
     if (error) throw error
