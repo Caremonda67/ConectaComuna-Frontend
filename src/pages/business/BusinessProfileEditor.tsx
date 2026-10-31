@@ -13,7 +13,7 @@ import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
 import { reverseGeocodificar } from '@/services/direccionService'
-import { DAY_NAMES } from '@/lib/utils'
+import { DAY_NAMES, formatCurrency } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
 import { FormSkeleton } from '@/components/ui/Skeleton'
@@ -472,94 +472,125 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         )}
       </section>
 
-      {/* Catálogo de servicios y precios de referencia */}
+      {/*
+        Catálogo de servicios.
+
+        Antes eran tres cajas iguales por servicio —nombre, tarifa y
+        descripción, las tres con su borde y su etiqueta diminuta—, así que el
+        apartado se leía como una tabla de base de datos y el emprendedor nunca
+        veía lo que iba a ver el cliente. Ahora cada fila tiene la forma de la
+        tarjeta que sale publicada: el nombre grande, el precio a la derecha y
+        el detalle debajo. Se escribe encima del resultado.
+      */}
       <section className="card p-4 space-y-3">
-        <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="font-bold text-sm text-ink-900 flex items-center gap-2">
-              <UI_ICONS.fileText size={18} className="text-brand-500" />
-              Catálogo de servicios y tarifas de referencia
+            <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
+              <UI_ICONS.fileText size={18} className="text-brand-700" />
+              Lo que ofreces y a qué precio
+              {servicesCatalog.length > 0 && (
+                <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">
+                  {servicesCatalog.length}
+                </span>
+              )}
             </h2>
             <p className="text-xs text-ink-500">
-              Muestra a los vecinos tus servicios más pedidos y sus precios orientativos.
+              Así aparecerá en tu ficha. Los precios son orientativos.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleAddService}
-            className="text-xs font-semibold text-brand-700 hover:text-brand-800 hover:bg-brand-100 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-xs active:translate-y-0 active:scale-95 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-brand-200 bg-brand-50 cursor-pointer transition-all duration-150"
-          >
-            + Añadir servicio o tarifa
-          </button>
+          {servicesCatalog.length > 0 && (
+            <Button type="button" size="sm" variant="secondary" onClick={handleAddService}>
+              <UI_ICONS.package size={15} />
+              Añadir otro
+            </Button>
+          )}
         </div>
 
         {servicesCatalog.length === 0 ? (
-          <p className="text-xs text-ink-500 italic py-2">
-            No has agregado servicios o tarifas de referencia aún. Añade los arreglos o trabajos que más te piden.
-          </p>
+          <div className="rounded-xl border border-dashed border-brand-300 bg-brand-50 p-5 text-center">
+            <p className="text-sm font-semibold text-ink-900">
+              Todavía no has puesto ningún precio
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-ink-600">
+              Los vecinos preguntan primero por el precio. Poner dos o tres de los trabajos que
+              más te piden evita media conversación por WhatsApp.
+            </p>
+            <p className="mt-2 text-xs text-ink-500">
+              Por ejemplo: <span className="font-semibold text-ink-700">Ruedo de pantalón</span>
+              {' · '}
+              <span className="font-semibold text-ink-700">{formatCurrency(15000)}</span>
+            </p>
+            <div className="mt-3 flex justify-center">
+              <Button type="button" size="sm" onClick={handleAddService}>
+                Añadir mi primer servicio
+              </Button>
+            </div>
+          </div>
         ) : (
-          <div className="space-y-3 pt-1">
+          <ul className="space-y-2.5">
             {servicesCatalog.map((item, idx) => (
-              <div
+              <li
                 key={item.id || idx}
-                className="p-3 rounded-xl border border-ink-200 bg-cream-50 dark:bg-cream-200/40 space-y-2.5"
+                className="rounded-xl border border-ink-200 bg-white dark:bg-cream-100 p-3 transition-colors focus-within:border-brand-400"
               >
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_140px_auto] items-start gap-2">
-                  <div className="min-w-0">
-                    <label className="text-[11px] font-semibold text-ink-600 block mb-1">
-                      Servicio o producto
-                    </label>
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
                     <input
                       type="text"
-                      placeholder="Ej: Ruedo de pantalón o Copia de llave"
+                      aria-label={`Nombre del servicio ${idx + 1}`}
+                      placeholder="Ej: Ruedo de pantalón"
                       value={item.name}
                       onChange={(e) => updateService(idx, 'name', e.target.value)}
-                      className="w-full text-sm font-medium px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                      /* Sin borde: el campo se ve como el título que será, y
+                         solo se marca al enfocarlo. */
+                      className="w-full rounded-md bg-transparent px-1 py-0.5 text-sm font-semibold text-ink-900 placeholder:font-normal placeholder:text-ink-400 focus:bg-cream-100 dark:focus:bg-cream-50 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      aria-label={`Detalle del servicio ${idx + 1}`}
+                      placeholder="Detalle breve (opcional): tela estándar, a mano o a máquina…"
+                      value={item.description ?? ''}
+                      onChange={(e) => updateService(idx, 'description', e.target.value)}
+                      className="mt-0.5 w-full rounded-md bg-transparent px-1 py-0.5 text-xs text-ink-600 placeholder:text-ink-400 focus:bg-cream-100 dark:focus:bg-cream-50 focus:outline-none"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 sm:w-36">
-                      <label className="text-[11px] font-semibold text-ink-600 block mb-1">
-                        Tarifa aprox. ($)
-                      </label>
+
+                  <div className="flex shrink-0 items-center gap-1">
+                    <div className="flex items-center rounded-lg border border-ink-200 bg-cream-50 dark:bg-cream-200/40 px-2 focus-within:border-brand-500">
+                      <span aria-hidden="true" className="text-sm font-semibold text-ink-500">
+                        $
+                      </span>
                       <input
-                        type="number"
-                        placeholder="Ej: 15000"
-                        value={item.price ?? ''}
-                        onChange={(e) =>
-                          updateService(
-                            idx,
-                            'price',
-                            e.target.value ? Number(e.target.value) : null
-                          )
-                        }
-                        className="w-full text-sm px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                        type="text"
+                        inputMode="numeric"
+                        aria-label={`Precio del servicio ${idx + 1} en pesos`}
+                        placeholder="15.000"
+                        value={item.price == null ? '' : item.price.toLocaleString('es-CO')}
+                        onChange={(e) => {
+                          // Se escribe con puntos de mil a la vista, pero se
+                          // guarda el número limpio: "15.000" es legible y
+                          // 15000 es lo que entiende la base.
+                          const digitos = e.target.value.replace(/\D/g, '')
+                          updateService(idx, 'price', digitos ? Number(digitos) : null)
+                        }}
+                        className="w-20 bg-transparent py-1.5 text-right text-sm font-semibold text-ink-900 placeholder:font-normal placeholder:text-ink-400 focus:outline-none"
                       />
                     </div>
-                    <div className="pt-5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => removeService(idx)}
-                        className="p-1.5 text-ink-400 hover:text-rose-600 hover:scale-115 active:scale-90 transition-all duration-150 cursor-pointer"
-                        title="Eliminar este servicio"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                    {/* 44 px de área táctil, como el resto de los botones: la
+                        "✕" anterior medía 26 y había que apuntarle. */}
+                    <button
+                      type="button"
+                      onClick={() => removeService(idx)}
+                      aria-label={`Quitar ${item.name.trim() || `el servicio ${idx + 1}`}`}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300"
+                    >
+                      <UI_ICONS.close size={17} />
+                    </button>
                   </div>
                 </div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Descripción o detalle breve (ej: tela estándar, a mano o máquina)"
-                    value={item.description ?? ''}
-                    onChange={(e) => updateService(idx, 'description', e.target.value)}
-                    className="w-full text-xs text-ink-700 px-3 py-1.5 rounded-lg border border-ink-200 bg-white dark:bg-cream-100 text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                  />
-                </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 

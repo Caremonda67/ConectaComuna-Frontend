@@ -2,10 +2,28 @@ import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import { businessService } from './businessService'
+import { hayTablaDeContacto } from './contactoDisponible'
 import type { Business, FacilitadorNegocio } from '@/types'
 
 const SELECT_RELACIONES =
   "*, negocio:businesses!facilitadores_negocio_negocio_id_fkey(id, name, category, photos, verification_status), facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(id, full_name)"
+
+/**
+ * Las dos variantes del embed del facilitador. Sin `perfil_contacto` en la
+ * base, pedir la rama del contacto tumba la consulta entera con PGRST205 y el
+ * panel de «Gestión de Facilitadores» se queda en su estado de error, aunque
+ * los nombres y los estados sí estuvieran disponibles.
+ */
+const FACILITADOR_CON_CONTACTO =
+  'facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, contacto:perfil_contacto(phone))'
+
+const FACILITADOR_SIN_CONTACTO =
+  'facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name)'
+
+async function columnasDeVinculacion(): Promise<string> {
+  const rama = (await hayTablaDeContacto()) ? FACILITADOR_CON_CONTACTO : FACILITADOR_SIN_CONTACTO
+  return `*, ${rama}`
+}
 
 /**
  * El embed trae el contacto en su propia rama; la interfaz espera el teléfono
@@ -72,7 +90,7 @@ export const facilitadorService = {
     // RLS: policy 'facilitadores_select_duenos' permite ver solicitudes hacia tu negocio.
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, contacto:perfil_contacto(phone))')
+      .select(await columnasDeVinculacion())
       .eq('negocio_id', negocioId)
       .eq('estado_vinculacion', 'pendiente')
     if (error) throw error
@@ -148,7 +166,7 @@ export const facilitadorService = {
     }
     const { data, error } = await requireSupabase()
       .from('facilitadores_negocio')
-      .select('*, facilitador:profiles!facilitadores_negocio_facilitador_id_fkey(full_name, contacto:perfil_contacto(phone))')
+      .select(await columnasDeVinculacion())
       .eq('negocio_id', negocioId)
       .order('creado_en', { ascending: false })
     if (error) throw error
