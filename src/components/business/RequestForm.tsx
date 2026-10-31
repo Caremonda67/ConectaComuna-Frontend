@@ -207,7 +207,7 @@ export function RequestForm({
             multiple
             onChange={handlePhotos}
             aria-label="Subir fotos de referencia"
-            className="block w-full text-sm text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100 file:cursor-pointer dark:file:bg-brand-900/30 dark:file:text-brand-300"
+            className="block w-full text-sm text-ink-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-700 hover:file:bg-brand-100 file:cursor-pointer"
           />
         )}
       </div>

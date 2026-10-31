@@ -103,8 +103,23 @@ alter table public.businesses enable row level security;
 create policy businesses_select_public on public.businesses
   for select using (is_active or owner_id = auth.uid());
 
-create policy businesses_owner_write on public.businesses
-  for all using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+-- Partida en tres (antes era una sola `for all` llamada
+-- businesses_owner_write) para poder excluir al facilitador solo del insert:
+-- acompana oficios ajenos, no abre uno propio.
+create policy businesses_owner_insert on public.businesses
+  for insert with check (
+    auth.uid() = owner_id
+    and not exists (
+      select 1 from public.profiles p
+       where p.id = auth.uid() and p.account_type = 'facilitador'
+    )
+  );
+
+create policy businesses_owner_update on public.businesses
+  for update using (auth.uid() = owner_id) with check (auth.uid() = owner_id);
+
+create policy businesses_owner_delete on public.businesses
+  for delete using (auth.uid() = owner_id);
 
 -- ---------- PEDIDOS ----------
 create type order_status as enum
@@ -335,10 +350,9 @@ create policy businesses_facilitator_update on public.businesses
     )
   );
 
--- NOTA: La política original 'businesses_owner_write' permitía 'for all'. 
--- Deberíamos asegurar que DELETE sigue siendo solo para el owner.
--- Supabase acumula las políticas con OR. Como la del facilitador es solo FOR UPDATE,
--- el DELETE seguirá bloqueado para el facilitador por omisión.
+-- El borrado es solo del dueno: `businesses_owner_delete` es la unica politica
+-- `for delete`, y la del facilitador es `for update`. Postgres suma las
+-- politicas con OR, asi que al facilitador no le alcanza ninguna para borrar.
 
 -- ---------- REPORTES COMUNITARIOS ----------
 create table if not exists public.reportes_comunitarios (
@@ -1233,6 +1247,80 @@ create policy order_photos_read on storage.objects
 -- no, y entonces todo responde 'permission denied for schema public'.
 -- Van al final para cubrir todas las tablas, y los permisos de profiles se
 -- vuelven a cerrar justo después: un 'grant all' abriría el teléfono de todos.
+-- ---------- CONTACTO CON REGLAS ----------
+-- El telefono salio de `profiles` cuando se cerro la privacidad. Esta tabla es
+-- el espejo que si se puede leer con reglas: la propia persona, la contraparte
+-- de un pedido, y el negocio con su facilitador aprobado. Llego con
+-- migracion-contacto-perfiles.sql y se incorpora aqui para que reconstruir
+-- desde este archivo de una base igual a la que esta en produccion.
+
+create table if not exists public.perfil_contacto (
+  profile_id uuid primary key references public.profiles(id) on delete cascade,
+  phone text,
+  actualizado_en timestamptz not null default now()
+);
+
+alter table public.perfil_contacto enable row level security;
+
+insert into public.perfil_contacto (profile_id, phone)
+select id, phone from public.profiles where phone is not null
+on conflict (profile_id) do update set phone = excluded.phone, actualizado_en = now();
+
+create or replace function public.espejar_contacto()
+returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  if new.phone is null then
+    delete from public.perfil_contacto where profile_id = new.id;
+  else
+    insert into public.perfil_contacto (profile_id, phone)
+    values (new.id, new.phone)
+    on conflict (profile_id) do update set phone = excluded.phone, actualizado_en = now();
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists profiles_espejo_contacto on public.profiles;
+create trigger profiles_espejo_contacto
+after insert or update of phone on public.profiles
+for each row execute function public.espejar_contacto();
+
+drop policy if exists contacto_propio on public.perfil_contacto;
+create policy contacto_propio on public.perfil_contacto
+  for select using (profile_id = auth.uid());
+
+-- Las dos partes de un pedido se ven entre sí; el negocio y su facilitador
+-- aprobado también. Nadie más.
+drop policy if exists contacto_contraparte on public.perfil_contacto;
+create policy contacto_contraparte on public.perfil_contacto
+  for select using (
+    exists (
+      select 1
+        from public.orders o
+        join public.businesses b on b.id = o.business_id
+       where (o.client_id = auth.uid() and b.owner_id = perfil_contacto.profile_id)
+          or (b.owner_id = auth.uid() and o.client_id = perfil_contacto.profile_id)
+    )
+    or exists (
+      select 1
+        from public.facilitadores_negocio fn
+        join public.businesses b on b.id = fn.negocio_id
+       where fn.estado_vinculacion = 'aprobado'
+         and ((fn.facilitador_id = auth.uid() and b.owner_id = perfil_contacto.profile_id)
+           or (b.owner_id = auth.uid() and fn.facilitador_id = perfil_contacto.profile_id))
+    )
+  );
+
+drop policy if exists contacto_escritura_propia on public.perfil_contacto;
+create policy contacto_escritura_propia on public.perfil_contacto
+  for insert with check (profile_id = auth.uid());
+
+drop policy if exists contacto_actualizacion_propia on public.perfil_contacto;
+create policy contacto_actualizacion_propia on public.perfil_contacto
+  for update using (profile_id = auth.uid()) with check (profile_id = auth.uid());
+
+grant select, insert, update on public.perfil_contacto to authenticated;
+
 grant usage on schema public to anon, authenticated, service_role;
 grant all on all tables in schema public to anon, authenticated, service_role;
 grant all on all sequences in schema public to anon, authenticated, service_role;

@@ -110,6 +110,30 @@ Puedo colaborarte para:
   }
 }
 
+/**
+ * Nombres de las secciones que el asistente puede proponer y que no tienen
+ * tarjeta propia. Antes caían en un genérico «Sección recomendada / Toca el
+ * botón para abrir esta sección directamente / Ir a la sección», que no le
+ * dice a nadie a dónde va: justo lo contrario de lo que necesita quien no se
+ * maneja con soltura en una aplicación.
+ */
+const SECCIONES_CONOCIDAS: ReadonlyArray<
+  readonly [prefijo: string, titulo: string, descripcion: string, boton: string]
+> = [
+  ['/como-funciona', 'Cómo funciona ConectaComuna', 'Los pasos de un trabajo, de la búsqueda al comprobante', 'Ver cómo funciona'],
+  ['/entrar', 'Ingresar a tu cuenta', 'Entra con tu correo para ver tus pedidos y acuerdos', 'Ir a ingresar'],
+  ['/negocio', 'Ficha del oficio', 'Fotos, horarios, reseñas y contacto directo por WhatsApp', 'Abrir la ficha'],
+  ['/equipo', 'Equipo de ConectaComuna', 'Quiénes sostienen el piloto en la comuna', 'Conocer al equipo'],
+  ['/terminos', 'Términos del servicio', 'Las reglas de uso de la plataforma', 'Leer los términos'],
+  ['/privacidad', 'Tratamiento de datos', 'Qué datos se guardan y quién puede verlos', 'Leer la política'],
+]
+
+/** Busca la sección por prefijo de ruta, ignorando parámetros de consulta. */
+function seccionDe(ruta: string) {
+  const limpia = ruta.split('?')[0]
+  return SECCIONES_CONOCIDAS.find(([prefijo]) => limpia.startsWith(prefijo))
+}
+
 export function AsistenteComunalModal() {
   const { isOpen, cerrarAsistente, mensajeInicial } = useAsistente()
   const { userId, email, profile, business, activeRole, refresh } = useAuth()
@@ -742,7 +766,7 @@ export function AsistenteComunalModal() {
             {/* Encabezado */}
             <header className="flex items-center justify-between px-3.5 sm:px-4 py-3 border-b border-ink-200 dark:border-ink-700 bg-cream-200/70 dark:bg-cream-100">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-brand-600 text-white shadow-md shadow-brand-900/20 shrink-0">
+                <div className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-brand-700 text-white dark:text-brand-50 shadow-md shadow-brand-900/20 shrink-0">
                   <UI_ICONS.bot size={20} className="stroke-[2.2] text-amber-300 sm:w-[22px] sm:h-[22px]" />
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-emerald-500 rounded-full border-2 border-cream-100" />
                 </div>
@@ -751,7 +775,7 @@ export function AsistenteComunalModal() {
                     <h2 className="text-sm font-bold text-ink-900 leading-tight truncate">
                       Asistente Comunal
                     </h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-100 text-brand-900 dark:bg-emerald-950/90 dark:text-emerald-300 border border-brand-200 dark:border-emerald-700/60 shrink-0">
+                    <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-100 text-brand-900 dark:bg-emerald-950/90 dark:text-emerald-300 border border-brand-200 dark:border-emerald-700/60 shrink-0">
                       IA Vecinal
                     </span>
                   </div>
@@ -774,7 +798,7 @@ export function AsistenteComunalModal() {
                     'p-2 rounded-xl transition-colors',
                     ttsActivo
                       ? 'bg-brand-200 dark:bg-emerald-950/80 text-brand-900 dark:text-emerald-300 border border-brand-300 dark:border-emerald-700/60'
-                      : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200'
+                      : 'text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:hover:text-white dark:hover:bg-cream-200'
                   )}
                   aria-label={ttsActivo ? 'Silenciar lectura de voz' : 'Activar lectura de voz'}
                 >
@@ -786,7 +810,7 @@ export function AsistenteComunalModal() {
                   type="button"
                   onClick={reiniciarConversacion}
                   title="Reiniciar conversación"
-                  className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
+                  className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
                   aria-label="Reiniciar conversación"
                 >
                   <UI_ICONS.reset size={18} />
@@ -799,7 +823,7 @@ export function AsistenteComunalModal() {
                     detenerLecturaVoz()
                     cerrarAsistente()
                   }}
-                  className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:text-ink-300 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
+                  className="p-2 rounded-xl text-ink-600 hover:text-ink-900 hover:bg-cream-200 dark:hover:text-white dark:hover:bg-cream-200 transition-colors"
                   aria-label="Cerrar chat"
                 >
                   <UI_ICONS.close size={20} />
@@ -822,7 +846,7 @@ export function AsistenteComunalModal() {
                       className={cn(
                         'max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed',
                         esUsuario
-                          ? 'bg-brand-600 text-white rounded-tr-none shadow-xs'
+                          ? 'bg-brand-700 text-white dark:text-brand-50 rounded-tr-none shadow-xs'
                           : 'bg-white dark:bg-cream-200 border border-ink-200 dark:border-ink-700 text-ink-900 dark:text-white rounded-tl-none shadow-xs'
                       )}
                     >
@@ -966,7 +990,7 @@ export function AsistenteComunalModal() {
                               type="button"
                               disabled={guardandoServicioId === m.id}
                               onClick={() => guardarEnCatalogo(estructurada.servicio!, m.id)}
-                              className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-md shadow-brand-900/10 transition-colors disabled:opacity-50"
+                              className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-bold rounded-xl bg-brand-700 text-white dark:text-brand-50 hover:bg-brand-800 shadow-md shadow-brand-900/10 transition-colors disabled:opacity-50"
                             >
                               {guardandoServicioId === m.id ? (
                                 <UI_ICONS.loader size={16} className="animate-spin" />
@@ -1109,7 +1133,7 @@ export function AsistenteComunalModal() {
                             type="button"
                             disabled={ejecutandoAccion}
                             onClick={() => ejecutarAccionConfirmada(estructurada.accionPendiente)}
-                            className="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-center transition-colors shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            className="flex-1 py-2 px-3 text-xs font-bold rounded-xl bg-brand-700 hover:bg-brand-800 text-white dark:text-brand-50 text-center transition-colors shadow-xs flex items-center justify-center gap-1.5 disabled:opacity-50"
                           >
                             {ejecutandoAccion ? (
                               <UI_ICONS.loader size={14} className="animate-spin" />
@@ -1171,7 +1195,7 @@ export function AsistenteComunalModal() {
                         ? 'Directorio de Oficios'
                         : esRegistro
                         ? 'Registro de Emprendedor'
-                        : 'Sección recomendada'
+                        : (seccionDe(estructurada.rutaNavegacion)?.[1] ?? 'Sección recomendada')
 
                       const descNav = esVerificarTrato
                         ? 'Comprueba el tope de anticipo del 50%, el negocio con el que se pactó y el estado del trabajo en tiempo real'
@@ -1183,7 +1207,7 @@ export function AsistenteComunalModal() {
                         ? 'Explora todas las categorías y emprendedores de la comuna'
                         : esRegistro
                         ? 'Publica tu taller u oficio gratis en 2 minutos sin intermediarios'
-                        : 'Toca el botón para abrir esta sección directamente'
+                        : (seccionDe(estructurada.rutaNavegacion)?.[2] ?? 'Toca el botón para abrirla directamente')
 
                       const botonTexto = esVerificarTrato
                         ? 'Abrir comprobante verificable con QR'
@@ -1195,7 +1219,7 @@ export function AsistenteComunalModal() {
                         ? 'Explorar directorio'
                         : esRegistro
                         ? 'Crear perfil gratis'
-                        : 'Ir a la sección'
+                        : (seccionDe(estructurada.rutaNavegacion)?.[3] ?? 'Abrir sección')
 
                       return (
                         <div
@@ -1221,7 +1245,7 @@ export function AsistenteComunalModal() {
                               <div className="text-xs font-bold text-ink-900">
                                 {tituloNav}
                               </div>
-                              <p className="text-[11px] text-ink-600 dark:text-ink-400 mt-0.5 leading-snug">
+                              <p className="text-[11px] text-ink-600 mt-0.5 leading-snug">
                                 {descNav}
                               </p>
                             </div>
@@ -1326,7 +1350,7 @@ export function AsistenteComunalModal() {
                     placeholder={
                       escuchandoVoz ? 'Escuchando tu voz...' : 'Escribe o presiona el micrófono...'
                     }
-                    className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-cream-50 dark:bg-cream-200 text-ink-900 dark:text-white border border-ink-200 dark:border-ink-700 focus:border-brand-500 focus:outline-none transition-all placeholder:text-ink-500 dark:placeholder:text-ink-400 shadow-2xs"
+                    className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-2xl bg-cream-50 dark:bg-cream-200 text-ink-900 dark:text-white border border-ink-200 dark:border-ink-700 focus:border-brand-500 focus:outline-none transition-all placeholder:text-ink-500 shadow-2xs"
                   />
 
                   {/* Botón de micrófono */}
@@ -1338,7 +1362,7 @@ export function AsistenteComunalModal() {
                       'absolute right-1.5 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all',
                       escuchandoVoz
                         ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
-                        : 'text-ink-600 dark:text-ink-300 hover:text-brand-600 dark:hover:text-emerald-400 hover:bg-cream-200 dark:hover:bg-cream-200'
+                        : 'text-ink-600 hover:text-brand-600 dark:hover:text-emerald-400 hover:bg-cream-200 dark:hover:bg-cream-200'
                     )}
                     aria-label={escuchandoVoz ? 'Detener grabación de voz' : 'Iniciar grabación de voz'}
                   >
@@ -1350,7 +1374,7 @@ export function AsistenteComunalModal() {
                 <button
                   type="submit"
                   disabled={!textoEntrada.trim() || cargando}
-                  className="flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-600 text-white hover:bg-brand-700 shadow-md shadow-brand-900/20 disabled:opacity-40 disabled:pointer-events-none transition-all focus:outline-none focus:ring-2 focus:ring-brand-400"
+                  className="flex items-center justify-center w-11 h-11 rounded-2xl bg-brand-700 text-white dark:text-brand-50 hover:bg-brand-800 shadow-md shadow-brand-900/20 disabled:opacity-40 disabled:pointer-events-none transition-all focus:outline-none focus:ring-2 focus:ring-brand-400"
                   aria-label="Enviar mensaje"
                 >
                   <UI_ICONS.send size={18} />

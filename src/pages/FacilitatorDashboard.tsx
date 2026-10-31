@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
+import { RowSkeletonList } from '@/components/ui/Skeleton'
+import { AvisoGuardado } from '@/components/ui/AvisoGuardado'
+import { useConfirmacion } from '@/hooks/useConfirmacion'
 
 const ETIQUETA_ROL: Record<string, string> = {
   client: 'Cliente',
@@ -42,7 +45,16 @@ export default function FacilitatorDashboard() {
   // Verificación en territorio
   const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
   const [notaVerificacion, setNotaVerificacion] = useState('')
+  const [aceptaResponsabilidad, setAceptaResponsabilidad] = useState(false)
+
+  // Firmar un sello es la acción de más peso del sistema: es lo que hace que
+  // un negocio aparezca como verificado ante todo el barrio. Pide las dos
+  // cosas que un facilitador debería poder dar siempre que sea cierto: que
+  // cuente qué vio, y que lo asuma por escrito.
+  const puedeFirmar = notaVerificacion.trim().length >= 15 && aceptaResponsabilidad
   const [guardandoVerif, setGuardandoVerif] = useState(false)
+  const confirmacionPerfil = useConfirmacion()
+  const confirmacionSello = useConfirmacion()
   const [errorVerif, setErrorVerif] = useState<string | null>(null)
 
   useEffect(() => {
@@ -66,6 +78,7 @@ export default function FacilitatorDashboard() {
       })
       await refresh()
       setEditandoPerfil(false)
+      confirmacionPerfil.confirmar()
     } finally {
       setGuardandoPerfil(false)
     }
@@ -101,6 +114,9 @@ export default function FacilitatorDashboard() {
         notaVerificacion,
       )
       setVerificandoBizId(null)
+      setNotaVerificacion('')
+      setAceptaResponsabilidad(false)
+      confirmacionSello.confirmar()
       if (userId) {
         const data = await facilitadorService.getNegociosVinculados(userId)
         setVinculaciones(data)
@@ -128,7 +144,7 @@ export default function FacilitatorDashboard() {
 
 
   if (loading) {
-    return <div className="p-4 text-center text-ink-500">Cargando tus negocios apadrinados...</div>
+    return <RowSkeletonList count={3} />
   }
 
   return (
@@ -162,6 +178,8 @@ export default function FacilitatorDashboard() {
               Editar datos
             </Button>
           )}
+          {/* Fuera del panel de edicion: ese se cierra al guardar. */}
+          <AvisoGuardado visible={confirmacionPerfil.visible} />
         </div>
 
         {editandoPerfil ? (
@@ -261,6 +279,11 @@ export default function FacilitatorDashboard() {
           </p>
         )}
 
+        {/* El sello recien firmado ya cambia la insignia del negocio en la
+            lista, pero ese cambio puede quedar fuera de la vista: el acuse va
+            arriba, donde esta mirando quien acaba de pulsar. */}
+        <AvisoGuardado visible={confirmacionSello.visible}>Sello firmado</AvisoGuardado>
+
         {vinculaciones.length === 0 ? (
           <div className="card p-6 text-center">
             <p className="text-ink-600">Aún no estás administrando ningún negocio. Ingresa un código abajo para empezar.</p>
@@ -349,31 +372,66 @@ export default function FacilitatorDashboard() {
                               variant="secondary"
                               onClick={() => {
                                 setVerificandoBizId(negocio.id)
-                                setNotaVerificacion('Local y taller visitados presencialmente en la comuna.')
+                                // Vacía a propósito: venía rellenada con "Local y
+                                // taller visitados presencialmente", de modo que se
+                                // podía firmar sin escribir nada y quedaba registrada
+                                // una afirmación que el facilitador nunca hizo.
+                                setNotaVerificacion('')
+                                setAceptaResponsabilidad(false)
                               }}
                             >
                               <UI_ICONS.shieldCheck size={14} className="text-emerald-700" />
                               Validar en territorio
                             </Button>
                           ) : (
-                            <div className="mt-2 p-2.5 bg-white dark:bg-cream-100 rounded-xl border border-brand-300 dark:border-brand-800/60 space-y-2 text-xs">
-                              <p className="font-semibold text-ink-900">
-                                Certificar visita territorial:
+                            <div className="mt-2 p-3 bg-white dark:bg-cream-100 rounded-xl border border-amber-400 dark:border-amber-700/70 space-y-2.5 text-xs">
+                              <p className="font-bold text-ink-900">
+                                Vas a firmar el sello de {negocio.name}
                               </p>
-                              <input
-                                type="text"
-                                value={notaVerificacion}
-                                onChange={(e) => setNotaVerificacion(e.target.value)}
-                                placeholder="Nota de campo (ej: Local visitado en Carrera 41)"
-                                className="w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1.5 text-xs text-ink-900 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                              />
+                              {/* Las escalas amber no se invierten con el tema: aquí
+                                  la variante dark sí hace falta. */}
+                              <p className="rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 p-2 text-amber-900 dark:text-amber-200 leading-relaxed">
+                                El sello aparece en la ficha pública del negocio y le dice al
+                                barrio que alguien de la red respondió por él. Queda guardado
+                                con <strong>tu nombre</strong> y la fecha.
+                              </p>
+                              <label className="block">
+                                <span className="font-semibold text-ink-900">
+                                  Qué viste, cuándo y dónde
+                                </span>
+                                <input
+                                  type="text"
+                                  value={notaVerificacion}
+                                  onChange={(e) => setNotaVerificacion(e.target.value)}
+                                  placeholder="Ej: Visité el taller en la Carrera 41 el 28 de octubre"
+                                  className="mt-1 w-full rounded-lg border border-ink-200 bg-white dark:bg-cream-50 px-2.5 py-1.5 text-xs text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                />
+                              </label>
+                              <label className="flex items-start gap-2 text-ink-800">
+                                <input
+                                  type="checkbox"
+                                  checked={aceptaResponsabilidad}
+                                  onChange={(e) => setAceptaResponsabilidad(e.target.checked)}
+                                  className="mt-0.5 h-4 w-4 shrink-0 accent-brand-700"
+                                />
+                                <span>
+                                  Estuve en el sitio o conozco a esta persona del barrio, y
+                                  respondo por lo que firmo.
+                                </span>
+                              </label>
+                              {!puedeFirmar && (
+                                <p className="text-ink-500">
+                                  Escribe la nota de campo y marca la casilla para poder firmar.
+                                </p>
+                              )}
                               <div className="flex gap-2">
                                 <Button
                                   size="sm"
                                   loading={guardandoVerif}
+                                  disabled={!puedeFirmar}
                                   onClick={() => handleConfirmarVerificacion(negocio.id)}
                                 >
-                                  Confirmar
+                                  Firmar el sello
                                 </Button>
                                 <Button
                                   size="sm"

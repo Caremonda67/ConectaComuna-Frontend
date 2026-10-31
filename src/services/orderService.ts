@@ -2,6 +2,7 @@ import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode, env } from '@/lib/env'
 import { apiFetch } from '@/lib/apiClient'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
+import { hayTablaDeContacto } from './contactoDisponible'
 import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 
 const SELECT_WITH_RELATIONS =
@@ -10,21 +11,9 @@ const SELECT_WITH_RELATIONS =
 const SELECT_SIN_CONTACTO =
   '*, business:businesses(id, name, category, photos, phone), client:profiles!orders_client_id_fkey(id, full_name, avatar_url), review:reviews(id, rating, comment, created_at)'
 
-let hayTablaDeContacto: boolean | null = null
-
-/**
- * La tabla de contacto llegó con migracion-contacto-perfiles.sql. Si el
- * despliegue va por delante de la migración, pedirla hace fallar la consulta
- * entera y el panel se queda en blanco; por eso se pregunta una sola vez por
- * sesión y se elige el select. Sin la tabla, el pedido se ve igual, sin el
- * teléfono de la contraparte.
- */
+/** La detección vive en contactoDisponible: la comparten varios servicios. */
 async function columnasDePedido(): Promise<string> {
-  if (hayTablaDeContacto === null) {
-    const { error } = await requireSupabase().from('perfil_contacto').select('profile_id').limit(1)
-    hayTablaDeContacto = !error
-  }
-  return hayTablaDeContacto ? SELECT_WITH_RELATIONS : SELECT_SIN_CONTACTO
+  return (await hayTablaDeContacto()) ? SELECT_WITH_RELATIONS : SELECT_SIN_CONTACTO
 }
 
 function mapDbOrder(raw: any): Order {

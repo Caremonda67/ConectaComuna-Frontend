@@ -19,7 +19,7 @@ export function FloatingChatButton() {
           'group relative flex items-center gap-2.5 rounded-full px-4 py-3 shadow-xl transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-400',
           isOpen
             ? 'bg-ink-800 text-ink-100 hover:bg-ink-700 dark:bg-ink-200 dark:text-ink-900'
-            : 'bg-brand-600 text-white hover:bg-brand-700 shadow-brand-900/30'
+            : 'bg-brand-700 text-white dark:text-brand-50 hover:bg-brand-800 shadow-brand-900/30'
         )}
       >
         {/* Indicador de disponibilidad comunitaria */}
@@ -42,7 +42,7 @@ export function FloatingChatButton() {
           <span className="text-xs font-bold leading-tight tracking-wide">
             {isOpen ? 'Cerrar asistente' : 'Asistente Comunal'}
           </span>
-          <span className="text-[10px] text-white/80 dark:text-ink-800/80 leading-none">
+          <span className="text-[10px] text-white dark:text-brand-50 leading-none">
             {isOpen ? 'Toca para ocultar' : 'Voz & oficios cercanos'}
           </span>
         </div>

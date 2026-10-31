@@ -289,7 +289,7 @@ function TypeCard({
         aria-hidden="true"
         className={cn(
           'mb-2 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200',
-          active ? 'bg-brand-500 text-white scale-105' : 'bg-cream-200 text-ink-700 group-hover:scale-105',
+          active ? 'bg-brand-700 text-white dark:text-brand-50 scale-105' : 'bg-cream-200 text-ink-700 group-hover:scale-105',
         )}
       >
         <Icon size={18} strokeWidth={1.75} />

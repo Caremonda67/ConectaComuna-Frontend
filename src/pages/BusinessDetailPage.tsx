@@ -292,7 +292,7 @@ export default function BusinessDetailPage() {
         {isOwner ? (
           <div className="mt-4 rounded-xl border border-brand-200 bg-brand-50/70 p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-500 text-white text-xs font-bold">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-700 text-white dark:text-brand-50 text-xs font-bold">
                 ✓
               </span>
               <p className="text-sm font-semibold text-brand-900">
@@ -305,7 +305,7 @@ export default function BusinessDetailPage() {
             <div className="flex flex-col sm:flex-row gap-2 pt-1">
               <Link
                 to="/panel/negocio"
-                className="flex-1 min-h-11 inline-flex items-center justify-center rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white hover:bg-brand-600 transition-colors text-center text-sm shadow-xs"
+                className="flex-1 min-h-11 inline-flex items-center justify-center rounded-xl bg-brand-700 px-4 py-2.5 font-semibold text-white dark:text-brand-50 hover:bg-brand-800 transition-colors text-center text-sm shadow-xs"
               >
                 Editar información de mi negocio
               </Link>

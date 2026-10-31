@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
 import { usePageMeta } from '@/hooks/usePageMeta'
@@ -16,6 +16,8 @@ import { formatCurrency, getBadges, profileCompletion } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
+import { AvisoGuardado } from '@/components/ui/AvisoGuardado'
+import { useConfirmacion } from '@/hooks/useConfirmacion'
 
 /** Panel del negocio: pedidos recibidos, reputación y perfil asistido. */
 export default function BusinessDashboard() {
@@ -25,6 +27,22 @@ export default function BusinessDashboard() {
   })
 
   const { business, userId } = useAuth()
+
+  // El editor de negocio navega hasta aqui despues de guardar y trae el acuse
+  // en el estado de la ruta: mostrarlo alla no servia de nada porque esa
+  // pantalla se desmonta en el mismo momento del guardado.
+  const location = useLocation()
+  const guardado = (location.state as { guardado?: string } | null)?.guardado
+  const confirmacion = useConfirmacion()
+  const yaAvisado = useRef(false)
+  useEffect(() => {
+    if (guardado && !yaAvisado.current) {
+      yaAvisado.current = true
+      confirmacion.confirmar()
+      // Se limpia del historial para que no reaparezca al volver atras.
+      window.history.replaceState({}, '')
+    }
+  }, [guardado, confirmacion])
   const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
   const [codigoExpiraEn, setCodigoExpiraEn] = useState<string | null>(null)
   const [generandoCodigo, setGenerandoCodigo] = useState(false)
@@ -53,7 +71,7 @@ export default function BusinessDashboard() {
         action={
           <Link
             to="/panel/negocio"
-            className="min-h-11 rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white"
+            className="min-h-11 rounded-xl bg-brand-700 px-4 py-2.5 font-semibold text-white dark:text-brand-50"
           >
             Crear mi negocio
           </Link>
@@ -79,6 +97,8 @@ export default function BusinessDashboard() {
 
   return (
     <div className="space-y-6">
+      <AvisoGuardado visible={confirmacion.visible}>{guardado ?? 'Guardado'}</AvisoGuardado>
+
       {business.verification_status === 'under_review' && (
         <section
           role="alert"
@@ -87,7 +107,7 @@ export default function BusinessDashboard() {
           <UI_ICONS.alert size={22} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-1 text-sm">
             <p className="font-bold">Tu negocio está bajo observación comunitaria</p>
-            <p className="text-xs text-ink-700 dark:text-ink-300 leading-relaxed">
+            <p className="text-xs text-ink-700 leading-relaxed">
               Se han registrado reportes sobre tu servicio que están siendo evaluados por el equipo de Conecta Comuna.
               Por favor revisa la sección de reportes abajo y comparte tu versión para que el equipo pueda revisar el caso.
             </p>
@@ -168,7 +188,7 @@ export default function BusinessDashboard() {
                   <UI_ICONS.alert size={15} className="text-amber-600 shrink-0" />
                   El código anterior ya venció (duración de 24 horas)
                 </p>
-                <p className="text-xs text-ink-600 dark:text-ink-400">
+                <p className="text-xs text-ink-600">
                   Por seguridad de tu negocio, los códigos de vinculación caducan tras un día. Genera uno nuevo para compartirlo con tu facilitador.
                 </p>
                 <Button

@@ -15,6 +15,8 @@ import { ORDER_STATUS_LABEL, formatDate } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 import { useRealtimeOrders } from '@/hooks/useRealtimeOrders'
+import { AvisoGuardado } from '@/components/ui/AvisoGuardado'
+import { useConfirmacion } from '@/hooks/useConfirmacion'
 
 /** Panel del cliente: historial y seguimiento de sus solicitudes. */
 export default function ClientDashboard() {
@@ -48,6 +50,7 @@ export default function ClientDashboard() {
   const [nuevoTelefono, setNuevoTelefono] = useState(profile?.phone ?? '')
   const [nuevoBarrio, setNuevoBarrio] = useState(profile?.neighborhood ?? '')
   const [guardandoPerfil, setGuardandoPerfil] = useState(false)
+  const confirmacionPerfil = useConfirmacion()
 
   const { locate: detectarBarrio, loading: detectando } = useNeighborhoodLocator(
     (barrio) => setNuevoBarrio(barrio),
@@ -65,6 +68,7 @@ export default function ClientDashboard() {
       })
       await refresh()
       setEditandoPerfil(false)
+      confirmacionPerfil.confirmar()
     } finally {
       setGuardandoPerfil(false)
     }
@@ -95,6 +99,9 @@ export default function ClientDashboard() {
               Editar perfil
             </Button>
           )}
+          {/* Fuera del panel de edicion a proposito: ese se cierra al guardar,
+              asi que un aviso dentro no se llegaria a ver. */}
+          <AvisoGuardado visible={confirmacionPerfil.visible} />
         </div>
 
         {editandoPerfil ? (

@@ -4,8 +4,17 @@ Aplicación web que conecta a los habitantes de una comuna de Cali con los ofici
 servicios informales del barrio (costura, manicure, cerrajería, venta de ropa, ventas
 ambulantes, etc.).
 
-Este repositorio contiene **solo el frontend**. El backend (Supabase + API) vive en un
-repositorio aparte; aquí está toda la capa de integración lista para conectarse.
+Este repositorio contiene **solo el frontend**; aquí está toda la capa de integración
+lista para conectarse. El proyecto se reparte en tres:
+
+| | |
+|---|---|
+| **Frontend** (este) | React 19, TypeScript, Vite, Tailwind y Leaflet |
+| [**Backend**](https://github.com/Caremonda67/ConectaComuna-Backend) | Node.js y Express sobre Supabase |
+| [**Documentación**](https://github.com/Caremonda67/ConectaComuna-Docs) | Entregables, auditorías, investigación de campo y proceso SCRUM |
+
+Si vienes a evaluar el proyecto y no a leer código, empieza por el repositorio de
+documentación: su README dice qué leer primero.
 
 ## Cómo correrlo
 
