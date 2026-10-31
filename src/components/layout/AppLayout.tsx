@@ -73,12 +73,15 @@ export function AppLayout() {
     { to: '/explorar', label: 'Explorar oficios', end: false },
     { to: '/mapa', label: 'Mapa comunal', end: false },
     {
+      // El facilitador no publica: acompaña a quien publica. Mandarlo al
+      // editor le abria un "Crear mi negocio" en blanco, que es justo lo que
+      // su rol no debe hacer.
       to: profile
-        ? profile.account_type === 'client'
-          ? '/panel'
-          : '/panel/negocio'
+        ? profile.account_type === 'business'
+          ? '/panel/negocio'
+          : '/panel'
         : '/registro',
-      label: 'Publicar servicio',
+      label: profile?.account_type === 'facilitador' ? 'Negocios que apoyo' : 'Publicar servicio',
       end: false,
     },
     { to: '/como-funciona', label: 'Cómo funciona', end: false },

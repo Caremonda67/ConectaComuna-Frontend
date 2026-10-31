@@ -17,6 +17,8 @@ import { DAY_NAMES, formatCurrency } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
 import { FormSkeleton } from '@/components/ui/Skeleton'
+import { SeccionFicha } from '@/components/business/SeccionFicha'
+import { ProgresoFicha, type PasoFicha } from '@/components/business/ProgresoFicha'
 
 const schema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -141,6 +143,26 @@ export default function BusinessProfileEditor() {
     )
   }
 
+  // Un facilitador que entra sin indicar negocio caia en el formulario de
+  // creacion: `business` es null para el, y el formulario sin negocio es el de
+  // "Crear mi negocio". Su papel es acompañar los oficios de otros, no abrir
+  // uno propio, asi que aqui se le manda a elegir cual va a editar.
+  if (profile?.account_type === 'facilitador' && !requestedBusinessId) {
+    return (
+      <div className="card p-6">
+        <h1 className="text-xl font-bold">Elige el negocio que vas a editar</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          Como facilitador acompañas los oficios de tus vecinos: puedes editar las fotos, los
+          precios y los horarios de los negocios que te dieron acceso, pero no abrir uno propio
+          desde esta cuenta.
+        </p>
+        <Button className="mt-4" onClick={() => navigate('/panel')}>
+          Ver los negocios que apoyo
+        </Button>
+      </div>
+    )
+  }
+
   const activeBusiness = requestedBusinessId ? targetBusiness : business
 
   return (
@@ -236,6 +258,29 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
     setServicesCatalog((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // El avance se mide sobre lo que hay escrito ahora mismo, no sobre lo
+  // guardado: quien acaba de llenar el nombre ve el contador subir en el acto.
+  // `useWatch` en vez de `watch()`: el segundo devuelve una funcion que el
+  // compilador de React no puede memorizar y hace que se salte el componente
+  // entero.
+  const vistos = useWatch({ control })
+  const tieneBasico =
+    (vistos.name ?? '').trim().length > 0 &&
+    (vistos.category ?? '').trim().length > 0 &&
+    (vistos.description ?? '').trim().length > 0
+  const tieneContacto =
+    ((vistos.phone ?? '').trim().length > 0 || (vistos.whatsapp ?? '').trim().length > 0) &&
+    (vistos.neighborhood ?? '').trim().length > 0
+  const tieneCatalogo = servicesCatalog.some((s) => s.name.trim().length > 0)
+
+  const pasos: PasoFicha[] = [
+    { id: 'ficha-basico', etiqueta: 'Nombre, oficio y descripción', listo: tieneBasico, esencial: true },
+    { id: 'ficha-contacto', etiqueta: 'Contacto y punto en el mapa', listo: tieneContacto, esencial: true },
+    { id: 'ficha-catalogo', etiqueta: 'Precios de referencia', listo: tieneCatalogo, esencial: true },
+    { id: 'ficha-fotos', etiqueta: 'Fotos de tus trabajos', listo: photos.length > 0, esencial: false },
+    { id: 'ficha-horarios', etiqueta: 'Horarios de atención', listo: hours.some((h) => !h.closed), esencial: false },
+  ]
+
   async function onSubmit(values: Values) {
     if (!userId) return
     const ownerId = managedBusiness?.owner_id ?? userId
@@ -287,6 +332,8 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         {managedBusiness ? 'Editar mi negocio' : 'Crear mi negocio'}
       </h1>
 
+      <ProgresoFicha pasos={pasos} />
+
       {managedBusiness?.verification_status === 'verified' && (
         <div className="rounded-xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 flex items-start gap-2.5">
           <UI_ICONS.shieldCheck size={20} className="text-emerald-700 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -311,8 +358,13 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         </div>
       )}
 
-      <section className="space-y-3 card p-4">
-        <h2 className="font-bold">Lo básico</h2>
+      <SeccionFicha
+        id="ficha-basico"
+        icon={UI_ICONS.store}
+        titulo="Lo básico"
+        porQue="Es lo primero que lee un vecino cuando te encuentra."
+        completa={tieneBasico}
+      >
         <TextField
           label="Nombre del negocio"
           hint="Usa el nombre con el que te conocen en el barrio."
@@ -333,10 +385,15 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           hint={`${description.length}/40 caracteres mínimos. Menciona precios aproximados y tiempos de entrega.`}
           {...register('description')}
         />
-      </section>
+      </SeccionFicha>
 
-      <section className="space-y-3 card p-4">
-        <h2 className="font-bold">Contacto y ubicación</h2>
+      <SeccionFicha
+        id="ficha-contacto"
+        icon={UI_ICONS.map}
+        titulo="Contacto y ubicación"
+        porQue="Sin un punto en el mapa no apareces en las búsquedas por cercanía."
+        completa={tieneContacto}
+      >
         <TextField
           label="Celular"
           type="tel"
@@ -384,13 +441,16 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             Coordenadas: {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
           </p>
         </div>
-      </section>
+      </SeccionFicha>
 
-      <section className="space-y-3 card p-4">
-        <h2 className="font-bold">Portafolio</h2>
-        <p className="text-sm text-ink-500">
-          Sube hasta 6 fotos de tus trabajos. Las fotos reales aumentan mucho la confianza.
-        </p>
+      <SeccionFicha
+        id="ficha-fotos"
+        icon={UI_ICONS.gallery}
+        titulo="Fotos de tus trabajos"
+        porQue="Una foto real de lo que haces convence más que cualquier descripción."
+        completa={photos.length > 0}
+      >
+        <p className="text-sm text-ink-500">Sube hasta 6 fotos. Con una ya se nota la diferencia.</p>
         <input
           type="file"
           accept="image/*"
@@ -423,34 +483,28 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             ))}
           </ul>
         )}
-      </section>
+      </SeccionFicha>
 
       {/* Venta al por mayor y distribuidores */}
-      <section className="card p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-800">
-              <UI_ICONS.package size={20} />
-            </div>
-            <div>
-              <h2 className="font-bold text-sm text-ink-900">
-                Venta al por mayor y distribuidores
-              </h2>
-              <p className="text-xs text-ink-500">
-                ¿Vendes por lotes o atiendes a comerciantes y tiendas de barrio?
-              </p>
-            </div>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              checked={wholesaleEnabled}
-              onChange={(e) => setWholesaleEnabled(e.target.checked)}
-              className="sr-only peer"
-            />
-            <div className="w-11 h-6 bg-cream-300 dark:bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
-          </label>
-        </div>
+      <SeccionFicha
+        id="ficha-mayoreo"
+        icon={UI_ICONS.package}
+        titulo="Venta al por mayor"
+        porQue="¿Vendes por lotes o atiendes a tiendas de barrio? Actívalo solo si aplica."
+        opcional
+        completa={wholesaleEnabled}
+        acción={
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={wholesaleEnabled}
+                onChange={(e) => setWholesaleEnabled(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-cream-300 dark:bg-cream-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-ink-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500" />
+            </label>
+        }
+      >
 
         {wholesaleEnabled && (
           <div className="space-y-3 pt-2 border-t border-ink-100">
@@ -470,7 +524,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             />
           </div>
         )}
-      </section>
+      </SeccionFicha>
 
       {/*
         Catálogo de servicios.
@@ -482,29 +536,21 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         tarjeta que sale publicada: el nombre grande, el precio a la derecha y
         el detalle debajo. Se escribe encima del resultado.
       */}
-      <section className="card p-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="flex items-center gap-2 text-sm font-bold text-ink-900">
-              <UI_ICONS.fileText size={18} className="text-brand-700" />
-              Lo que ofreces y a qué precio
-              {servicesCatalog.length > 0 && (
-                <span className="rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-semibold text-brand-800">
-                  {servicesCatalog.length}
-                </span>
-              )}
-            </h2>
-            <p className="text-xs text-ink-500">
-              Así aparecerá en tu ficha. Los precios son orientativos.
-            </p>
-          </div>
-          {servicesCatalog.length > 0 && (
+      <SeccionFicha
+        id="ficha-catalogo"
+        icon={UI_ICONS.fileText}
+        titulo="Lo que ofreces y a qué precio"
+        porQue="Los vecinos preguntan el precio primero; tenerlo escrito ahorra media conversación."
+        completa={servicesCatalog.some((s) => s.name.trim().length > 0)}
+        acción={
+          servicesCatalog.length > 0 ? (
             <Button type="button" size="sm" variant="secondary" onClick={handleAddService}>
               <UI_ICONS.package size={15} />
               Añadir otro
             </Button>
-          )}
-        </div>
+          ) : undefined
+        }
+      >
 
         {servicesCatalog.length === 0 ? (
           <div className="rounded-xl border border-dashed border-brand-300 bg-brand-50 p-5 text-center">
@@ -592,15 +638,16 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             ))}
           </ul>
         )}
-      </section>
+      </SeccionFicha>
 
-      <section className="space-y-3 card p-4">
-        <div>
-          <h2 className="font-bold">Horarios de atención</h2>
-          <p className="text-xs text-ink-500 mt-0.5">
-            Indica qué días atiendes. Esto activa el indicador de "Abierto ahora" para que los vecinos sepan cuándo contactarte.
-          </p>
-        </div>
+      <SeccionFicha
+        id="ficha-horarios"
+        icon={UI_ICONS.calendar}
+        titulo="Horarios de atención"
+        porQue={'Activa el indicador "Abierto ahora" para que no te escriban a deshora.'}
+        opcional
+        completa={hours.some((h) => !h.closed)}
+      >
         <ul className="divide-y divide-ink-100">
           {hours.map((h, i) => (
             <li key={h.day} className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-sm">
@@ -654,7 +701,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             </li>
           ))}
         </ul>
-      </section>
+      </SeccionFicha>
 
       {serverError && (
         <p role="alert" className="text-sm text-rose-700">
