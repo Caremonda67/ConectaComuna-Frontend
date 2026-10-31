@@ -1,14 +1,22 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRotacion } from '@/hooks/useRotacion'
 import { cn } from '@/lib/utils'
 
 /** Lo que tarda `.animate-texto-sale` en index.css, para desmontar al salir. */
 const SALIDA_MS = 480
 
+/** Margen que se deja a cada lado del recorte para que no coma las letras. */
+const HOLGURA = 8
+
 interface Props {
   items: readonly string[]
   /** Frase completa y quieta para lectores de pantalla. */
   etiqueta?: string
+  /**
+   * El texto va dentro de una frase, no en su propia línea. Entonces también
+   * hay que reservar el ancho; en bloque basta con ocupar la línea entera.
+   */
+  enLinea?: boolean
   className?: string
   cadaMs?: number
 }
@@ -16,52 +24,116 @@ interface Props {
 /**
  * Texto que se releva a sí mismo.
  *
- * Las dos palabras se funden una en otra: la que sale sigue en pantalla
- * mientras entra la siguiente. Sin desplazamiento vertical, solo opacidad y
- * un desenfoque leve. Se apilan con `grid` en la misma celda, no con
- * posición absoluta, para que el contenedor siga midiendo lo que mide el texto
- * y no haya que inventarle un tamaño.
+ * Las dos frases se cruzan en el aire: la que sale sigue en pantalla mientras
+ * entra la siguiente, apiladas en la misma celda de un `grid`.
  *
- * La transición es CSS, no `AnimatePresence`. Aquel espera a que termine la
- * salida antes de montar la entrada, y si el navegador congela el bucle de
- * animación (una pestaña en segundo plano, por ejemplo) esa salida no termina
- * nunca y el texto se queda a medio desvanecer para siempre.
+ * El problema que costaba resolver: mientras conviven, la celda mide por la
+ * más grande de las dos, y al desmontarse la saliente el contenedor **daba un
+ * tirón**. Con frases de largo distinto pasa en los dos ejes, y el salto se
+ * nota medio segundo después del cambio, desconectado de la animación.
  *
- * El alto se reserva por adelantado: sin eso cada palabra de ancho distinto
- * empuja lo que tenga debajo y la pantalla late. Y no se fija `display` en el
- * contenedor externo porque `cn` solo concatena clases: chocaría con el que
- * ponga quien llama.
+ * - **Alto.** Se mide la frase entrante *en su sitio*, ya montada en la celda
+ *   y con el ancho real de la columna, así que el número cuenta los saltos de
+ *   línea de verdad. Ese alto se fija en el contenedor con una transición: el
+ *   hueco se abre o se cierra deslizándose mientras el texto entra.
+ * - **Ancho.** En bloque ocupa la línea entera y no hay nada que ajustar. En
+ *   línea se apilan copias invisibles de todas las frases, de modo que el
+ *   hueco mide siempre lo que la más ancha.
+ *
+ * Lo que **no** funciona, por si alguien lo reintenta: medir con un elemento
+ * auxiliar en posición absoluta. Al no tener las restricciones del sitio donde
+ * vive, mide de más (126 px medidos frente a 115 disponibles) y el tamaño
+ * fijado acaba recortado por el contenedor.
  */
-export function TextoRotativo({ items, etiqueta, className, cadaMs }: Props) {
+export function TextoRotativo({ items, etiqueta, enLinea = false, className, cadaMs }: Props) {
   const i = useRotacion(items.length, cadaMs)
   const actual = items[i] ?? items[0]
 
   const [saliente, setSaliente] = useState<string | null>(null)
   const anteriorRef = useRef(actual)
 
+  const entranteRef = useRef<HTMLSpanElement>(null)
+  const [alto, setAlto] = useState<number>()
+
   useEffect(() => {
     if (anteriorRef.current === actual) return undefined
     setSaliente(anteriorRef.current)
     anteriorRef.current = actual
-    // La que sale se desmonta al acabar su animación. Si se quedara montada,
-    // la celda del grid seguiría midiendo por la palabra más ancha de las dos.
     const id = window.setTimeout(() => setSaliente(null), SALIDA_MS)
     return () => window.clearTimeout(id)
   }, [actual])
 
+  // Antes de pintar: así la transición arranca en el mismo fotograma en que
+  // entra la frase nueva, y el hueco se abre acompañándola en vez de después.
+  useLayoutEffect(() => {
+    const medido = entranteRef.current?.getBoundingClientRect().height
+    if (medido) setAlto(medido)
+  }, [actual])
+
+  // Al cambiar el ancho de la ventana una frase puede pasar de una línea a dos:
+  // el alto fijado se quedaría corto y recortaría el texto.
+  useEffect(() => {
+    const alRedimensionar = () => {
+      const medido = entranteRef.current?.getBoundingClientRect().height
+      if (medido) setAlto(medido)
+    }
+    window.addEventListener('resize', alRedimensionar)
+    return () => window.removeEventListener('resize', alRedimensionar)
+  }, [])
+
   return (
     <span className={cn('min-h-[1.25em]', className)}>
       {etiqueta && <span className="sr-only">{etiqueta}</span>}
-      <span aria-hidden="true" className="inline-grid">
+      <span
+        aria-hidden="true"
+        className={cn(
+          // `items-start` es imprescindible: con el alto fijado, un hijo
+          // estirado mediria ese mismo alto y la medida se quedaria clavada
+          // en el valor anterior. Alineado al inicio, mide lo suyo.
+          // `overflow-hidden` convierte la celda en una ventana: el texto
+          // entra deslizandose desde abajo y el que sale se va por arriba,
+          // en vez de pisar lo que tenga debajo.
+          'items-start overflow-hidden transition-[height] duration-[450ms] ease-out',
+          enLinea ? 'inline-grid align-bottom' : 'grid',
+        )}
+        /*
+         * El alto medido es el de la CAJA DE LINEA, y con `leading-[1.15]` los
+         * signos de apertura y las colas de las letras sobresalen de ella: con
+         * el recorte justo al borde, "¿arreglar el calzado?" salia comido por
+         * abajo. Se le da holgura al recorte con relleno vertical y se compensa
+         * con margen negativo, de modo que la ventana respira sin que el
+         * diseno se mueva ni un pixel.
+         */
+        style={
+          alto
+            ? {
+                height: alto + HOLGURA * 2,
+                paddingBlock: HOLGURA,
+                marginBlock: -HOLGURA,
+              }
+            : undefined
+        }
+      >
+        {/* Reserva del ancho: todas las frases apiladas e invisibles, para que
+            la celda mida siempre lo que la más ancha. Se apilan todas y no
+            solo la más larga en letras, porque la más larga no es siempre la
+            más ancha: depende de qué letras sean. */}
+        {enLinea &&
+          items.map((frase) => (
+            <span key={`hueco-${frase}`} className="invisible col-start-1 row-start-1">
+              {frase}
+            </span>
+          ))}
         {saliente !== null && saliente !== actual && (
-          <span
-            key={`sale-${saliente}`}
-            className="col-start-1 row-start-1 animate-texto-sale"
-          >
+          <span key={`sale-${saliente}`} className="col-start-1 row-start-1 animate-texto-sale">
             {saliente}
           </span>
         )}
-        <span key={`entra-${actual}`} className="col-start-1 row-start-1 animate-texto-entra">
+        <span
+          ref={entranteRef}
+          key={`entra-${actual}`}
+          className="col-start-1 row-start-1 animate-texto-entra"
+        >
           {actual}
         </span>
       </span>
