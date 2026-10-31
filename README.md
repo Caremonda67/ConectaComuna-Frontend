@@ -1,8 +1,13 @@
 # ConectaComuna · Frontend
 
-Aplicación web que conecta a los habitantes de una comuna de Cali con los oficios y
-servicios informales del barrio (costura, manicure, cerrajería, venta de ropa, ventas
-ambulantes, etc.).
+Aplicación web que conecta a los vecinos de un barrio con los oficios y servicios
+informales que tienen al lado: costura, manicure, cerrajería, venta de ropa, ventas
+ambulantes, comida casera.
+
+Funciona en **cualquier barrio o municipio de Colombia**: un negocio marca su punto en
+el mapa y la búsqueda por cercanía se calcula desde ahí, sin ninguna ciudad fijada en
+el código. El **piloto** está en la **Comuna 20 de Cali**, que es de donde salen las
+entrevistas de campo y los primeros negocios registrados.
 
 Este repositorio contiene **solo el frontend**; aquí está toda la capa de integración
 lista para conectarse. El proyecto se reparte en tres:
