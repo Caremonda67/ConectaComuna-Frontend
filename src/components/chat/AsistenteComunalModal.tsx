@@ -21,11 +21,13 @@ import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptMo
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
 import type { Order, ServiceCatalogItem } from '@/types'
 import { cn, formatCurrency } from '@/lib/utils'
+import { corregirDictado, detenerLectura, leerEnVozAlta, mejorAlternativa } from '@/lib/voz'
 
 // Web Speech API interfaces
 interface IWindowSpeechRecognition extends EventTarget {
   continuous: boolean
   interimResults: boolean
+  maxAlternatives: number
   lang: string
   start: () => void
   stop: () => void
@@ -239,56 +241,26 @@ export function AsistenteComunalModal() {
 
   // Detener lectura de voz en curso
   const detenerLecturaVoz = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel()
-    }
+    detenerLectura()
     setHablandoId(null)
   }, [])
 
-  // Leer un texto en voz alta con síntesis de voz (TTS)
+  // Leer un texto en voz alta. La eleccion de voz y el troceado en frases
+  // viven en lib/voz: antes se pedia `getVoices()` sin esperar a que el
+  // navegador terminara de cargarlas, asi que la primera lectura de cada
+  // sesion se quedaba sin voz asignada y sonaba con la de fabrica.
   const leerTextoEnVozAlta = useCallback(
     (texto: string, mensajeId: string) => {
-      if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-
       if (hablandoId === mensajeId) {
         detenerLecturaVoz()
         return
       }
-
       detenerLecturaVoz()
-      const textoLimpio = texto.replace(/[#*•_]/gu, '')
-      const utterance = new SpeechSynthesisUtterance(textoLimpio)
-      utterance.lang = 'es-CO'
-      utterance.rate = 0.96
-      utterance.pitch = 1.0
-
-      const voces = window.speechSynthesis.getVoices()
-      // Priorizar voces Naturales / Neuronales en español colombiano o latinoamericano
-      const vozEspanol = voces
-        .filter((v) => v.lang.startsWith('es') || v.lang.includes('ES') || v.lang.includes('CO'))
-        .sort((a, b) => {
-          const scoreA =
-            (a.lang.includes('CO') ? 40 : 0) +
-            (a.name.includes('Natural') || a.name.includes('Neural') || a.name.includes('Online') ? 30 : 0) +
-            (a.name.includes('Google') ? 20 : 0) +
-            (a.lang.includes('419') || a.lang.includes('MX') || a.lang.includes('US') ? 10 : 0)
-          const scoreB =
-            (b.lang.includes('CO') ? 40 : 0) +
-            (b.name.includes('Natural') || b.name.includes('Neural') || b.name.includes('Online') ? 30 : 0) +
-            (b.name.includes('Google') ? 20 : 0) +
-            (b.lang.includes('419') || b.lang.includes('MX') || b.lang.includes('US') ? 10 : 0)
-          return scoreB - scoreA
-        })[0]
-
-      if (vozEspanol) {
-        utterance.voice = vozEspanol
-      }
-
-      utterance.onend = () => setHablandoId(null)
-      utterance.onerror = () => setHablandoId(null)
-
       setHablandoId(mensajeId)
-      window.speechSynthesis.speak(utterance)
+      void leerEnVozAlta(texto, {
+        alTerminar: () => setHablandoId(null),
+        alFallar: () => setHablandoId(null),
+      })
     },
     [hablandoId, detenerLecturaVoz]
   )
@@ -622,15 +594,47 @@ export function AsistenteComunalModal() {
       detenerLecturaVoz()
       const recognition = new SpeechClass()
       recognition.lang = 'es-CO'
-      recognition.continuous = false
+      // `continuous = false` cortaba en la primera pausa. Quien no se maneja
+      // con soltura habla despacio y se detiene a pensar, y se quedaba a
+      // media frase pulsando otra vez el microfono.
+      recognition.continuous = true
       recognition.interimResults = true
+      // Con varias alternativas se puede desempatar a favor de las palabras
+      // del oficio: "cerrajeria" frente a "cerrar ahi".
+      recognition.maxAlternatives = 3
+
+      // Lo ya escrito antes de dictar no se pierde: el dictado se le suma.
+      const textoPrevio = textoEntrada.trim()
+      let yaCerrado = ''
+
+      // Al no cortar en la primera pausa, hay que cerrar por silencio: si
+      // pasan cuatro segundos sin que llegue nada nuevo, se da por terminado.
+      // Sin esto el microfono se quedaria abierto hasta que alguien se
+      // acuerde de apagarlo.
+      let temporizadorSilencio: number | undefined
+      const reiniciarSilencio = () => {
+        window.clearTimeout(temporizadorSilencio)
+        temporizadorSilencio = window.setTimeout(() => recognition.stop(), 4000)
+      }
 
       recognition.onresult = (event: any) => {
-        let textoTranscribiendo = ''
-        for (let i = 0; i < event.results.length; ++i) {
-          textoTranscribiendo += event.results[i][0].transcript
+        let enCurso = ''
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const resultado = event.results[i]
+          const alternativas: string[] = Array.from(
+            { length: resultado.length },
+            (_, k) => resultado[k].transcript as string,
+          )
+          const elegida = mejorAlternativa(alternativas)
+          // Lo definitivo se acumula; lo provisional se reescribe en cada
+          // evento. Antes se concatenaba todo junto y sin espacios, asi que
+          // las frases largas salian pegadas.
+          if (resultado.isFinal) yaCerrado += ' ' + elegida
+          else enCurso += ' ' + elegida
         }
-        setTextoEntrada(textoTranscribiendo)
+        const dictado = corregirDictado(yaCerrado + ' ' + enCurso)
+        setTextoEntrada(textoPrevio ? `${textoPrevio} ${dictado}` : dictado)
+        reiniciarSilencio()
       }
 
       recognition.onerror = (event: any) => {
@@ -646,11 +650,13 @@ export function AsistenteComunalModal() {
       }
 
       recognition.onend = () => {
+        window.clearTimeout(temporizadorSilencio)
         setEscuchandoVoz(false)
       }
 
       reconocimientoRef.current = recognition
       recognition.start()
+      reiniciarSilencio()
       setEscuchandoVoz(true)
     } catch (err) {
       console.error('Fallo al iniciar micrófono:', err)
