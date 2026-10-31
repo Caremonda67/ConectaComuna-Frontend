@@ -149,7 +149,9 @@ export default function ExplorePage() {
                 <TextoRotativo
                   enLinea
                   items={SUGERENCIAS}
-                  etiqueta={`Prueba con ${SUGERENCIAS.join(', ')}.`}
+                  // Sin repetir el "Prueba con" que ya esta escrito al lado:
+                  // un lector de pantalla leia "Prueba con Prueba con...".
+                  etiqueta={`${SUGERENCIAS.join(', ')}.`}
                   className="inline-block font-semibold text-brand-700"
                 />
               </>

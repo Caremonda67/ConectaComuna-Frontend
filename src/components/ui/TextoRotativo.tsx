@@ -5,6 +5,9 @@ import { cn } from '@/lib/utils'
 /** Lo que tarda `.animate-texto-sale` en index.css, para desmontar al salir. */
 const SALIDA_MS = 480
 
+/** Margen que se deja a cada lado del recorte para que no coma las letras. */
+const HOLGURA = 8
+
 interface Props {
   items: readonly string[]
   /** Frase completa y quieta para lectores de pantalla. */
@@ -89,13 +92,27 @@ export function TextoRotativo({ items, etiqueta, enLinea = false, className, cad
           // en el valor anterior. Alineado al inicio, mide lo suyo.
           // `overflow-hidden` convierte la celda en una ventana: el texto
           // entra deslizandose desde abajo y el que sale se va por arriba,
-          // en vez de aparecer y desaparecer encima de lo que haya debajo.
-          // El alto es el natural del texto, asi que las colas de las letras
-          // no se cortan en reposo.
+          // en vez de pisar lo que tenga debajo.
           'items-start overflow-hidden transition-[height] duration-[450ms] ease-out',
           enLinea ? 'inline-grid align-bottom' : 'grid',
         )}
-        style={alto ? { height: alto } : undefined}
+        /*
+         * El alto medido es el de la CAJA DE LINEA, y con `leading-[1.15]` los
+         * signos de apertura y las colas de las letras sobresalen de ella: con
+         * el recorte justo al borde, "¿arreglar el calzado?" salia comido por
+         * abajo. Se le da holgura al recorte con relleno vertical y se compensa
+         * con margen negativo, de modo que la ventana respira sin que el
+         * diseno se mueva ni un pixel.
+         */
+        style={
+          alto
+            ? {
+                height: alto + HOLGURA * 2,
+                paddingBlock: HOLGURA,
+                marginBlock: -HOLGURA,
+              }
+            : undefined
+        }
       >
         {/* Reserva del ancho: todas las frases apiladas e invisibles, para que
             la celda mida siempre lo que la más ancha. Se apilan todas y no
