@@ -32,6 +32,7 @@ const columns = [
       { to: '/explorar', label: 'Explorar oficios', isExternal: false },
       { to: '/mapa', label: 'Mapa de tu comuna', isExternal: false },
       { to: '/como-funciona', label: 'Cómo funciona', isExternal: false },
+      { to: '/tecnologia', label: 'Cómo está construida', isExternal: false },
     ],
   },
   {
@@ -97,7 +98,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-white dark:bg-cream-200 dark:text-ink-900 dark:hover:bg-brand-500 dark:hover:text-white transition-all hover:bg-brand-600 hover:-translate-y-0.5 active:scale-95"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-white dark:text-brand-50 dark:bg-cream-200 dark:text-ink-900 dark:hover:bg-brand-700 dark:hover:text-white transition-all hover:bg-brand-800 hover:-translate-y-0.5 active:scale-95"
                 >
                   <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d={s.path} />
@@ -115,7 +116,7 @@ export function SiteFooter() {
           de la Ley 1480 de 2011 (Estatuto del Consumidor de Colombia). Los oficios y servicios son
           ofrecidos de manera autónoma e independiente por cada emprendedor.
         </p>
-        <p className="text-ink-400">
+        <p className="text-ink-500">
           © {new Date().getFullYear()} ConectaComuna · Cali, Colombia. Todos los derechos reservados.
         </p>
       </div>

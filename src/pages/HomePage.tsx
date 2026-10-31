@@ -136,7 +136,7 @@ export default function HomePage() {
       {status !== 'granted' && (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4 border-brand-200/80 bg-brand-50/50">
           <div className="flex items-center gap-3">
-            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-white shadow-xs">
+            <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white dark:text-brand-50 shadow-xs">
               <MapPin size={18} strokeWidth={2} className="animate-bounce" />
             </span>
             <p className="text-sm font-medium text-ink-800">
@@ -170,7 +170,7 @@ export default function HomePage() {
                   aria-hidden="true"
                   className={cn(
                     'flex h-11 w-11 items-center justify-center rounded-full transition-all duration-200 group-hover:scale-115 group-hover:rotate-6',
-                    c.style?.iconBg ?? 'bg-brand-100 text-brand-700 group-hover:bg-brand-500 group-hover:text-white',
+                    c.style?.iconBg ?? 'bg-brand-100 text-brand-700 group-hover:bg-brand-700 group-hover:text-white dark:text-brand-50',
                   )}
                 >
                   <c.icon size={20} strokeWidth={1.8} />

@@ -86,7 +86,7 @@ function ListaDePasos({ pasos }: { pasos: Paso[] }) {
             <s.icon size={22} strokeWidth={1.75} />
           </span>
           <h3 className="mt-3 font-bold">
-            <span className="text-brand-600">{i + 1}.</span> {s.title}
+            <span className="text-brand-700">{i + 1}.</span> {s.title}
           </h3>
           <p className="mt-1 text-sm text-ink-500">{s.description}</p>
         </li>
@@ -156,8 +156,12 @@ export default function HowItWorksPage() {
               <span
                 className={cn(
                   'rounded-full border px-3 py-1 text-sm font-semibold transition-colors duration-500',
+                  // `brand-700` es verde oscuro en claro pero verde claro en
+                  // oscuro: la escala no es un espejo. Con blanco encima da
+                  // 5,13:1 en claro y 1,68:1 en oscuro, así que en oscuro el
+                  // texto tiene que ser el tono oscuro de la escala (9,71:1).
                   i === encendido
-                    ? 'border-brand-700 bg-brand-700 text-white'
+                    ? 'border-brand-700 bg-brand-700 text-white dark:text-brand-50'
                     : 'border-brand-200 bg-brand-50 text-brand-800',
                 )}
               >
@@ -178,7 +182,7 @@ export default function HowItWorksPage() {
       {/* Sección destacada de Trato Seguro Comunal */}
       <section className="card p-6 border-brand-200 bg-brand-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
         <div className="flex items-start gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-white shadow-xs">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-700 text-white dark:text-brand-50 shadow-xs">
             <UI_ICONS.shieldCheck size={26} strokeWidth={2} />
           </span>
           <div className="space-y-1">

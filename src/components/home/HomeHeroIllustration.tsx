@@ -190,7 +190,7 @@ export function HomeHeroIllustration() {
             repeat: Infinity,
             ease: 'easeInOut',
           }}
-          className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-brand-500 text-white shadow-md shadow-brand-600/30 border-2 border-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 cursor-pointer active:scale-90 transition-all duration-150"
+          className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-brand-700 text-white dark:text-brand-50 shadow-md shadow-brand-600/30 border-2 border-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-600 cursor-pointer active:scale-90 transition-all duration-150"
           title="¡Toca para emitir ondas de búsqueda en tu comuna!"
           aria-label="Toca para emitir ondas de búsqueda en la comuna"
         >

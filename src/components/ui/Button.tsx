@@ -12,13 +12,26 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode
 }
 
+/**
+ * Sobre el botón primario y el `dark:text-` que parece sobrar.
+ *
+ * La escala `brand` no es un espejo entre temas: en claro sube de claro a
+ * oscuro (700 = #467a36), y en oscuro los tonos altos son los CLAROS
+ * (700 = #8fd89b). Por eso un fondo `brand-700` necesita texto blanco en claro
+ * (5,13:1) y texto oscuro en oscuro (9,71:1); con blanco en los dos daría
+ * 1,68:1 en oscuro. Es la excepción a «no pongas `dark:` sobre la paleta
+ * propia»: aquí lo que se invierte es la polaridad del par, no el tono suelto.
+ *
+ * El `brand-500` anterior daba 2,57:1 en claro y 2,53:1 en oscuro: fallaba en
+ * los dos, y es el botón más repetido de la aplicación.
+ */
 const variants: Record<Variant, string> = {
   primary:
-    'bg-brand-500 text-white hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25 active:bg-brand-700 disabled:bg-brand-300 dark:disabled:bg-brand-900/50',
+    'bg-brand-700 text-white dark:text-brand-50 hover:bg-brand-800 hover:shadow-md hover:shadow-brand-700/25 active:bg-brand-900 disabled:bg-brand-300 disabled:text-white',
   secondary:
     'bg-white text-ink-900 border border-ink-200 hover:border-brand-400 hover:bg-cream-100 hover:text-brand-900 hover:shadow-xs active:bg-cream-200 dark:bg-cream-50 dark:text-ink-900 dark:border-ink-200 dark:hover:border-brand-500/70 dark:hover:bg-cream-200',
   ghost:
-    'bg-transparent text-brand-700 hover:bg-brand-50/80 hover:text-brand-800 dark:text-brand-400 dark:hover:bg-brand-950/40 dark:hover:text-brand-300',
+    'bg-transparent text-brand-700 hover:bg-brand-50/80 hover:text-brand-800 dark:text-brand-400 dark:hover:bg-brand-950/40',
   danger:
     'bg-white text-rose-700 border border-rose-300 hover:border-rose-400 hover:bg-rose-50 hover:text-rose-800 hover:shadow-xs hover:shadow-rose-500/15 active:bg-rose-100 dark:bg-cream-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/40',
 }

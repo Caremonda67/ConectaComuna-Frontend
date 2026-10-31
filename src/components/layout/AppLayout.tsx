@@ -151,7 +151,7 @@ export function AppLayout() {
       <div className="flex min-h-dvh flex-col bg-cream-100 overflow-x-clip">
       <a
         href="#contenido"
-        className="sr-only-focusable absolute left-2 top-2 z-50 rounded bg-brand-600 px-3 py-2 text-white"
+        className="sr-only-focusable absolute left-2 top-2 z-50 rounded bg-brand-700 px-3 py-2 text-white dark:text-brand-50"
       >
         Saltar al contenido
       </a>
@@ -323,13 +323,13 @@ export function AppLayout() {
               <>
                 <NavLink
                   to="/entrar"
-                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:text-brand-800 dark:hover:text-brand-300 hover:shadow-xs active:translate-y-0 active:scale-95"
+                  className="inline-flex min-h-7 sm:min-h-9 items-center rounded-full border border-ink-200 bg-white dark:bg-cream-50 px-2 sm:px-3 text-xs sm:text-sm font-medium text-ink-800 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-400 hover:text-brand-800 hover:shadow-xs active:translate-y-0 active:scale-95"
                 >
                   <span>Ingresar</span>
                 </NavLink>
                 <NavLink
                   to="/registro"
-                  className="group relative inline-flex min-h-7 sm:min-h-9 items-center rounded-full bg-brand-500 px-2 sm:px-3.5 text-xs sm:text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-md hover:shadow-brand-500/25 active:translate-y-0 active:scale-95 overflow-hidden"
+                  className="group relative inline-flex min-h-7 sm:min-h-9 items-center rounded-full bg-brand-700 px-2 sm:px-3.5 text-xs sm:text-sm font-semibold text-white dark:text-brand-50 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-800 hover:shadow-md hover:shadow-brand-500/25 active:translate-y-0 active:scale-95 overflow-hidden"
                 >
                   <span
                     aria-hidden="true"
@@ -351,7 +351,7 @@ export function AppLayout() {
         )}
       </header>
 
-      <main id="contenido" className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 lg:pb-10">
+      <main id="contenido" className="mx-auto w-full max-w-5xl flex-1 px-4 pb-36 pt-6 lg:pb-10">
         <Outlet />
       </main>
 

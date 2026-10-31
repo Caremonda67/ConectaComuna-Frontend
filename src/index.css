@@ -121,6 +121,10 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* Sin esto los bucles `infinite` (ondas del mapa, barras de voz, latido
+       del aviso) seguian repitiendose para siempre, solo que muy rapido. */
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
   }
 }

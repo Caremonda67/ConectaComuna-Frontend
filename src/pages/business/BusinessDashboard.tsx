@@ -53,7 +53,7 @@ export default function BusinessDashboard() {
         action={
           <Link
             to="/panel/negocio"
-            className="min-h-11 rounded-xl bg-brand-500 px-4 py-2.5 font-semibold text-white"
+            className="min-h-11 rounded-xl bg-brand-700 px-4 py-2.5 font-semibold text-white dark:text-brand-50"
           >
             Crear mi negocio
           </Link>
@@ -87,7 +87,7 @@ export default function BusinessDashboard() {
           <UI_ICONS.alert size={22} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
           <div className="space-y-1 text-sm">
             <p className="font-bold">Tu negocio está bajo observación comunitaria</p>
-            <p className="text-xs text-ink-700 dark:text-ink-300 leading-relaxed">
+            <p className="text-xs text-ink-700 leading-relaxed">
               Se han registrado reportes sobre tu servicio que están siendo evaluados por el equipo de Conecta Comuna.
               Por favor revisa la sección de reportes abajo y comparte tu versión para que el equipo pueda revisar el caso.
             </p>
@@ -168,7 +168,7 @@ export default function BusinessDashboard() {
                   <UI_ICONS.alert size={15} className="text-amber-600 shrink-0" />
                   El código anterior ya venció (duración de 24 horas)
                 </p>
-                <p className="text-xs text-ink-600 dark:text-ink-400">
+                <p className="text-xs text-ink-600">
                   Por seguridad de tu negocio, los códigos de vinculación caducan tras un día. Genera uno nuevo para compartirlo con tu facilitador.
                 </p>
                 <Button

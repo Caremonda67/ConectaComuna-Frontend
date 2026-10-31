@@ -15,6 +15,7 @@ const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
 const BusinessProfileEditor = lazy(() => import('@/pages/business/BusinessProfileEditor'))
 const HowItWorksPage = lazy(() => import('@/pages/HowItWorksPage'))
+const TecnologiaPage = lazy(() => import('@/pages/TecnologiaPage'))
 const TratoSeguroPage = lazy(() => import('@/pages/TratoSeguroPage'))
 const TratoSeguroVerificationPage = lazy(() => import('@/pages/TratoSeguroVerificationPage'))
 const TermsPage = lazy(() => import('@/pages/legal/TermsPage'))
@@ -61,6 +62,14 @@ const router = createBrowserRouter([
         element: (
           <Lazy>
             <HowItWorksPage />
+          </Lazy>
+        ),
+      },
+      {
+        path: 'tecnologia',
+        element: (
+          <Lazy>
+            <TecnologiaPage />
           </Lazy>
         ),
       },

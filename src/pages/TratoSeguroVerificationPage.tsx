@@ -223,7 +223,7 @@ _Pacto registrado en ConectaComuna. La entrega y el pago del saldo se acuerdan d
           </Button>
         </form>
 
-        <div className="pt-3 border-t border-ink-200 dark:border-ink-700 flex flex-wrap items-center gap-2 text-xs text-ink-600 dark:text-ink-400">
+        <div className="pt-3 border-t border-ink-200 dark:border-ink-700 flex flex-wrap items-center gap-2 text-xs text-ink-600">
           <span className="font-medium text-ink-700 dark:text-ink-700">Ejemplos para probar el verificador:</span>
           <button
             type="button"
@@ -469,7 +469,7 @@ _Pacto registrado en ConectaComuna. La entrega y el pago del saldo se acuerdan d
             </section>
 
             {/* Línea de troquelado de talonario de recibo vecinal */}
-            <div className="relative py-3 my-2 border-t-2 border-dashed border-ink-300 dark:border-ink-600 flex items-center justify-between text-xs text-ink-600 dark:text-ink-400 select-none">
+            <div className="relative py-3 my-2 border-t-2 border-dashed border-ink-300 dark:border-ink-600 flex items-center justify-between text-xs text-ink-600 select-none">
               <span className="ticket-notch-l" aria-hidden="true" />
               <span className="font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase text-center w-full">
                 ✂️ Talón oficial desprendible • Verificación pública comunal

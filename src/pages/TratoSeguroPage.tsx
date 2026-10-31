@@ -116,7 +116,7 @@ export default function TratoSeguroPage() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 dark:text-brand-300 border border-brand-200 dark:border-brand-800/60">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200 dark:border-brand-800/60">
               <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
               Pacto vecinal con comprobante público
             </span>
@@ -126,7 +126,7 @@ export default function TratoSeguroPage() {
           <h1 className="text-3xl font-extrabold sm:text-4xl text-ink-900 leading-tight">
             Trato Seguro Comunal
           </h1>
-          <p className="max-w-2xl text-base text-ink-600 dark:text-ink-300 sm:text-lg leading-relaxed">
+          <p className="max-w-2xl text-base text-ink-600 sm:text-lg leading-relaxed">
             En ConectaComuna creemos en la palabra de la gente del barrio. Este pacto deja constancia
             del trabajo, del precio y del anticipo, que no puede pasar del 50%. Si algo sale mal,
             el equipo de Conecta Comuna revisa el caso con las dos partes.
@@ -159,7 +159,7 @@ export default function TratoSeguroPage() {
             <UI_ICONS.alert size={18} className="shrink-0 text-amber-600 dark:text-amber-400" />
             Lo que no hace
           </h2>
-          <ul className="space-y-1.5 text-sm text-ink-700 dark:text-ink-300">
+          <ul className="space-y-1.5 text-sm text-ink-700">
             <li>No recibe ni retiene tu dinero: el pago va directo entre ustedes.</li>
             <li>No es un seguro ni devuelve lo pagado si el trabajo sale mal.</li>
             <li>No reemplaza a la autoridad si hay que denunciar algo grave.</li>
@@ -184,21 +184,21 @@ export default function TratoSeguroPage() {
             <h2 id="verificador-rapido" className="text-lg font-bold text-ink-900 dark:text-white">
               ¿Te compartieron un código de acuerdo o recibo?
             </h2>
-            <p className="text-xs text-ink-600 dark:text-ink-400">
+            <p className="text-xs text-ink-600">
               Comprueba que el oficio esté registrado, con qué negocio se pactó y cuánto quedó de anticipo.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Link
               to="/trato-seguro/verificar/CC-DEMO2026"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand-300 dark:border-brand-700 bg-white dark:bg-cream-100 px-3.5 py-2.5 text-xs font-bold text-brand-800 dark:text-brand-300 shadow-2xs hover:bg-brand-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand-300 dark:border-brand-700 bg-white dark:bg-cream-100 px-3.5 py-2.5 text-xs font-bold text-brand-800 shadow-2xs hover:bg-brand-50 transition-colors"
             >
               <UI_ICONS.checkCircle size={14} className="text-emerald-600" />
               Ver pacto demo (#CC-DEMO2026)
             </Link>
             <Link
               to="/trato-seguro/verificar"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 text-sm font-semibold shadow-xs transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white dark:text-brand-50 px-4 py-2.5 text-sm font-semibold shadow-xs transition-colors"
             >
               <UI_ICONS.search size={16} />
               Consultar código
@@ -210,7 +210,7 @@ export default function TratoSeguroPage() {
       {/* Los 5 acuerdos */}
       <section aria-labelledby="acuerdos-titulo" className="space-y-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-500 text-white shadow-xs">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-700 text-white dark:text-brand-50 shadow-xs">
             <UI_ICONS.checkCircle size={20} />
           </div>
           <div>
@@ -283,7 +283,7 @@ export default function TratoSeguroPage() {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'cliente'
-                  ? 'bg-brand-600 text-white shadow-2xs'
+                  ? 'bg-brand-700 text-white dark:text-brand-50 shadow-2xs'
                   : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
@@ -296,7 +296,7 @@ export default function TratoSeguroPage() {
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 cursor-pointer active:scale-95',
                 rolPestana === 'emprendedor'
-                  ? 'bg-brand-600 text-white shadow-2xs'
+                  ? 'bg-brand-700 text-white dark:text-brand-50 shadow-2xs'
                   : 'text-ink-700 hover:text-ink-900 hover:scale-[1.02]',
               )}
             >
