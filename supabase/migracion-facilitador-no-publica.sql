@@ -35,10 +35,15 @@ create policy businesses_owner_delete on public.businesses
   for delete using (auth.uid() = owner_id);
 
 -- 2. El facilitador aprobado sí edita los negocios que le dieron acceso.
---    Esto es lo que hace útil su rol, y no estaba escrito como política.
+--    Esta política ya existía en schema.sql con el nombre en inglés
+--    (`businesses_facilitator_update`). Se vuelve a escribir aquí por dos
+--    razones: dejar el archivo autocontenido, y soltar de paso la variante en
+--    castellano que una versión anterior de esta migración llegó a crear, para
+--    no acabar con dos políticas idénticas haciendo lo mismo.
 drop policy if exists businesses_facilitador_update on public.businesses;
+drop policy if exists businesses_facilitator_update on public.businesses;
 
-create policy businesses_facilitador_update on public.businesses
+create policy businesses_facilitator_update on public.businesses
   for update using (
     exists (
       select 1
@@ -59,5 +64,6 @@ create policy businesses_facilitador_update on public.businesses
 
 -- Comprobación rápida, para pegar en el editor SQL después de aplicar:
 --   select policyname, cmd from pg_policies where tablename = 'businesses';
--- Deben aparecer: businesses_select_public, businesses_owner_insert,
--- businesses_owner_update, businesses_owner_delete, businesses_facilitador_update.
+-- Deben aparecer exactamente cinco: businesses_select_public,
+-- businesses_owner_insert, businesses_owner_update, businesses_owner_delete
+-- y businesses_facilitator_update.
