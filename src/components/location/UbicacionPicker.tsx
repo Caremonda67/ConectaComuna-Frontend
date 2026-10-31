@@ -14,6 +14,7 @@ import {
 import { UI_ICONS } from '@/components/ui/icons'
 import type { UbicacionElegida } from '@/lib/ubicacion'
 import type { Coordinates } from '@/types'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Props {
   value: UbicacionElegida | null
@@ -257,7 +258,14 @@ export function UbicacionPicker({ value, onChange }: Props) {
               />
             </div>
 
-            {buscando && <p className="mt-2 text-sm text-ink-500">Buscando…</p>}
+            {/* Las sugerencias llegan con la forma que van a tener: sin esto la
+                lista aparecia de golpe y empujaba todo lo de abajo. */}
+            {buscando && (
+              <div role="status" aria-label="Buscando lugares" className="mt-2 space-y-2">
+                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-9 w-5/6" />
+              </div>
+            )}
 
             {!buscando && sugerencias.length > 0 && (
               <ul

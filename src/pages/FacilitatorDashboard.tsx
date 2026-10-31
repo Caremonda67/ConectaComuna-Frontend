@@ -9,6 +9,9 @@ import { Button } from '@/components/ui/Button'
 import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, FacilitadorNegocio } from '@/types'
+import { RowSkeletonList } from '@/components/ui/Skeleton'
+import { AvisoGuardado } from '@/components/ui/AvisoGuardado'
+import { useConfirmacion } from '@/hooks/useConfirmacion'
 
 const ETIQUETA_ROL: Record<string, string> = {
   client: 'Cliente',
@@ -43,6 +46,8 @@ export default function FacilitatorDashboard() {
   const [verificandoBizId, setVerificandoBizId] = useState<string | null>(null)
   const [notaVerificacion, setNotaVerificacion] = useState('')
   const [guardandoVerif, setGuardandoVerif] = useState(false)
+  const confirmacionPerfil = useConfirmacion()
+  const confirmacionSello = useConfirmacion()
   const [errorVerif, setErrorVerif] = useState<string | null>(null)
 
   useEffect(() => {
@@ -66,6 +71,7 @@ export default function FacilitatorDashboard() {
       })
       await refresh()
       setEditandoPerfil(false)
+      confirmacionPerfil.confirmar()
     } finally {
       setGuardandoPerfil(false)
     }
@@ -101,6 +107,7 @@ export default function FacilitatorDashboard() {
         notaVerificacion,
       )
       setVerificandoBizId(null)
+      confirmacionSello.confirmar()
       if (userId) {
         const data = await facilitadorService.getNegociosVinculados(userId)
         setVinculaciones(data)
@@ -128,7 +135,7 @@ export default function FacilitatorDashboard() {
 
 
   if (loading) {
-    return <div className="p-4 text-center text-ink-500">Cargando tus negocios apadrinados...</div>
+    return <RowSkeletonList count={3} />
   }
 
   return (
@@ -162,6 +169,8 @@ export default function FacilitatorDashboard() {
               Editar datos
             </Button>
           )}
+          {/* Fuera del panel de edicion: ese se cierra al guardar. */}
+          <AvisoGuardado visible={confirmacionPerfil.visible} />
         </div>
 
         {editandoPerfil ? (
@@ -260,6 +269,11 @@ export default function FacilitatorDashboard() {
             {errorVerif}
           </p>
         )}
+
+        {/* El sello recien firmado ya cambia la insignia del negocio en la
+            lista, pero ese cambio puede quedar fuera de la vista: el acuse va
+            arriba, donde esta mirando quien acaba de pulsar. */}
+        <AvisoGuardado visible={confirmacionSello.visible}>Sello firmado</AvisoGuardado>
 
         {vinculaciones.length === 0 ? (
           <div className="card p-6 text-center">

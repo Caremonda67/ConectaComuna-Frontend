@@ -5,6 +5,7 @@ import { businessService } from '@/services/businessService'
 import { Button } from '@/components/ui/Button'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { EstadoReporte, MotivoReporte, ReporteComunitario } from '@/types'
+import { RowSkeletonList } from '@/components/ui/Skeleton'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   direccion_falsa: 'La dirección no existe',
@@ -100,7 +101,7 @@ export function ReportesComunitariosPanel({ modo, usuarioId, negocioId }: Props)
       </p>
 
       {error && <p className="text-sm text-rose-700">{error}</p>}
-      {cargando && <p className="text-sm text-ink-500">Cargando reportes...</p>}
+      {cargando && <RowSkeletonList count={2} />}
 
       {!cargando && reportes.length === 0 && (
         <p className="text-sm text-ink-500">

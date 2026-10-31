@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useAsync } from '@/hooks/useAsync'
 import { usePageMeta } from '@/hooks/usePageMeta'
@@ -16,6 +16,8 @@ import { formatCurrency, getBadges, profileCompletion } from '@/lib/utils'
 import type { OrderStatus } from '@/types'
 import { UI_ICONS } from '@/components/ui/icons'
 import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
+import { AvisoGuardado } from '@/components/ui/AvisoGuardado'
+import { useConfirmacion } from '@/hooks/useConfirmacion'
 
 /** Panel del negocio: pedidos recibidos, reputación y perfil asistido. */
 export default function BusinessDashboard() {
@@ -25,6 +27,22 @@ export default function BusinessDashboard() {
   })
 
   const { business, userId } = useAuth()
+
+  // El editor de negocio navega hasta aqui despues de guardar y trae el acuse
+  // en el estado de la ruta: mostrarlo alla no servia de nada porque esa
+  // pantalla se desmonta en el mismo momento del guardado.
+  const location = useLocation()
+  const guardado = (location.state as { guardado?: string } | null)?.guardado
+  const confirmacion = useConfirmacion()
+  const yaAvisado = useRef(false)
+  useEffect(() => {
+    if (guardado && !yaAvisado.current) {
+      yaAvisado.current = true
+      confirmacion.confirmar()
+      // Se limpia del historial para que no reaparezca al volver atras.
+      window.history.replaceState({}, '')
+    }
+  }, [guardado, confirmacion])
   const [codigoApadrinamiento, setCodigoApadrinamiento] = useState<string | null>(null)
   const [codigoExpiraEn, setCodigoExpiraEn] = useState<string | null>(null)
   const [generandoCodigo, setGenerandoCodigo] = useState(false)
@@ -79,6 +97,8 @@ export default function BusinessDashboard() {
 
   return (
     <div className="space-y-6">
+      <AvisoGuardado visible={confirmacion.visible}>{guardado ?? 'Guardado'}</AvisoGuardado>
+
       {business.verification_status === 'under_review' && (
         <section
           role="alert"

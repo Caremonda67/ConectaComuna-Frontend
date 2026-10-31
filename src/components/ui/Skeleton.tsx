@@ -34,3 +34,39 @@ export function CardSkeletonList({ count = 4 }: { count?: number }) {
     </div>
   )
 }
+
+/** Filas compactas: listas sin miniatura (reportes, negocios apadrinados). */
+export function RowSkeletonList({ count = 3 }: { count?: number }) {
+  return (
+    <div role="status" aria-label="Cargando" className="grid gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="card space-y-2 p-4">
+          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-4/5" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/**
+ * Formulario en carga. Dibuja la forma que va a ocupar el contenido real, de
+ * modo que al llegar los datos nada se mueve de sitio.
+ */
+export function FormSkeleton({ campos = 5 }: { campos?: number }) {
+  return (
+    <div role="status" aria-label="Cargando formulario" className="space-y-5">
+      <Skeleton className="h-7 w-52" />
+      <div className="space-y-4">
+        {Array.from({ length: campos }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-11 w-full" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-11 w-40" />
+    </div>
+  )
+}

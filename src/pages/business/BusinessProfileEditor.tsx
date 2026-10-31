@@ -16,6 +16,7 @@ import { reverseGeocodificar } from '@/services/direccionService'
 import { DAY_NAMES } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
+import { FormSkeleton } from '@/components/ui/Skeleton'
 
 const schema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres.'),
@@ -123,7 +124,7 @@ export default function BusinessProfileEditor() {
   }, [requestedBusinessId, userId, profile?.account_type])
 
   if (loadingBusiness) {
-    return <p className="text-sm text-ink-500">Cargando negocio…</p>
+    return <FormSkeleton campos={6} />
   }
 
   if (accessDenied) {
@@ -149,7 +150,9 @@ export default function BusinessProfileEditor() {
       userId={userId ?? ''}
       onSaved={async () => {
         await refresh()
-        navigate('/panel')
+        // El acuse viaja con la navegacion: mostrarlo aqui seria inutil
+        // porque esta pantalla se desmonta en el mismo instante.
+        navigate('/panel', { state: { guardado: 'Negocio guardado' } })
       }}
     />
   )
