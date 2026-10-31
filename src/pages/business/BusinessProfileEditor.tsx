@@ -349,7 +349,12 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <h1 className="text-xl font-bold">
-        {managedBusiness ? 'Editar mi negocio' : 'Crear mi negocio'}
+        {/* Un facilitador edita la ficha de un vecino, no la suya. */}
+        {!managedBusiness
+          ? 'Crear mi negocio'
+          : profile?.account_type === 'facilitador'
+            ? `Editar la ficha de ${managedBusiness.name}`
+            : 'Editar mi negocio'}
       </h1>
 
       <ProgresoFicha pasos={pasos} />

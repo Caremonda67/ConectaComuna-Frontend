@@ -30,3 +30,6 @@ dist-ssr
 
 # Documentacion interna de trabajo: nunca va al repositorio
 docs/
+
+# Credenciales de cuentas de prueba locales: nunca al repositorio.
+supabase/cuentas-de-prueba.local.md
