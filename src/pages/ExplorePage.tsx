@@ -147,6 +147,7 @@ export default function ExplorePage() {
               <>
                 Prueba con{' '}
                 <TextoRotativo
+                  enLinea
                   items={SUGERENCIAS}
                   etiqueta={`Prueba con ${SUGERENCIAS.join(', ')}.`}
                   className="inline-block font-semibold text-brand-700"
