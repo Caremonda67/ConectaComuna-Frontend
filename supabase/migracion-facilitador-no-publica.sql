@@ -11,6 +11,9 @@
 
 -- 1. Nadie con rol de facilitador puede crear un negocio a su nombre.
 drop policy if exists businesses_owner_write on public.businesses;
+drop policy if exists businesses_owner_insert on public.businesses;
+drop policy if exists businesses_owner_update on public.businesses;
+drop policy if exists businesses_owner_delete on public.businesses;
 
 create policy businesses_owner_insert on public.businesses
   for insert with check (
@@ -55,6 +58,6 @@ create policy businesses_facilitador_update on public.businesses
   );
 
 -- Comprobación rápida, para pegar en el editor SQL después de aplicar:
---   select polname, cmd from pg_policies where tablename = 'businesses';
+--   select policyname, cmd from pg_policies where tablename = 'businesses';
 -- Deben aparecer: businesses_select_public, businesses_owner_insert,
 -- businesses_owner_update, businesses_owner_delete, businesses_facilitador_update.
