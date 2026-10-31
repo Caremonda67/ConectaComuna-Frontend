@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useRotacion } from '@/hooks/useRotacion'
 import { cn } from '@/lib/utils'
 
@@ -10,9 +10,8 @@ interface Props {
   /** Frase completa y quieta para lectores de pantalla. */
   etiqueta?: string
   /**
-   * El texto va dentro de una frase, no en su propia línea. Entonces el ancho
-   * de la celda sí se nota y hay que reservarlo; en bloque no hace falta,
-   * porque ocupa la línea entera.
+   * El texto va dentro de una frase, no en su propia línea. Entonces también
+   * hay que reservar el ancho; en bloque basta con ocupar la línea entera.
    */
   enLinea?: boolean
   className?: string
@@ -22,27 +21,26 @@ interface Props {
 /**
  * Texto que se releva a sí mismo.
  *
- * Las dos palabras se cruzan en el aire: la que sale sigue en pantalla
- * mientras entra la siguiente, apiladas en la misma celda de un `grid`.
+ * Las dos frases se cruzan en el aire: la que sale sigue en pantalla mientras
+ * entra la siguiente, apiladas en la misma celda de un `grid`.
  *
- * El detalle que costaba: mientras conviven, la celda mide por la más ancha de
- * las dos, y al desmontarse la saliente el contenedor **encogía de golpe**. Se
- * resuelve reservando el sitio por adelantado, de dos formas según el uso:
+ * El problema que costaba resolver: mientras conviven, la celda mide por la
+ * más grande de las dos, y al desmontarse la saliente el contenedor **daba un
+ * tirón**. Con frases de largo distinto pasa en los dos ejes, y el salto se
+ * nota medio segundo después del cambio, desconectado de la animación.
  *
- * - En bloque (el titular, en su propia línea) la celda ocupa el ancho
- *   completo y no hay nada que encoger.
- * - En línea se apilan copias invisibles de todas las frases en la misma
- *   celda, así que el hueco mide siempre lo que la más ancha.
+ * - **Alto.** Se mide la frase entrante *en su sitio*, ya montada en la celda
+ *   y con el ancho real de la columna, así que el número cuenta los saltos de
+ *   línea de verdad. Ese alto se fija en el contenedor con una transición: el
+ *   hueco se abre o se cierra deslizándose mientras el texto entra.
+ * - **Ancho.** En bloque ocupa la línea entera y no hay nada que ajustar. En
+ *   línea se apilan copias invisibles de todas las frases, de modo que el
+ *   hueco mide siempre lo que la más ancha.
  *
- * Se probó antes a medir el texto con un elemento auxiliar y animar el ancho,
- * y no sirve: el auxiliar va en posición absoluta y sin restricciones, así que
- * mide más de lo que el contenedor real puede darle (126 px medidos frente a
- * 115 disponibles) y el ancho fijado acababa recortado. El tirón volvía por
- * otro lado.
- *
- * La transición es CSS, no `AnimatePresence`: aquel espera a que termine la
- * salida antes de montar la entrada, y si el navegador congela el bucle de
- * animación esa salida no termina nunca y el texto se queda a medias.
+ * Lo que **no** funciona, por si alguien lo reintenta: medir con un elemento
+ * auxiliar en posición absoluta. Al no tener las restricciones del sitio donde
+ * vive, mide de más (126 px medidos frente a 115 disponibles) y el tamaño
+ * fijado acaba recortado por el contenedor.
  */
 export function TextoRotativo({ items, etiqueta, enLinea = false, className, cadaMs }: Props) {
   const i = useRotacion(items.length, cadaMs)
@@ -50,6 +48,9 @@ export function TextoRotativo({ items, etiqueta, enLinea = false, className, cad
 
   const [saliente, setSaliente] = useState<string | null>(null)
   const anteriorRef = useRef(actual)
+
+  const entranteRef = useRef<HTMLSpanElement>(null)
+  const [alto, setAlto] = useState<number>()
 
   useEffect(() => {
     if (anteriorRef.current === actual) return undefined
@@ -59,11 +60,44 @@ export function TextoRotativo({ items, etiqueta, enLinea = false, className, cad
     return () => window.clearTimeout(id)
   }, [actual])
 
+  // Antes de pintar: así la transición arranca en el mismo fotograma en que
+  // entra la frase nueva, y el hueco se abre acompañándola en vez de después.
+  useLayoutEffect(() => {
+    const medido = entranteRef.current?.getBoundingClientRect().height
+    if (medido) setAlto(medido)
+  }, [actual])
+
+  // Al cambiar el ancho de la ventana una frase puede pasar de una línea a dos:
+  // el alto fijado se quedaría corto y recortaría el texto.
+  useEffect(() => {
+    const alRedimensionar = () => {
+      const medido = entranteRef.current?.getBoundingClientRect().height
+      if (medido) setAlto(medido)
+    }
+    window.addEventListener('resize', alRedimensionar)
+    return () => window.removeEventListener('resize', alRedimensionar)
+  }, [])
+
   return (
     <span className={cn('min-h-[1.25em]', className)}>
       {etiqueta && <span className="sr-only">{etiqueta}</span>}
-      <span aria-hidden="true" className={enLinea ? 'inline-grid align-bottom' : 'grid'}>
-        {/* Reserva del sitio: todas las frases apiladas e invisibles, para que
+      <span
+        aria-hidden="true"
+        className={cn(
+          // `items-start` es imprescindible: con el alto fijado, un hijo
+          // estirado mediria ese mismo alto y la medida se quedaria clavada
+          // en el valor anterior. Alineado al inicio, mide lo suyo.
+          // `overflow-hidden` convierte la celda en una ventana: el texto
+          // entra deslizandose desde abajo y el que sale se va por arriba,
+          // en vez de aparecer y desaparecer encima de lo que haya debajo.
+          // El alto es el natural del texto, asi que las colas de las letras
+          // no se cortan en reposo.
+          'items-start overflow-hidden transition-[height] duration-[450ms] ease-out',
+          enLinea ? 'inline-grid align-bottom' : 'grid',
+        )}
+        style={alto ? { height: alto } : undefined}
+      >
+        {/* Reserva del ancho: todas las frases apiladas e invisibles, para que
             la celda mida siempre lo que la más ancha. Se apilan todas y no
             solo la más larga en letras, porque la más larga no es siempre la
             más ancha: depende de qué letras sean. */}
@@ -78,7 +112,11 @@ export function TextoRotativo({ items, etiqueta, enLinea = false, className, cad
             {saliente}
           </span>
         )}
-        <span key={`entra-${actual}`} className="col-start-1 row-start-1 animate-texto-entra">
+        <span
+          ref={entranteRef}
+          key={`entra-${actual}`}
+          className="col-start-1 row-start-1 animate-texto-entra"
+        >
           {actual}
         </span>
       </span>
