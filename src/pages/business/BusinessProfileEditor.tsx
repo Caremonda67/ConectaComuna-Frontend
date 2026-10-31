@@ -61,7 +61,7 @@ export default function BusinessProfileEditor() {
     description: 'Edita la información, ubicación, horarios y catálogo de tu negocio u oficio.',
   })
 
-  const { userId, business, profile, refresh } = useAuth()
+  const { userId, business, profile, activeRole, setActiveRole, refresh } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const requestedBusinessId = new URLSearchParams(location.search).get('id')
@@ -138,6 +138,26 @@ export default function BusinessProfileEditor() {
         </p>
         <Button className="mt-4" onClick={() => navigate('/panel')}>
           Volver al panel
+        </Button>
+      </div>
+    )
+  }
+
+  // Una cuenta de negocio en rol Cliente podia abrir el editor y guardar, y
+  // terminaba en "Mis Solicitudes" sin ver el acuse de guardado, que vive en
+  // el panel de negocio. No es un problema de permisos —la ficha es suya— sino
+  // de coherencia: se estaba editando el negocio desde la vista que no lo
+  // muestra. Se pide el cambio de rol en vez de rebotar sin explicacion.
+  if (profile?.account_type === 'business' && activeRole !== 'business') {
+    return (
+      <div className="card p-6">
+        <h1 className="text-xl font-bold">Estás en modo Cliente</h1>
+        <p className="mt-2 text-sm text-ink-600">
+          Tu ficha de negocio se edita desde el modo Negocio. Así, al guardar, vuelves a tu
+          panel de pedidos y ves el cambio reflejado.
+        </p>
+        <Button className="mt-4" onClick={() => setActiveRole('business')}>
+          Cambiar a modo Negocio
         </Button>
       </div>
     )
