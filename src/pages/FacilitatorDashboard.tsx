@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { facilitadorService } from '@/services/facilitadorService'
@@ -55,6 +55,22 @@ export default function FacilitatorDashboard() {
   const [guardandoVerif, setGuardandoVerif] = useState(false)
   const confirmacionPerfil = useConfirmacion()
   const confirmacionSello = useConfirmacion()
+
+  // El editor de negocio navega a /panel despues de guardar y trae el acuse en
+  // el estado de la ruta. Lo leia solo el panel de negocio, asi que cuando
+  // quien guardaba era un facilitador —que aterriza aqui— el mensaje se
+  // perdia: guardaba la ficha de un vecino y no recibia ninguna senal.
+  const location = useLocation()
+  const guardado = (location.state as { guardado?: string } | null)?.guardado
+  const confirmacionGuardado = useConfirmacion()
+  const yaAvisado = useRef(false)
+  useEffect(() => {
+    if (guardado && !yaAvisado.current) {
+      yaAvisado.current = true
+      confirmacionGuardado.confirmar()
+      window.history.replaceState({}, '')
+    }
+  }, [guardado, confirmacionGuardado])
   const [errorVerif, setErrorVerif] = useState<string | null>(null)
 
   useEffect(() => {
@@ -157,29 +173,36 @@ export default function FacilitatorDashboard() {
         </p>
       </header>
 
+      <AvisoGuardado visible={confirmacionGuardado.visible}>{guardado ?? 'Guardado'}</AvisoGuardado>
+
       <section aria-labelledby="datos-cuenta" className="card border-brand-100 p-4 shadow-sm">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Información personal</p>
             <h2 id="datos-cuenta" className="mt-1 font-bold text-ink-900">Datos de la cuenta</h2>
           </div>
-          {!editandoPerfil && (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setNuevoNombre(profile?.full_name ?? '')
-                setNuevoTelefono(profile?.phone ?? '')
-                setNuevoBarrio(profile?.neighborhood ?? '')
-                setEditandoPerfil(true)
-              }}
-            >
-              Editar datos
-            </Button>
-          )}
-          {/* Fuera del panel de edicion: ese se cierra al guardar. */}
-          <AvisoGuardado visible={confirmacionPerfil.visible} />
+          {/* Botón y aviso van juntos: sueltos, `justify-between` repartía
+              entre tres y dejaba el botón flotando a media tarjeta, porque el
+              aviso ocupa sitio aunque esté invisible. */}
+          <div className="flex items-center gap-2">
+            {!editandoPerfil && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setNuevoNombre(profile?.full_name ?? '')
+                  setNuevoTelefono(profile?.phone ?? '')
+                  setNuevoBarrio(profile?.neighborhood ?? '')
+                  setEditandoPerfil(true)
+                }}
+              >
+                Editar datos
+              </Button>
+            )}
+            {/* Fuera del panel de edicion: ese se cierra al guardar. */}
+            <AvisoGuardado visible={confirmacionPerfil.visible} />
+          </div>
         </div>
 
         {editandoPerfil ? (
@@ -231,7 +254,7 @@ export default function FacilitatorDashboard() {
             </div>
           </div>
         ) : (
-          <dl className="mt-3 grid gap-2 text-sm text-ink-700">
+          <dl className="mt-3 grid gap-x-8 gap-y-2 text-sm text-ink-700 sm:grid-cols-2">
             <div className="flex gap-2">
               <dt className="font-medium">Nombre:</dt>
               <dd>{profile?.full_name || 'Sin nombre'}</dd>

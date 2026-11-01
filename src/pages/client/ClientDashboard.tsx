@@ -84,6 +84,10 @@ export default function ClientDashboard() {
       <section className="card p-4">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-xl font-bold">Mi cuenta</h1>
+          {/* Botón y aviso van juntos: sueltos, `justify-between` repartía
+              entre tres y dejaba el botón flotando a media tarjeta, porque el
+              aviso ocupa sitio aunque esté invisible. */}
+          <div className="flex items-center gap-2">
           {!editandoPerfil && (
             <Button
               type="button"
@@ -102,6 +106,7 @@ export default function ClientDashboard() {
           {/* Fuera del panel de edicion a proposito: ese se cierra al guardar,
               asi que un aviso dentro no se llegaria a ver. */}
           <AvisoGuardado visible={confirmacionPerfil.visible} />
+          </div>
         </div>
 
         {editandoPerfil ? (
@@ -169,7 +174,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         ) : (
-          <dl className="mt-2 grid gap-1 text-sm text-ink-700">
+          <dl className="mt-2 grid gap-x-8 gap-y-1 text-sm text-ink-700 sm:grid-cols-2">
             <div className="flex gap-2">
               <dt className="font-medium">Nombre:</dt>
               <dd>{profile?.full_name}</dd>

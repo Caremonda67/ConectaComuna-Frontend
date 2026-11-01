@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTheme } from '@/hooks/useTheme'
@@ -68,22 +68,34 @@ export function AppLayout() {
     void checkBackendHealth()
   }, [])
 
+  // Un facilitador acompaña a quien publica, no publica el mismo, y un negocio
+  // en modo Cliente ya tiene su ficha.
+  const puedePublicar =
+    !profile || activeRole === 'business' || (activeRole === 'client' && !isDual)
+
   const topNav = [
     { to: '/', label: 'Inicio', end: true },
     { to: '/explorar', label: 'Explorar oficios', end: false },
     { to: '/mapa', label: 'Mapa comunal', end: false },
-    {
-      // El facilitador no publica: acompaña a quien publica. Mandarlo al
-      // editor le abria un "Crear mi negocio" en blanco, que es justo lo que
-      // su rol no debe hacer.
-      to: profile
-        ? profile.account_type === 'business'
-          ? '/panel/negocio'
-          : '/panel'
-        : '/registro',
-      label: profile?.account_type === 'facilitador' ? 'Negocios que apoyo' : 'Publicar servicio',
-      end: false,
-    },
+    // "Publicar servicio" solo aparece para quien de verdad puede publicar:
+    // quien no tiene cuenta (va al registro), quien esta en modo Negocio (va a
+    // su ficha) y el cliente puro (va a su panel, donde esta el bloque para
+    // activar el negocio). Un facilitador no publica —la base se lo impide— y
+    // un negocio en modo Cliente ya tiene su ficha, asi que para ellos el
+    // enlace apuntaba a /panel: el mismo sitio que "Mi cuenta", y por eso se
+    // marcaban los dos a la vez.
+    ...(puedePublicar
+      ? [
+          {
+            to: !profile ? '/registro' : activeRole === 'business' ? '/panel/negocio' : '/panel',
+            label: 'Publicar servicio',
+            end: false,
+            // Es una llamada a la accion, no una seccion: no debe pintarse
+            // como "estas aqui" aunque la ruta coincida.
+            sinEstadoActivo: !profile ? false : activeRole !== 'business',
+          },
+        ]
+      : []),
     { to: '/como-funciona', label: 'Cómo funciona', end: false },
   ]
 
@@ -169,18 +181,32 @@ export function AppLayout() {
             <ul className="flex items-center gap-6">
               {topNav.map((item) => (
                 <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      cn(
-                        'text-sm font-medium transition-colors',
-                        isActive ? 'text-brand-700' : 'text-ink-700 hover:text-brand-700',
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
+                  {/* "Publicar servicio" es una llamada a la accion y apunta
+                      al mismo sitio que "Mi cuenta". Como `NavLink` marca
+                      "estas aqui" por coincidencia de ruta —en la clase y en
+                      `aria-current`—, los dos salian resaltados a la vez. Un
+                      `Link` normal no marca nada. */}
+                  {item.sinEstadoActivo ? (
+                    <Link
+                      to={item.to}
+                      className="text-sm font-medium text-ink-700 transition-colors hover:text-brand-700"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <NavLink
+                      to={item.to}
+                      end={item.end}
+                      className={({ isActive }) =>
+                        cn(
+                          'text-sm font-medium transition-colors',
+                          isActive ? 'text-brand-700' : 'text-ink-700 hover:text-brand-700',
+                        )
+                      }
+                    >
+                      {item.label}
+                    </NavLink>
+                  )}
                 </li>
               ))}
             </ul>

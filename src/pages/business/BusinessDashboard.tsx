@@ -423,23 +423,20 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  async function responder(id: string, estado: 'aprobado' | 'rechazado' | 'revocado') {
+  /**
+   * Quitarle el acceso a un facilitador. Es la única decisión que se toma
+   * desde aquí: el apadrinamiento se concede entregando el código, no
+   * aprobando solicitudes, así que no hay nada que aprobar ni rechazar.
+   */
+  async function revocarAcceso(id: string) {
     if (busy) return
     setBusy(true)
     setAccion(id)
     setMensaje(null)
     setErrorMsg(null)
     try {
-      // Usamos el mismo método responderSolicitud, ya que solo cambia el estado.
-      // Si el backend es estricto con los estados, asegúrate de que soporte 'revocado' o 'rechazado'.
-      await facilitadorService.responderSolicitud(id, estado === 'revocado' ? 'rechazado' : estado)
-      setMensaje(
-        estado === 'aprobado'
-          ? 'Apadrinamiento aprobado.'
-          : estado === 'revocado'
-            ? 'Acceso revocado correctamente.'
-            : 'Solicitud rechazada.',
-      )
+      await facilitadorService.responderSolicitud(id, 'rechazado')
+      setMensaje('Acceso revocado correctamente.')
       reload()
     } catch (e) {
       setErrorMsg(e instanceof Error ? e.message : 'No pudimos guardar tu decisión.')
@@ -459,10 +456,9 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
     )
   }
 
-  const pendientes = vinculaciones?.filter((v) => v.estado_vinculacion === 'pendiente') ?? []
   const aprobados = vinculaciones?.filter((v) => v.estado_vinculacion === 'aprobado') ?? []
 
-  if (pendientes.length === 0 && aprobados.length === 0) return null
+  if (aprobados.length === 0) return null
 
   return (
     <section className="rounded-2xl border border-ink-200 p-4 space-y-4">
@@ -471,48 +467,6 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
         <p role="alert" className="text-sm text-rose-700">
           {errorMsg}
         </p>
-      )}
-
-      {pendientes.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold">Solicitudes de apadrinamiento</h2>
-          <p className="mb-3 text-sm text-ink-500">
-            Un vecino pide ayudarte a administrar tu perfil. Aprobarlo le permite editar
-            tus fotos y precios; tú sigues siendo el dueño principal.
-          </p>
-          <ul className="space-y-3">
-            {pendientes.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-brand-50 border border-brand-200 p-3"
-              >
-                <div>
-                  <p className="font-semibold">{s.facilitador?.full_name ?? 'Vecino'}</p>
-                  {s.facilitador?.phone && (
-                    <p className="text-xs text-ink-500">{s.facilitador.phone}</p>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    loading={busy && accion === s.id}
-                    onClick={() => void responder(s.id, 'aprobado')}
-                  >
-                    Aprobar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() => void responder(s.id, 'rechazado')}
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
       )}
 
       {aprobados.length > 0 && (
@@ -539,7 +493,7 @@ function ApadrinamientoPanel({ businessId }: { businessId: string }) {
                   loading={busy && accion === s.id}
                   onClick={() => {
                     if (window.confirm('¿Seguro que quieres revocar el acceso a este facilitador? Ya no podrá gestionar tu negocio.')) {
-                      void responder(s.id, 'revocado')
+                      void revocarAcceso(s.id)
                     }
                   }}
                 >

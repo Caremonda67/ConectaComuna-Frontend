@@ -64,8 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setEmail(session.email)
     setProfile(p)
     setBusiness(negocio)
-    if (p?.account_type === 'business' && !localStorage.getItem(ROLE_KEY)) {
-      setActiveRoleState('business')
+    // Quien tiene rol doble entra en el suyo, no en el de cliente. Antes solo
+    // se contemplaba 'business', asi que un facilitador recien entrado se
+    // quedaba en 'client' y aterrizaba en el panel equivocado.
+    if (
+      (p?.account_type === 'business' || p?.account_type === 'facilitador') &&
+      !localStorage.getItem(ROLE_KEY)
+    ) {
+      setActiveRoleState(p.account_type)
     }
   }, [])
 

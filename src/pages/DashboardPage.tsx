@@ -9,10 +9,14 @@ import FacilitatorDashboard from '@/pages/FacilitatorDashboard'
  */
 export default function DashboardPage() {
   const { profile, activeRole } = useAuth()
-  
+
+  // El facilitador tambien es un vecino: puede pedirle un arreglo a la modista
+  // de su cuadra. Antes esta pantalla le devolvia su panel de facilitador
+  // pasara lo que pasara, asi que podia contratar en rol Cliente y despues no
+  // tenia donde ver el pedido. El conmutador decide, como en los demas roles.
   if (profile?.account_type === 'facilitador') {
-    return <FacilitatorDashboard />
+    return activeRole === 'facilitador' ? <FacilitatorDashboard /> : <ClientDashboard />
   }
-  
+
   return activeRole === 'business' ? <BusinessDashboard /> : <ClientDashboard />
 }
