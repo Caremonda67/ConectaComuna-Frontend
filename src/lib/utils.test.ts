@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cn, distanceKm, formatCurrency, formatDistance } from './utils'
+import { cn, distanceKm, extractErrorMessage, formatCurrency, formatDistance } from './utils'
 
 describe('distancias', () => {
   it('mide en kilómetros entre dos puntos', () => {
@@ -32,5 +32,21 @@ describe('formato de moneda', () => {
 describe('cn', () => {
   it('junta clases y descarta lo falso', () => {
     expect(cn('a', false, null, undefined, 'b')).toBe('a b')
+  })
+})
+
+describe('extractErrorMessage', () => {
+  it('extrae el mensaje de una instancia de Error', () => {
+    expect(extractErrorMessage(new Error('Fallo de red'))).toBe('Fallo de red')
+  })
+
+  it('extrae el mensaje de un objeto PostgrestError de Supabase', () => {
+    const pgError = { message: 'permission denied for table businesses', code: '42501' }
+    expect(extractErrorMessage(pgError)).toBe('permission denied for table businesses')
+  })
+
+  it('usa fallback cuando el error viene vacío o no tiene mensaje', () => {
+    expect(extractErrorMessage(null)).toBe('Ocurrió un error inesperado.')
+    expect(extractErrorMessage({})).toBe('Ocurrió un error inesperado.')
   })
 })

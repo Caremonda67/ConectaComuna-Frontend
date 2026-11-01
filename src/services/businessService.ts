@@ -116,7 +116,7 @@ export const businessService = {
     }
 
     const { data, error } = await query
-    if (error) throw error
+    if (error) throw new Error(error.message || 'No fue posible cargar los negocios')
     let result = withDistance((data ?? []) as Business[], filters.center)
     if (filters.center && filters.radiusKm) {
       result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
@@ -146,7 +146,7 @@ export const businessService = {
         .maybeSingle()
       if (error) {
         if (error.code === '22P02') return null
-        throw error
+        throw new Error(error.message || 'No fue posible cargar el negocio')
       }
       return (data as Business | null) ?? null
     } catch (err: unknown) {
@@ -167,7 +167,7 @@ export const businessService = {
       .select(SELECT_CON_CODIGO)
       .eq('owner_id', ownerId)
       .maybeSingle()
-    if (error) throw error
+    if (error) throw new Error(error.message || 'No fue posible cargar el negocio')
     return data as Business | null
   },
 
@@ -236,7 +236,7 @@ export const businessService = {
         .eq('id', existingId)
         .select(SELECT_CON_CODIGO)
         .single()
-      if (error) throw error
+      if (error) throw new Error(error.message || 'No fue posible actualizar el negocio')
       return data as Business
     }
 
@@ -245,7 +245,7 @@ export const businessService = {
       .insert({ ...input, owner_id: ownerId })
       .select(SELECT_CON_CODIGO)
       .single()
-    if (error) throw error
+    if (error) throw new Error(error.message || 'No fue posible registrar el negocio')
     return data as Business
   },
 

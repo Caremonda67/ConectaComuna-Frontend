@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { extractErrorMessage } from '@/lib/utils'
 
 interface AsyncState<T> {
   data: T | null
@@ -43,7 +44,7 @@ export function useAsync<T>(
           setState({
             data: null,
             loading: false,
-            error: err instanceof Error ? err.message : 'Ocurrió un error inesperado.',
+            error: extractErrorMessage(err),
           })
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
