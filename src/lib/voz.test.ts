@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { corregirDictado, mejorAlternativa } from './voz'
+import { construirDictado, corregirDictado, mejorAlternativa } from './voz'
 
 describe('corregirDictado', () => {
   it('arregla los oficios que el dictado confunde', () => {
@@ -50,5 +50,47 @@ describe('mejorAlternativa', () => {
 
   it('si ninguna gana, se queda con la primera, que es la que el motor puntuo mejor', () => {
     expect(mejorAlternativa(['buenos dias', 'buenos días'])).toBe('buenos dias')
+  })
+})
+
+describe('construirDictado', () => {
+  const definitivo = (t: string) => ({ esDefinitivo: true, alternativas: [t] })
+  const enCurso = (t: string) => ({ esDefinitivo: false, alternativas: [t] })
+
+  it('no duplica cuando el motor reentrega un resultado ya cerrado', () => {
+    // Android vuelve a entregar la lista completa en cada evento. Armar el
+    // texto de cero tiene que dar lo mismo las veces que haga falta.
+    const unaVez = [definitivo('hola')]
+    expect(construirDictado(unaVez)).toBe('hola')
+    expect(construirDictado(unaVez)).toBe('hola')
+    expect(construirDictado(unaVez)).toBe('hola')
+  })
+
+  it('une los tramos con espacio, sin pegarlos', () => {
+    expect(construirDictado([definitivo('necesito'), definitivo('una modista')])).toBe(
+      'necesito una modista',
+    )
+  })
+
+  it('mezcla lo cerrado con lo que se esta diciendo', () => {
+    expect(construirDictado([definitivo('busco'), enCurso('un cerrajero')])).toBe(
+      'busco un cerrajero',
+    )
+  })
+
+  it('aplica el diccionario del oficio', () => {
+    expect(construirDictado([definitivo('necesito un serrajero')])).toBe(
+      'necesito un cerrajero',
+    )
+  })
+
+  it('desempata a favor de las palabras del oficio', () => {
+    expect(
+      construirDictado([{ esDefinitivo: true, alternativas: ['cerrar ahi', 'cerrajería'] }]),
+    ).toBe('cerrajería')
+  })
+
+  it('sin resultados devuelve cadena vacia', () => {
+    expect(construirDictado([])).toBe('')
   })
 })

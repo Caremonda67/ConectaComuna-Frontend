@@ -21,7 +21,7 @@ import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptMo
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
 import type { Order, ServiceCatalogItem } from '@/types'
 import { cn, formatCurrency } from '@/lib/utils'
-import { corregirDictado, detenerLectura, leerEnVozAlta, mejorAlternativa } from '@/lib/voz'
+import { construirDictado, detenerLectura, leerEnVozAlta, type ResultadoDictado } from '@/lib/voz'
 
 // Web Speech API interfaces
 interface IWindowSpeechRecognition extends EventTarget {
@@ -605,7 +605,6 @@ export function AsistenteComunalModal() {
 
       // Lo ya escrito antes de dictar no se pierde: el dictado se le suma.
       const textoPrevio = textoEntrada.trim()
-      let yaCerrado = ''
 
       // Al no cortar en la primera pausa, hay que cerrar por silencio: si
       // pasan cuatro segundos sin que llegue nada nuevo, se da por terminado.
@@ -618,21 +617,25 @@ export function AsistenteComunalModal() {
       }
 
       recognition.onresult = (event: any) => {
-        let enCurso = ''
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const resultado = event.results[i]
-          const alternativas: string[] = Array.from(
-            { length: resultado.length },
-            (_, k) => resultado[k].transcript as string,
-          )
-          const elegida = mejorAlternativa(alternativas)
-          // Lo definitivo se acumula; lo provisional se reescribe en cada
-          // evento. Antes se concatenaba todo junto y sin espacios, asi que
-          // las frases largas salian pegadas.
-          if (resultado.isFinal) yaCerrado += ' ' + elegida
-          else enCurso += ' ' + elegida
-        }
-        const dictado = corregirDictado(yaCerrado + ' ' + enCurso)
+        // Se recorre la lista ENTERA y se arma el texto de cero en cada
+        // evento. Acumular desde `event.resultIndex` parecia lo natural, pero
+        // en Android el motor vuelve a entregar resultados ya cerrados con el
+        // indice en cero, asi que cada reentrega sumaba lo mismo otra vez:
+        // decir "hola" una sola vez escribia "hola hola".
+        const resultados: ResultadoDictado[] = Array.from(
+          { length: event.results.length },
+          (_, i) => {
+            const r = event.results[i]
+            return {
+              esDefinitivo: Boolean(r.isFinal),
+              alternativas: Array.from(
+                { length: r.length },
+                (_, k) => r[k].transcript as string,
+              ),
+            }
+          },
+        )
+        const dictado = construirDictado(resultados)
         setTextoEntrada(textoPrevio ? `${textoPrevio} ${dictado}` : dictado)
         reiniciarSilencio()
       }

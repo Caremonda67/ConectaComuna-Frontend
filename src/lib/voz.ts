@@ -155,6 +155,26 @@ export function corregirDictado(texto: string): string {
   return salida
 }
 
+/** Un resultado del reconocedor: sus alternativas y si ya es definitivo. */
+export interface ResultadoDictado {
+  readonly esDefinitivo: boolean
+  readonly alternativas: readonly string[]
+}
+
+/**
+ * Arma el texto dictado a partir de **toda** la lista de resultados.
+ *
+ * Se reconstruye entera en cada evento, a propósito. La versión anterior
+ * acumulaba los definitivos con `+=` empezando en `event.resultIndex`, y en
+ * Android el motor vuelve a entregar resultados ya cerrados con el índice en
+ * cero: cada reentrega sumaba otra vez lo mismo y decir «hola» una vez
+ * escribía «hola hola». Reconstruir no depende de cómo numere el navegador.
+ */
+export function construirDictado(resultados: readonly ResultadoDictado[]): string {
+  const partes = resultados.map((r) => mejorAlternativa([...r.alternativas]).trim())
+  return corregirDictado(partes.filter(Boolean).join(' '))
+}
+
 /**
  * De las alternativas que ofrece el reconocedor, se queda con la que más
  * palabras conocidas del dominio contiene. Cuando dudan entre "cerrajería" y
