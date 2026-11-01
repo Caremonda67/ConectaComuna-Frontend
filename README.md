@@ -6,8 +6,9 @@ ambulantes, comida casera.
 
 Funciona en **cualquier barrio o municipio de Colombia**: un negocio marca su punto en
 el mapa y la búsqueda por cercanía se calcula desde ahí, sin ninguna ciudad fijada en
-el código. El **piloto** está en la **Comuna 20 de Cali**, que es de donde salen las
-entrevistas de campo y los primeros negocios registrados.
+el código. El **piloto** está en **Cali, en la ladera y el oriente de la ciudad**: la
+Comuna 20 (Siloé y sus barrios), de donde sale la investigación de campo, y El
+Vallado, donde está el primer negocio que se registró por su cuenta.
 
 Este repositorio contiene **solo el frontend**; aquí está toda la capa de integración
 lista para conectarse. El proyecto se reparte en tres:
