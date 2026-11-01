@@ -22,6 +22,24 @@ function applySort(list: BusinessWithDistance[], sort: BusinessFilters['sort']) 
   return copy.sort((a, b) => (a.distanceKm ?? 1e9) - (b.distanceKm ?? 1e9))
 }
 
+/**
+ * Las columnas públicas de un negocio, nombradas una a una.
+ *
+ * No se puede pedir `*`: desde migracion-codigo-no-publico.sql el permiso de
+ * lectura para `anon` se concede por columnas, para que
+ * `codigo_apadrinamiento` deje de ser legible sin sesión. PostgREST resuelve
+ * `*` como "todas las columnas de la tabla" y entonces choca con el permiso,
+ * devolviendo 42501 y dejando el directorio en blanco para quien no ha
+ * entrado. Pasó en producción.
+ *
+ * El código vive aparte, en SELECT_CON_CODIGO, y solo lo pide el dueño.
+ */
+const COLUMNAS_PUBLICAS =
+  'id, owner_id, name, category, description, phone, whatsapp, address, neighborhood, lat, lng, photos, hours, rating_avg, rating_count, completed_orders, report_count, services_catalog, is_active, created_at, verification_status, verification_by, verification_date, verification_note, verification_score, verification_selfie_url, wholesale_enabled, wholesale_min_order, wholesale_terms'
+
+/** Lo mismo más el código de apadrinamiento, que solo ve el dueño del negocio. */
+const SELECT_CON_CODIGO = `${COLUMNAS_PUBLICAS}, codigo_apadrinamiento, codigo_apadrinamiento_expira_en`
+
 export const businessService = {
   async search(filters: BusinessFilters): Promise<BusinessWithDistance[]> {
     if (isDemoMode) {
@@ -60,7 +78,7 @@ export const businessService = {
     // Filtrado en el servidor: menos bytes viajando, clave con conexiones lentas.
     let query = requireSupabase()
       .from('businesses')
-      .select('*')
+      .select(COLUMNAS_PUBLICAS)
       .eq('is_active', true)
       .limit(60)
 
@@ -123,7 +141,7 @@ export const businessService = {
     try {
       const { data, error } = await requireSupabase()
         .from('businesses')
-        .select('*')
+        .select(COLUMNAS_PUBLICAS)
         .eq('id', id)
         .maybeSingle()
       if (error) {
@@ -146,7 +164,7 @@ export const businessService = {
     }
     const { data, error } = await requireSupabase()
       .from('businesses')
-      .select('*')
+      .select(SELECT_CON_CODIGO)
       .eq('owner_id', ownerId)
       .maybeSingle()
     if (error) throw error
@@ -216,7 +234,7 @@ export const businessService = {
         .from('businesses')
         .update(input)
         .eq('id', existingId)
-        .select()
+        .select(SELECT_CON_CODIGO)
         .single()
       if (error) throw error
       return data as Business
@@ -225,7 +243,7 @@ export const businessService = {
     const { data, error } = await supabase
       .from('businesses')
       .insert({ ...input, owner_id: ownerId })
-      .select()
+      .select(SELECT_CON_CODIGO)
       .single()
     if (error) throw error
     return data as Business
