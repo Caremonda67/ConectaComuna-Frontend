@@ -172,7 +172,34 @@ export interface ResultadoDictado {
  */
 export function construirDictado(resultados: readonly ResultadoDictado[]): string {
   const partes = resultados.map((r) => mejorAlternativa([...r.alternativas]).trim())
-  return corregirDictado(partes.filter(Boolean).join(' '))
+  return corregirDictado(sinInstantaneasRepetidas(partes).join(' '))
+}
+
+/**
+ * Quita las instantáneas progresivas de una misma frase.
+ *
+ * El motor de Android no actualiza un resultado en su sitio: va añadiendo
+ * entradas con la frase cada vez más larga. Decir "hola como estas" llegaba
+ * como ["Hola", "hola", "hola como", "hola como estas"], y unirlas todas
+ * escribía "Hola hola hola como hola como estas".
+ *
+ * Si un tramo empieza por el anterior, es ese mismo tramo más avanzado y lo
+ * sustituye. Si no, es texto nuevo y se añade. El precio es que decir dos
+ * veces seguidas la misma palabra cuenta como una; se prefiere eso a repetir
+ * media frase.
+ */
+function sinInstantaneasRepetidas(partes: readonly string[]): string[] {
+  const salida: string[] = []
+  for (const parte of partes) {
+    if (!parte) continue
+    const anterior = salida[salida.length - 1]
+    if (anterior && parte.toLowerCase().startsWith(anterior.toLowerCase())) {
+      salida[salida.length - 1] = parte
+    } else {
+      salida.push(parte)
+    }
+  }
+  return salida
 }
 
 /**

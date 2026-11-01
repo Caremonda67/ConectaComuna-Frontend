@@ -94,3 +94,32 @@ describe('construirDictado', () => {
     expect(construirDictado([])).toBe('')
   })
 })
+
+describe('construirDictado: instantaneas progresivas de Android', () => {
+  const def = (t: string) => ({ esDefinitivo: true, alternativas: [t] })
+  const curso = (t: string) => ({ esDefinitivo: false, alternativas: [t] })
+
+  it('colapsa la frase que va creciendo en vez de repetirla', () => {
+    // Caso real reportado desde un telefono: se dijo "Hola como estas" y se
+    // escribio "Hola hola hola como hola como estas".
+    expect(
+      construirDictado([def('Hola'), curso('hola'), curso('hola como'), curso('hola como estas')]),
+    ).toBe('hola como estas')
+  })
+
+  it('mantiene los tramos que son texto nuevo', () => {
+    expect(construirDictado([def('necesito'), def('una modista')])).toBe('necesito una modista')
+  })
+
+  it('colapsa solo cuando uno continua al otro', () => {
+    expect(construirDictado([def('busco'), curso('busco un'), curso('busco un cerrajero')])).toBe(
+      'busco un cerrajero',
+    )
+  })
+
+  it('no mezcla frases distintas que empiezan parecido', () => {
+    expect(construirDictado([def('arreglo de ropa'), def('arreglos de zapatos')])).toBe(
+      'arreglo de ropa arreglos de zapatos',
+    )
+  })
+})
