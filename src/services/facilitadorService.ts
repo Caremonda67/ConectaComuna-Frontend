@@ -98,38 +98,6 @@ export const facilitadorService = {
   },
 
   /**
-   * El facilitador pide administrar un negocio (queda en 'pendiente').
-   */
-  async solicitarVinculacion(facilitadorId: string, negocioId: string): Promise<FacilitadorNegocio> {
-    if (isDemoMode) {
-      const existente = readDb().vinculaciones.find((v) => v.facilitador_id === facilitadorId && v.negocio_id === negocioId)
-      if (existente) throw new Error('Ya existe una vinculacion con este negocio.')
-
-      const nueva: FacilitadorNegocio = {
-        id: uid('fac'),
-        negocio_id: negocioId,
-        facilitador_id: facilitadorId,
-        estado_vinculacion: 'pendiente',
-        creado_en: new Date().toISOString(),
-      }
-      mutateDb((d) => d.vinculaciones.push(nueva))
-      return delay(nueva, 300)
-    }
-    // RLS: policy 'facilitadores_insert_solicitud' permite insertar solo en 'pendiente'.
-    const { data, error } = await requireSupabase()
-      .from('facilitadores_negocio')
-      .insert({
-        facilitador_id: facilitadorId,
-        negocio_id: negocioId,
-        estado_vinculacion: 'pendiente',
-      })
-      .select()
-      .single()
-    if (error) throw error
-    return data as FacilitadorNegocio
-  },
-
-  /**
    * El dueno aprueba o rechaza una solicitud de apadrinamiento.
    */
   async responderSolicitud(vinculacionId: string, estado: 'aprobado' | 'rechazado'): Promise<void> {
