@@ -73,15 +73,20 @@ export function AppLayout() {
     { to: '/explorar', label: 'Explorar oficios', end: false },
     { to: '/mapa', label: 'Mapa comunal', end: false },
     {
-      // El facilitador no publica: acompaña a quien publica. Mandarlo al
+      // Sigue al rol activo, no al tipo de cuenta. Mirando el tipo, un
+      // facilitador en modo Cliente seguia leyendo "Negocios que apoyo"
+      // mientras tenia delante su panel de cliente, y un negocio en modo
+      // Cliente iba a parar al editor, que ahora le pide cambiar de rol.
+      //
+      // El facilitador tampoco publica: acompaña a quien publica. Mandarlo al
       // editor le abria un "Crear mi negocio" en blanco, que es justo lo que
       // su rol no debe hacer.
-      to: profile
-        ? profile.account_type === 'business'
+      to: !profile
+        ? '/registro'
+        : activeRole === 'business'
           ? '/panel/negocio'
-          : '/panel'
-        : '/registro',
-      label: profile?.account_type === 'facilitador' ? 'Negocios que apoyo' : 'Publicar servicio',
+          : '/panel',
+      label: activeRole === 'facilitador' ? 'Negocios que apoyo' : 'Publicar servicio',
       end: false,
     },
     { to: '/como-funciona', label: 'Cómo funciona', end: false },
