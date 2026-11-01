@@ -280,4 +280,38 @@ export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
   }
 }
 
-
+/**
+ * Extrae un mensaje de error legible sin tapar la causa real cuando viene de
+ * Supabase (PostgrestError), una promesa rechazada o un objeto plano.
+ */
+export function extractErrorMessage(
+  err: unknown,
+  fallback = 'Ocurrió un error inesperado.',
+): string {
+  if (err instanceof Error && err.message.trim().length > 0) return err.message
+  if (typeof err === 'string' && err.trim().length > 0) return err
+  if (typeof err === 'object' && err !== null) {
+    const candidate = err as {
+      message?: unknown
+      error_description?: unknown
+      details?: unknown
+      hint?: unknown
+    }
+    if (typeof candidate.message === 'string' && candidate.message.trim().length > 0) {
+      return candidate.message
+    }
+    if (
+      typeof candidate.error_description === 'string' &&
+      candidate.error_description.trim().length > 0
+    ) {
+      return candidate.error_description
+    }
+    if (typeof candidate.details === 'string' && candidate.details.trim().length > 0) {
+      return candidate.details
+    }
+    if (typeof candidate.hint === 'string' && candidate.hint.trim().length > 0) {
+      return candidate.hint
+    }
+  }
+  return fallback
+}
