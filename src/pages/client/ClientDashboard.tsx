@@ -169,7 +169,7 @@ export default function ClientDashboard() {
             </div>
           </div>
         ) : (
-          <dl className="mt-2 grid gap-1 text-sm text-ink-700">
+          <dl className="mt-2 grid gap-x-8 gap-y-1 text-sm text-ink-700 sm:grid-cols-2">
             <div className="flex gap-2">
               <dt className="font-medium">Nombre:</dt>
               <dd>{profile?.full_name}</dd>
