@@ -181,23 +181,28 @@ export default function FacilitatorDashboard() {
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Información personal</p>
             <h2 id="datos-cuenta" className="mt-1 font-bold text-ink-900">Datos de la cuenta</h2>
           </div>
-          {!editandoPerfil && (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setNuevoNombre(profile?.full_name ?? '')
-                setNuevoTelefono(profile?.phone ?? '')
-                setNuevoBarrio(profile?.neighborhood ?? '')
-                setEditandoPerfil(true)
-              }}
-            >
-              Editar datos
-            </Button>
-          )}
-          {/* Fuera del panel de edicion: ese se cierra al guardar. */}
-          <AvisoGuardado visible={confirmacionPerfil.visible} />
+          {/* Botón y aviso van juntos: sueltos, `justify-between` repartía
+              entre tres y dejaba el botón flotando a media tarjeta, porque el
+              aviso ocupa sitio aunque esté invisible. */}
+          <div className="flex items-center gap-2">
+            {!editandoPerfil && (
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setNuevoNombre(profile?.full_name ?? '')
+                  setNuevoTelefono(profile?.phone ?? '')
+                  setNuevoBarrio(profile?.neighborhood ?? '')
+                  setEditandoPerfil(true)
+                }}
+              >
+                Editar datos
+              </Button>
+            )}
+            {/* Fuera del panel de edicion: ese se cierra al guardar. */}
+            <AvisoGuardado visible={confirmacionPerfil.visible} />
+          </div>
         </div>
 
         {editandoPerfil ? (
