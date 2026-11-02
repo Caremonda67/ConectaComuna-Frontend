@@ -23,8 +23,22 @@ export interface ServicioSugeridoAi {
   categoria: string
 }
 
+/**
+ * Lo que el copiloto puede HACER, no solo contar.
+ *
+ * Toda acción pasa por la misma puerta: el modelo propone, la tarjeta de
+ * confirmación muestra exactamente qué va a cambiar, y la persona acepta. La
+ * validación de verdad vive en la base —el tope del 50% del anticipo es un
+ * `CHECK` de Postgres, no una instrucción del prompt—, así que el modelo no
+ * puede saltársela ni equivocándose.
+ */
 export type TipoAccionPendiente =
   | 'activar_negocio'
+  | 'generar_codigo_apadrinamiento'
+  | 'cambiar_precio_servicio'
+  | 'aceptar_pedido'
+  | 'nota_avance_pedido'
+  | 'actualizar_horario'
   | 'guardar_servicio'
   | 'vincular_facilitador'
   | 'crear_trato_seguro'
@@ -110,8 +124,24 @@ export interface ContextoUsuarioCopiloto {
     pedidosFinalizados?: number
     calificacion?: number
     resenas?: number
+    /**
+     * El catálogo con identificadores, no solo cuántos hay.
+     *
+     * Sin esto el copiloto no puede cambiar un precio: sabría que la persona
+     * tiene 3 servicios, pero no cuáles ni cómo nombrarlos para actuar sobre
+     * uno. Una acción sin identificador es una acción que adivina.
+     */
+    servicios?: Array<{ id: string; nombre: string; precio: number | null }>
   } | null
   pedidosActivos?: PedidoActivoCopiloto[]
+  /**
+   * Cuántos pedidos activos hay en total.
+   *
+   * `pedidosActivos` viene recortado para no inflar el prompt. Sin este
+   * número el asistente presentaba la lista recortada como si fuera completa
+   * y afirmaba "tienes 5 pedidos" cuando había más.
+   */
+  totalPedidosActivos?: number
   pantallaActual?: {
     ruta: string
     negocioId?: string | null

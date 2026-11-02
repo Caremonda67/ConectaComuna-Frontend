@@ -17,6 +17,7 @@ import { estaEnZonaPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
 import { orderService } from '@/services/orderService'
+import { facilitadorService } from '@/services/facilitadorService'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
 import type { Order, ServiceCatalogItem } from '@/types'
@@ -167,6 +168,18 @@ export function AsistenteComunalModal() {
   const [errorVoz, setErrorVoz] = useState<string | null>(null)
   const [ejecutandoAccion, setEjecutandoAccion] = useState(false)
   const [pedidosUsuario, setPedidosUsuario] = useState<PedidoActivoCopiloto[]>([])
+  /**
+   * Trabajos cerrados, contados de la lista real de pedidos.
+   *
+   * No se usa `business.completed_orders`: ese contador y la suma de pedidos
+   * salen de fuentes distintas y llegaron a discrepar —el panel mostró
+   * "$30.000 en 61 servicios"—. El panel ya se corrigió contando sobre los
+   * pedidos; el copiloto tiene que leer de la misma fuente o volverá a decir
+   * un número que la pantalla de al lado desmiente.
+   */
+  const [finalizadosReales, setFinalizadosReales] = useState(0)
+  /** Cuántos pedidos activos hay en total, aunque se manden menos al modelo. */
+  const [totalPedidosActivos, setTotalPedidosActivos] = useState(0)
   const [comprobante, setComprobante] = useState<Order | null>(null)
   const [cargandoComprobante, setCargandoComprobante] = useState<string | null>(null)
 
@@ -189,9 +202,19 @@ export function AsistenteComunalModal() {
         }
         if (cancelado) return
 
-        const filtrados: PedidoActivoCopiloto[] = orders
-          .filter((o) => ['pending', 'accepted', 'in_progress'].includes(o.status))
-          .slice(0, 5)
+        // Antes se cortaba en 5, ordenados del mas nuevo al mas viejo, y el
+        // copiloto no sabia que faltaban: con 7 pedidos activos decia "tienes
+        // 5" con total seguridad, y los invisibles eran los mas antiguos,
+        // justo los que llevan mas tiempo esperando respuesta.
+        //
+        // Ahora se mandan hasta 15 y, por separado, cuantos hay de verdad,
+        // para que nunca presente una lista recortada como si fuera completa.
+        const activos = orders.filter((o) =>
+          ['pending', 'accepted', 'in_progress'].includes(o.status),
+        )
+        setTotalPedidosActivos(activos.length)
+        const filtrados: PedidoActivoCopiloto[] = activos
+          .slice(0, 15)
           .map((o) => ({
             id: o.id,
             codigo: `CC-${o.id.slice(0, 8).toUpperCase()}`,
@@ -204,6 +227,7 @@ export function AsistenteComunalModal() {
           }))
 
         setPedidosUsuario(filtrados)
+        setFinalizadosReales(orders.filter((o) => o.status === 'completed').length)
 
         // Si el usuario tiene pactos activos, enriquecer las sugerencias del saludo inicial
         if (filtrados.length > 0) {
@@ -344,12 +368,18 @@ export function AsistenteComunalModal() {
                 categoria: business.category,
                 serviciosCount: business.services_catalog?.length || 0,
                 verificado: business.verification_status === 'verified',
-                pedidosFinalizados: business.completed_orders ?? 0,
+                pedidosFinalizados: finalizadosReales,
+                servicios: (business.services_catalog ?? []).map((sv) => ({
+                  id: sv.id,
+                  nombre: sv.name,
+                  precio: sv.price,
+                })),
                 calificacion: business.rating_avg ?? 0,
                 resenas: business.rating_count ?? 0,
               }
             : { tieneNegocio: false },
           pedidosActivos: pedidosUsuario,
+          totalPedidosActivos,
           pantallaActual: {
             ruta: location.pathname,
           },
@@ -405,7 +435,7 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario, finalizadosReales, totalPedidosActivos]
   )
 
   const solicitarUbicacionGps = useCallback(() => {
@@ -545,10 +575,26 @@ export function AsistenteComunalModal() {
     }
   }, [isOpen])
 
+  /** Mensaje del asistente metido en la conversación sin pasar por el motor. */
+  const responderEnChat = (texto: string, sugerencias: string[] = []) => {
+    setMensajes((prev) => [
+      ...prev,
+      {
+        id: `accion-${Date.now()}`,
+        emisor: 'asistente',
+        texto,
+        fecha: new Date(),
+        respuestaEstructurada: { mensaje: '', tipo: 'conversacion', sugerencias },
+      },
+    ])
+  }
+
   // Ejecutar acción de mutación confirmada por el usuario
   const ejecutarAccionConfirmada = async (accion?: AccionPendienteAi) => {
     setEjecutandoAccion(true)
     try {
+      // Sin acción declarada se asume la única que existía antes, para no
+      // romper conversaciones ya abiertas cuando el modelo responde sin tipo.
       if (accion?.tipo === 'activar_negocio' || !accion) {
         if (userId) {
           await profileService.update(userId, { account_type: 'business' })
@@ -557,9 +603,153 @@ export function AsistenteComunalModal() {
         detenerLecturaVoz()
         cerrarAsistente()
         navigate('/panel/negocio')
+        return
       }
+
+      if (accion.tipo === 'generar_codigo_apadrinamiento') {
+        if (!business?.id) {
+          responderEnChat(
+            'Para generar el código primero necesitas tener tu negocio creado. Te llevo a crearlo cuando quieras.',
+            ['Ir a mi negocio'],
+          )
+          return
+        }
+        const codigo = await facilitadorService.generarCodigo(business.id)
+        responderEnChat(
+          `Listo. Tu código de apadrinamiento es **${codigo}**.\n\nEntrégaselo en persona a quien va a ayudarte —un familiar, un vecino o tu facilitador comunitario—. Sirve una sola vez y vence en 24 horas. Con él podrá editar tu negocio: fotos, precios y catálogo.\n\nNo lo publiques ni lo mandes a grupos: quien lo tenga puede tomar el control de tu ficha.`,
+          ['Ir a mi negocio', 'Ver quién puede editar mi negocio'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'cambiar_precio_servicio') {
+        const { servicioId, precioNuevo } = (accion.payload ?? {}) as {
+          servicioId?: string
+          precioNuevo?: number
+        }
+        const catalogo = business?.services_catalog ?? []
+        const servicio = catalogo.find((s) => s.id === servicioId)
+        if (!business?.id || !servicio || typeof precioNuevo !== 'number') {
+          responderEnChat(
+            'No tengo claro cuál servicio ni a qué precio. Dímelo así: «sube el corte de cabello a 30 mil».',
+            ['Ver mi catálogo'],
+          )
+          return
+        }
+        await businessService.upsert(business.owner_id, {
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          services_catalog: catalogo.map((s) =>
+            s.id === servicioId ? { ...s, price: precioNuevo } : s,
+          ),
+        })
+        await refresh()
+        responderEnChat(
+          `Listo. "${servicio.name}" queda en $ ${precioNuevo.toLocaleString('es-CO')}. Ya se ve así en tu ficha del directorio.`,
+          ['Ver mi catálogo', 'Cambiar otro precio'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'aceptar_pedido') {
+        const { pedidoId, precioFinal, anticipo } = (accion.payload ?? {}) as {
+          pedidoId?: string
+          precioFinal?: number
+          anticipo?: number
+        }
+        if (!pedidoId || typeof precioFinal !== 'number') {
+          responderEnChat('Para aceptar el pedido necesito el precio acordado.', ['Ver mis pedidos'])
+          return
+        }
+        // El tope del 50% no se comprueba aquí a propósito: lo impone la base
+        // con un CHECK. Si el modelo propusiera más, la base lo rechaza y el
+        // error llega al catch. Validar en dos sitios invita a que se
+        // desincronicen y a que alguien crea que basta con el de arriba.
+        await orderService.updateStatus(pedidoId, 'accepted', {
+          finalPrice: precioFinal,
+          advancePayment: anticipo ?? 0,
+        })
+        responderEnChat(
+          `Pedido aceptado por $ ${precioFinal.toLocaleString('es-CO')}${
+            anticipo ? `, con anticipo de $ ${anticipo.toLocaleString('es-CO')}` : ''
+          }. El cliente ya puede ver el comprobante del Trato Seguro.`,
+          ['Ver mis pedidos'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'nota_avance_pedido') {
+        const { pedidoId, nota } = (accion.payload ?? {}) as { pedidoId?: string; nota?: string }
+        if (!pedidoId || !nota?.trim()) {
+          responderEnChat('¿Qué le cuento al cliente sobre cómo va el trabajo?', ['Ver mis pedidos'])
+          return
+        }
+        await orderService.guardarNotaAvance(pedidoId, nota.trim())
+        responderEnChat(
+          `Nota guardada. El cliente la va a ver en su panel: "${nota.trim()}"`,
+          ['Ver mis pedidos'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'actualizar_horario') {
+        const { dias, opens, closes, cerrado } = (accion.payload ?? {}) as {
+          dias?: number[]
+          opens?: string
+          closes?: string
+          cerrado?: boolean
+        }
+        if (!business?.id || !Array.isArray(dias) || dias.length === 0) {
+          responderEnChat(
+            'Dime qué días y a qué horas, por ejemplo: «los sábados abro de 9 a 2».',
+            ['Ir a mi negocio'],
+          )
+          return
+        }
+        const horarioActual = business.hours ?? []
+        const nuevos = horarioActual.map((h) =>
+          dias.includes(h.day)
+            ? {
+                ...h,
+                closed: !!cerrado,
+                opens: cerrado ? null : (opens ?? h.opens),
+                closes: cerrado ? null : (closes ?? h.closes),
+              }
+            : h,
+        )
+        await businessService.upsert(business.owner_id, {
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          hours: nuevos,
+        })
+        await refresh()
+        responderEnChat('Horario actualizado. Así lo van a ver los vecinos en tu ficha.', [
+          'Ver mi negocio',
+        ])
+        return
+      }
+
+      // Tipos declarados pero todavía sin implementar. Antes el botón se
+      // quedaba girando sin hacer nada y sin decir por qué.
+      responderEnChat(
+        'Esa acción todavía no la puedo hacer yo desde el chat. Te llevo a la pantalla donde sí se puede.',
+        ['Ir a mi negocio'],
+      )
     } catch (err) {
       console.error('Error al ejecutar acción confirmada:', err)
+      // El motivo que da la base suele ser la respuesta correcta y está
+      // escrito para la persona: «El anticipo no puede pasar del 50% del
+      // precio», «Ese cambio de estado no está permitido». Esconderlo tras un
+      // mensaje genérico deja a alguien sin saber qué corregir.
+      const motivo = err instanceof Error ? err.message : ''
+      responderEnChat(
+        motivo
+          ? `No se pudo: ${motivo}`
+          : 'No pude completar la acción. Vuelve a intentarlo en un momento, o hazlo desde el panel de tu negocio.',
+        ['Ir a mi negocio'],
+      )
     } finally {
       setEjecutandoAccion(false)
     }
