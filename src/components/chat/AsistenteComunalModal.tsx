@@ -1315,8 +1315,14 @@ export function AsistenteComunalModal() {
                       </div>
                     )}
 
-                    {/* Tarjeta de Confirmación de Acción Explícita */}
-                    {estructurada && estructurada.tipo === 'confirmacion_accion' && (
+                    {/* Tarjeta de Confirmación de Acción Explícita.
+                        Se pinta si el modelo marca el tipo O si simplemente
+                        mandó una `accionPendiente`: el modelo acertaba el
+                        objeto pero a veces erraba el `tipo`, y entonces la
+                        tarjeta no salía, la acción no se ejecutaba y el texto
+                        decía que sí. Mejor pintarla de más que tragarse una
+                        acción que la persona pidió. */}
+                    {estructurada && (estructurada.tipo === 'confirmacion_accion' || estructurada.accionPendiente) && (
                       <div className="mt-3 w-full max-w-[95%] card-soft p-3.5 border-2 border-amber-400/80 dark:border-amber-500/60 rounded-2xl shadow-xs">
                         <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">
                           <UI_ICONS.alert size={15} />
