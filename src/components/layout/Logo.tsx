@@ -4,7 +4,14 @@ interface LogoProps {
   iconOnly?: boolean
   /** Usar versión blanca (para fondos oscuros forzados) */
   variant?: 'green' | 'white'
-  /** Oculta el texto en móviles muy angostos (<440px), útil para cabeceras con poco espacio */
+  /**
+   * Oculta el texto solo en pantallas de menos de 360px.
+   *
+   * Antes el corte estaba en 440px y eso dejaba el nombre fuera de **casi
+   * todos los teléfonos**: iPhone SE mide 375, iPhone 13 mide 390, los Android
+   * corrientes van de 360 a 412. El umbral estaba justo por encima de los
+   * aparatos reales, así que la marca solo aparecía en computador.
+   */
   hideTextOnMobile?: boolean
 }
 
@@ -57,8 +64,8 @@ export function Logo({
       {!iconOnly && (
         <span
           className={`${
-            hideTextOnMobile ? 'hidden min-[440px]:inline' : 'inline'
-          } text-base sm:text-xl font-bold tracking-tight whitespace-nowrap ${
+            hideTextOnMobile ? 'hidden min-[360px]:inline' : 'inline'
+          } text-[15px] min-[400px]:text-base sm:text-xl font-bold tracking-tight whitespace-nowrap ${
             isWhite ? 'text-white' : 'text-ink-900'
           }`}
         >

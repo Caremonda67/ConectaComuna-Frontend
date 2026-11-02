@@ -443,6 +443,47 @@ export const orderService = {
     return mapDbOrder(data)
   },
 
+  /**
+   * Deja la nota con la que el taller le cuenta al cliente cómo va el trabajo.
+   *
+   * Tiene función propia en la base, y no es un capricho: la nota se guardaba
+   * llamando a `cambiar_estado_pedido`, que **exige mover el pedido de
+   * estado**. Quedarse en el mismo estado no está en su tabla de transiciones,
+   * así que guardar una nota siempre fallaba con «Ese cambio de estado no está
+   * permitido». Dejar una nota no cambia el estado: es otra operación.
+   *
+   * Requiere `migracion-nota-avance.sql` aplicada.
+   */
+  async guardarNotaAvance(orderId: string, nota: string | null): Promise<Order> {
+    const limpia = nota?.trim() ? nota.trim() : null
+
+    if (isDemoMode) {
+      const db = mutateDb((d) => {
+        const o = d.orders.find((x) => x.id === orderId)
+        if (o) {
+          o.business_notes = limpia
+          o.updated_at = new Date().toISOString()
+        }
+      })
+      return delay(hydrate(db.orders.find((o) => o.id === orderId)!))
+    }
+
+    const { error } = await requireSupabase().rpc('guardar_nota_avance', {
+      p_pedido: orderId,
+      p_nota: limpia,
+    })
+    if (error) throw new Error(error.message)
+
+    // La función devuelve la fila pelada; la tarjeta necesita las relaciones.
+    const { data, error: errorLectura } = await requireSupabase()
+      .from('orders')
+      .select(await columnasDePedido())
+      .eq('id', orderId)
+      .single()
+    if (errorLectura) throw errorLectura
+    return mapDbOrder(data)
+  },
+
   /** Pedido completo para abrir el comprobante dentro del chat. */
   async getForReceipt(orderId: string): Promise<Order | null> {
     if (isDemoMode) {

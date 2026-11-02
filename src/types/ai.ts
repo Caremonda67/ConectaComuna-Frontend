@@ -99,6 +99,17 @@ export interface ContextoUsuarioCopiloto {
     categoria?: string | null
     serviciosCount?: number
     verificado?: boolean
+    /**
+     * Cifras del negocio, para que el copiloto pueda responder «¿cuántos
+     * trabajos llevo?» en vez de decir que ninguno.
+     *
+     * Antes no llegaban, y el asistente solo veía los pedidos **activos**
+     * (pendiente, aceptado, en curso): preguntarle por los finalizados daba
+     * siempre cero, aunque los hubiera.
+     */
+    pedidosFinalizados?: number
+    calificacion?: number
+    resenas?: number
   } | null
   pedidosActivos?: PedidoActivoCopiloto[]
   pantallaActual?: {

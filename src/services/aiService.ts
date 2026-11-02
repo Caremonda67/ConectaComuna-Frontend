@@ -117,7 +117,11 @@ function categoriaPedida(texto: string): string | null {
   return null
 }
 
-function generarRespuestaLocal(
+/**
+ * Exportada solo para las pruebas: es el motor que responde cuando no hay
+ * backend, y el que decide qué sabe el copiloto de su propio negocio.
+ */
+export function generarRespuestaLocal(
   mensaje: string,
   barrioParam?: string | null,
   historial: MensajeChat[] = [],
@@ -191,6 +195,61 @@ function generarRespuestaLocal(
       mensaje: `Entendido, ${nombreUsuario}. Tu cuenta continúa en rol de Cliente para buscar, consultar y contactar los mejores oficios de la comuna. ¿En qué te colaboro hoy?`,
       tipo: 'conversacion',
       sugerencias: ['Oficios cerca de mí', 'Ver en el mapa', '¿Cómo funciona el Trato Seguro?'],
+    }
+  }
+
+  // 2a-bis. Cómo le va al negocio: trabajos finalizados, calificación, reseñas.
+  //
+  // Esta rama va ANTES de la de pedidos activos a propósito. La de abajo solo
+  // mira `pedidosActivos`, que trae pendientes, aceptados y en curso —los
+  // finalizados quedan fuera por definición—, así que "¿cuántos pedidos he
+  // finalizado?" caía ahí y respondía que ninguno aunque los hubiera. Para un
+  // emprendedor esa respuesta no es un detalle: es el asistente diciéndole que
+  // su trabajo no existe.
+  const esConsultaDesempeno =
+    texto.includes('finalizado') ||
+    texto.includes('finalizados') ||
+    texto.includes('terminado') ||
+    texto.includes('terminados') ||
+    texto.includes('completado') ||
+    texto.includes('completados') ||
+    texto.includes('cuántos trabajos') ||
+    texto.includes('cuantos trabajos') ||
+    texto.includes('cuántos pedidos') ||
+    texto.includes('cuantos pedidos') ||
+    texto.includes('cuántos servicios') ||
+    texto.includes('cuantos servicios') ||
+    texto.includes('mi calificación') ||
+    texto.includes('mi calificacion') ||
+    texto.includes('mis reseñas') ||
+    texto.includes('mis resenas') ||
+    texto.includes('cómo va mi negocio') ||
+    texto.includes('como va mi negocio')
+
+  if (esConsultaDesempeno && esEmprendedor && tieneNegocio) {
+    const finalizados = contexto?.negocioPropio?.pedidosFinalizados ?? 0
+    const resenas = contexto?.negocioPropio?.resenas ?? 0
+    const calificacion = contexto?.negocioPropio?.calificacion ?? 0
+    const activos = Array.isArray(contexto?.pedidosActivos) ? contexto.pedidosActivos.length : 0
+
+    const lineas = [
+      `• Trabajos finalizados: **${finalizados}**`,
+      `• Trabajos en curso ahora: **${activos}**`,
+      resenas > 0
+        ? `• Calificación: **${calificacion.toFixed(1)}** de 5, con ${resenas} ${resenas === 1 ? 'reseña' : 'reseñas'}`
+        : `• Todavía no tienes reseñas. Llegan cuando el cliente califica un trabajo finalizado.`,
+    ].join('\n')
+
+    const cierre =
+      finalizados === 0
+        ? '\n\nTodavía no has cerrado ningún trabajo por la plataforma. Un pedido cuenta como finalizado cuando lo marcas así desde tu panel: ahí se suma a tu historial y el cliente puede calificarte.'
+        : '\n\nCada trabajo que marcas como finalizado suma a tu historial y habilita que el cliente te califique.'
+
+    return {
+      mensaje: `${nombreUsuario}, así va **${nombreNegocio}**:\n\n${lineas}${cierre}`,
+      tipo: 'navegacion',
+      rutaNavegacion: '/panel/negocio',
+      sugerencias: ['Ir al panel de mi negocio', 'Ver mis pedidos en curso', '¿Cómo consigo más reseñas?'],
     }
   }
 
