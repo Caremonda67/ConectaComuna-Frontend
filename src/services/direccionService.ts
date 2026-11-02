@@ -7,6 +7,16 @@ import type { Coordinates, DireccionUsuario } from '@/types'
 export interface UbicacionGeocodificada {
   etiqueta: string
   center: Coordinates
+  /**
+   * La calle o el sitio concreto, para distinguir resultados que comparten
+   * etiqueta.
+   *
+   * `etiqueta` se simplifica a "barrio, ciudad" porque es lo que la gente
+   * reconoce. El problema aparece al elegir entre varios: buscar una carrera
+   * devolvía tres opciones y dos se leían igual, "El Retiro, Cali", así que
+   * no había forma de saber cuál era cuál.
+   */
+  detalle?: string
 }
 
 export interface DireccionInput {
@@ -144,6 +154,23 @@ function puntoSinNombre(coords: Coordinates): string {
  * La respuesta trae el mismo lugar bajo nombres distintos según el país y el
  * tipo de vía, por eso la cascada de alternativas.
  */
+/**
+ * Lo que distingue un resultado de otro: la vía o el sitio con nombre.
+ *
+ * Nominatim manda el `display_name` completo, que es larguísimo y acaba en
+ * "Valle del Cauca, Colombia". Aquí se recortan las dos primeras partes, que
+ * es donde está la calle y el barrio.
+ */
+function detalleDeDireccion(
+  address: Record<string, string> | undefined,
+  respaldo: string,
+): string {
+  const a = address || {}
+  const via = a.road || a.pedestrian || a.amenity || a.shop || a.building || ''
+  if (via) return via
+  return respaldo.split(',').slice(0, 2).join(',').trim()
+}
+
 function etiquetarDireccion(
   address: Record<string, string> | undefined,
   respaldo: string,
@@ -191,14 +218,21 @@ export async function geocodificar(texto: string): Promise<UbicacionGeocodificad
       if (Array.isArray(data) && data.length > 0) {
         // Nominatim devuelve el mismo lugar varias veces (el polígono y su
         // nodo, por ejemplo) y al simplificar la etiqueta quedan idénticos.
+        //
+        // Se agrupa por calle y barrio, no por coordenada: una carrera larga
+        // llega partida en varios tramos, y al elegir salían tres opciones
+        // con el texto exacto "Carrera 39 · El Retiro, Cali". Entre esas, la
+        // persona no puede escoger —son la misma respuesta—, y además luego
+        // puede mover el punto a mano.
         const vistos = new Set<string>()
         return data
           .map((r) => ({
             etiqueta: etiquetarDireccion(r.address, r.display_name),
             center: { lat: Number(r.lat), lng: Number(r.lon) },
+            detalle: detalleDeDireccion(r.address, r.display_name),
           }))
           .filter((hit) => {
-            const clave = `${hit.etiqueta}|${hit.center.lat.toFixed(3)},${hit.center.lng.toFixed(3)}`
+            const clave = `${hit.detalle || ''}|${hit.etiqueta}`.toLowerCase()
             if (vistos.has(clave)) return false
             vistos.add(clave)
             return true

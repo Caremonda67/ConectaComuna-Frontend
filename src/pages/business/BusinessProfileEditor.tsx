@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
-import { reverseGeocodificar } from '@/services/direccionService'
+import { geocodificar, reverseGeocodificar } from '@/services/direccionService'
+import type { UbicacionGeocodificada } from '@/services/direccionService'
 import { DAY_NAMES, cn, formatCurrency } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
@@ -208,6 +209,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
@@ -226,6 +228,9 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
     managedBusiness ? { lat: managedBusiness.lat, lng: managedBusiness.lng } : COMUNA_CENTER,
   )
   const [resolviendoBarrio, setResolviendoBarrio] = useState(false)
+  const [buscandoDireccion, setBuscandoDireccion] = useState(false)
+  const [opcionesDireccion, setOpcionesDireccion] = useState<UbicacionGeocodificada[]>([])
+  const [avisoDireccion, setAvisoDireccion] = useState<string | null>(null)
   const [photos, setPhotos] = useState<string[]>(managedBusiness?.photos ?? [])
 
   /**
@@ -247,6 +252,57 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       setResolviendoBarrio(false)
     }
   }
+  /**
+   * Busca en el mapa la dirección escrita y mueve el punto allí.
+   *
+   * Hasta ahora esto iba en un solo sentido: el punto rellenaba el barrio,
+   * pero la dirección escrita no hacía nada. Se podía tener "cra 39 #52-56"
+   * con el punto a diez cuadras y nada avisaba, porque son dos datos que
+   * nunca se hablaban. El que manda para las búsquedas por cercanía es el
+   * punto, así que la dirección quedaba de adorno.
+   *
+   * No se busca mientras se escribe, a propósito: el geocodificador de
+   * OpenStreetMap pide como mucho una consulta por segundo, y un punto que
+   * salta solo mientras tecleas asusta. Lo pide la persona cuando acaba.
+   */
+  async function buscarDireccionEnMapa() {
+    const direccion = (getValues('address') ?? '').trim()
+    if (!direccion) {
+      setAvisoDireccion('Escribe primero la dirección o un punto de referencia.')
+      return
+    }
+
+    setBuscandoDireccion(true)
+    setAvisoDireccion(null)
+    setOpcionesDireccion([])
+    try {
+      // Una dirección suelta como "cra 39 #52-56" existe en media Colombia.
+      // Se le añade el barrio y la ciudad que ya haya para acotar la búsqueda.
+      const pistas = (getValues('neighborhood') ?? '').trim()
+      const consulta = pistas ? `${direccion}, ${pistas}` : `${direccion}, Cali`
+      const hits = await geocodificar(consulta)
+
+      if (hits.length === 0) {
+        setAvisoDireccion(
+          'No encontré esa dirección en el mapa. Puedes marcar el punto a mano tocando el mapa: eso es lo que de verdad usan los vecinos para encontrarte.',
+        )
+        return
+      }
+      if (hits.length === 1) {
+        await marcarPunto(hits[0].center)
+        setAvisoDireccion('Listo, moví el punto a esa dirección. Revisa que sea el sitio correcto.')
+        return
+      }
+      setOpcionesDireccion(hits)
+    } catch {
+      setAvisoDireccion(
+        'No se pudo consultar el mapa en este momento. Marca el punto a mano tocando el mapa.',
+      )
+    } finally {
+      setBuscandoDireccion(false)
+    }
+  }
+
   const [hours, setHours] = useState<BusinessHours[]>(
     managedBusiness?.hours?.length ? managedBusiness.hours : emptyHours(),
   )
@@ -433,11 +489,66 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           error={errors.whatsapp?.message}
           {...register('whatsapp')}
         />
-        <TextField
-          label="Dirección o punto de referencia"
-          error={errors.address?.message}
-          {...register('address')}
-        />
+        <div className="space-y-2">
+          <TextField
+            label="Dirección o punto de referencia"
+            hint="Escríbela y toca «Buscar en el mapa» para que el punto se ponga solo. Si no la encuentra, marca el punto a mano: eso es lo que vale."
+            error={errors.address?.message}
+            {...register('address')}
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            loading={buscandoDireccion}
+            onClick={buscarDireccionEnMapa}
+          >
+            Buscar en el mapa
+          </Button>
+
+          {avisoDireccion && (
+            <p role="status" className="text-xs text-ink-600">
+              {avisoDireccion}
+            </p>
+          )}
+
+          {/* Con varios resultados no se elige por la persona: una dirección
+              como "cra 39 #52-56" existe en varios barrios, y poner el punto
+              en el equivocado manda a los vecinos a otro lado. */}
+          {opcionesDireccion.length > 1 && (
+            <div className="rounded-xl border border-ink-200 p-2">
+              <p className="mb-1 text-xs font-medium text-ink-700">
+                Encontré varios sitios. ¿Cuál es el tuyo?
+              </p>
+              <ul className="space-y-1">
+                {opcionesDireccion.map((o) => (
+                  <li key={`${o.etiqueta}-${o.center.lat}-${o.center.lng}`}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void marcarPunto(o.center)
+                        setOpcionesDireccion([])
+                        setAvisoDireccion('Listo, moví el punto ahí. Revisa que sea el sitio correcto.')
+                      }}
+                      className="w-full rounded-lg px-2 py-1.5 text-left hover:bg-cream-200 cursor-pointer"
+                    >
+                      {/* El detalle va primero porque es lo que diferencia una
+                          opción de otra: sin él, dos resultados distintos se
+                          leían igual, "El Retiro, Cali", y no había forma de
+                          elegir. */}
+                      <span className="block text-sm font-medium text-ink-800">
+                        {o.detalle || o.etiqueta}
+                      </span>
+                      {o.detalle && (
+                        <span className="block text-xs text-ink-500">{o.etiqueta}</span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
         <TextField
           label="Barrio"
           hint={
@@ -463,6 +574,10 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             zoom={16}
           />
           <p className="mt-1 text-xs text-ink-500">
+            Este punto es el que usan las búsquedas por cercanía. Si no coincide con la
+            dirección que escribiste, manda el punto.
+          </p>
+          <p className="mt-0.5 text-xs text-ink-500">
             Coordenadas: {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
           </p>
         </div>
