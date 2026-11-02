@@ -167,6 +167,16 @@ export function AsistenteComunalModal() {
   const [errorVoz, setErrorVoz] = useState<string | null>(null)
   const [ejecutandoAccion, setEjecutandoAccion] = useState(false)
   const [pedidosUsuario, setPedidosUsuario] = useState<PedidoActivoCopiloto[]>([])
+  /**
+   * Trabajos cerrados, contados de la lista real de pedidos.
+   *
+   * No se usa `business.completed_orders`: ese contador y la suma de pedidos
+   * salen de fuentes distintas y llegaron a discrepar —el panel mostró
+   * "$30.000 en 61 servicios"—. El panel ya se corrigió contando sobre los
+   * pedidos; el copiloto tiene que leer de la misma fuente o volverá a decir
+   * un número que la pantalla de al lado desmiente.
+   */
+  const [finalizadosReales, setFinalizadosReales] = useState(0)
   const [comprobante, setComprobante] = useState<Order | null>(null)
   const [cargandoComprobante, setCargandoComprobante] = useState<string | null>(null)
 
@@ -204,6 +214,7 @@ export function AsistenteComunalModal() {
           }))
 
         setPedidosUsuario(filtrados)
+        setFinalizadosReales(orders.filter((o) => o.status === 'completed').length)
 
         // Si el usuario tiene pactos activos, enriquecer las sugerencias del saludo inicial
         if (filtrados.length > 0) {
@@ -344,7 +355,7 @@ export function AsistenteComunalModal() {
                 categoria: business.category,
                 serviciosCount: business.services_catalog?.length || 0,
                 verificado: business.verification_status === 'verified',
-                pedidosFinalizados: business.completed_orders ?? 0,
+                pedidosFinalizados: finalizadosReales,
                 calificacion: business.rating_avg ?? 0,
                 resenas: business.rating_count ?? 0,
               }
@@ -405,7 +416,7 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario, finalizadosReales]
   )
 
   const solicitarUbicacionGps = useCallback(() => {
