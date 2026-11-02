@@ -17,6 +17,7 @@ import { estaEnZonaPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { businessService } from '@/services/businessService'
 import { profileService } from '@/services/profileService'
 import { orderService } from '@/services/orderService'
+import { facilitadorService } from '@/services/facilitadorService'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
 import type { Order, ServiceCatalogItem } from '@/types'
@@ -556,10 +557,26 @@ export function AsistenteComunalModal() {
     }
   }, [isOpen])
 
+  /** Mensaje del asistente metido en la conversación sin pasar por el motor. */
+  const responderEnChat = (texto: string, sugerencias: string[] = []) => {
+    setMensajes((prev) => [
+      ...prev,
+      {
+        id: `accion-${Date.now()}`,
+        emisor: 'asistente',
+        texto,
+        fecha: new Date(),
+        respuestaEstructurada: { mensaje: '', tipo: 'conversacion', sugerencias },
+      },
+    ])
+  }
+
   // Ejecutar acción de mutación confirmada por el usuario
   const ejecutarAccionConfirmada = async (accion?: AccionPendienteAi) => {
     setEjecutandoAccion(true)
     try {
+      // Sin acción declarada se asume la única que existía antes, para no
+      // romper conversaciones ya abiertas cuando el modelo responde sin tipo.
       if (accion?.tipo === 'activar_negocio' || !accion) {
         if (userId) {
           await profileService.update(userId, { account_type: 'business' })
@@ -568,9 +585,37 @@ export function AsistenteComunalModal() {
         detenerLecturaVoz()
         cerrarAsistente()
         navigate('/panel/negocio')
+        return
       }
+
+      if (accion.tipo === 'generar_codigo_apadrinamiento') {
+        if (!business?.id) {
+          responderEnChat(
+            'Para generar el código primero necesitas tener tu negocio creado. Te llevo a crearlo cuando quieras.',
+            ['Ir a mi negocio'],
+          )
+          return
+        }
+        const codigo = await facilitadorService.generarCodigo(business.id)
+        responderEnChat(
+          `Listo. Tu código de apadrinamiento es **${codigo}**.\n\nEntrégaselo en persona a quien va a ayudarte —un familiar, un vecino o tu facilitador comunitario—. Sirve una sola vez y vence en 24 horas. Con él podrá editar tu negocio: fotos, precios y catálogo.\n\nNo lo publiques ni lo mandes a grupos: quien lo tenga puede tomar el control de tu ficha.`,
+          ['Ir a mi negocio', 'Ver quién puede editar mi negocio'],
+        )
+        return
+      }
+
+      // Tipos declarados pero todavía sin implementar. Antes el botón se
+      // quedaba girando sin hacer nada y sin decir por qué.
+      responderEnChat(
+        'Esa acción todavía no la puedo hacer yo desde el chat. Te llevo a la pantalla donde sí se puede.',
+        ['Ir a mi negocio'],
+      )
     } catch (err) {
       console.error('Error al ejecutar acción confirmada:', err)
+      responderEnChat(
+        'No pude completar la acción. Vuelve a intentarlo en un momento, o hazlo desde el panel de tu negocio.',
+        ['Ir a mi negocio'],
+      )
     } finally {
       setEjecutandoAccion(false)
     }

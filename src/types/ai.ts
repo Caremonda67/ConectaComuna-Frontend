@@ -25,6 +25,7 @@ export interface ServicioSugeridoAi {
 
 export type TipoAccionPendiente =
   | 'activar_negocio'
+  | 'generar_codigo_apadrinamiento'
   | 'guardar_servicio'
   | 'vincular_facilitador'
   | 'crear_trato_seguro'

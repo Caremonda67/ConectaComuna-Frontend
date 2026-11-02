@@ -198,6 +198,60 @@ export function generarRespuestaLocal(
     }
   }
 
+  // 2a-ter. Código de apadrinamiento.
+  //
+  // El asistente llegó a responder que ConectaComuna «no cuenta con una opción
+  // para generar códigos de apadrinamiento», con el botón que lo genera a dos
+  // centímetros en el panel. No es que se equivocara en un detalle: inventó
+  // una limitación del producto, que es la peor clase de error que puede
+  // cometer un copiloto. La causa era simple: la palabra «apadrinamiento» no
+  // aparecía en ninguno de los dos motores, así que el modelo improvisaba.
+  //
+  // Aquí no solo lo sabe: lo hace. La acción se ejecuta tras confirmación,
+  // igual que activar el negocio.
+  const esCodigoApadrinamiento =
+    texto.includes('apadrinamiento') ||
+    texto.includes('apadrinar') ||
+    texto.includes('apadrina') ||
+    (texto.includes('codigo') && texto.includes('facilitador')) ||
+    (texto.includes('código') && texto.includes('facilitador'))
+
+  if (esCodigoApadrinamiento) {
+    if (!esAutenticado) {
+      return {
+        mensaje:
+          'El código de apadrinamiento lo genera el dueño del negocio desde su cuenta. Ingresa y te muestro cómo.',
+        tipo: 'navegacion',
+        rutaNavegacion: '/entrar',
+        sugerencias: ['Ingresar a mi cuenta', '¿Qué es un facilitador?'],
+      }
+    }
+
+    if (!tieneNegocio) {
+      return {
+        mensaje:
+          'El código de apadrinamiento sirve para que alguien de confianza te ayude a manejar tu negocio en la plataforma. Para generarlo primero hay que crear tu negocio.',
+        tipo: 'navegacion',
+        rutaNavegacion: '/panel/negocio',
+        sugerencias: ['Crear mi negocio', '¿Qué es un facilitador?'],
+      }
+    }
+
+    return {
+      mensaje: `${nombreUsuario}, sí se puede: el código de apadrinamiento deja que una persona de confianza —un familiar, un vecino o tu facilitador comunitario— edite las fotos, los precios y el catálogo de ${nombreNegocio}.\n\nSon 8 caracteres, sirve una sola vez y vence en 24 horas. Se entrega en mano, nunca por grupos: quien lo tenga puede tomar el control de tu ficha.\n\n¿Te lo genero ahora?`,
+      tipo: 'confirmacion_accion',
+      accionPendiente: {
+        tipo: 'generar_codigo_apadrinamiento',
+        titulo: 'Generar código de apadrinamiento',
+        descripcion:
+          'Crea un código de un solo uso, válido 24 horas, para que alguien de confianza pueda editar tu negocio. El código anterior deja de servir.',
+        botonConfirmar: '✅ Sí, generar el código',
+        botonCancelar: '❌ Ahora no',
+      },
+      sugerencias: ['✅ Sí, generar el código', '¿Qué puede hacer un facilitador?'],
+    }
+  }
+
   // 2a-bis. Cómo le va al negocio: trabajos finalizados, calificación, reseñas.
   //
   // Esta rama va ANTES de la de pedidos activos a propósito. La de abajo solo
