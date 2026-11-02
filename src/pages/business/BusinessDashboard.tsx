@@ -362,6 +362,10 @@ export default function BusinessDashboard() {
                 await orderService.updateStatus(o.id, status, options)
                 reload()
               }}
+              onSaveNote={async (nota) => {
+                await orderService.guardarNotaAvance(o.id, nota)
+                reload()
+              }}
             />
           ))}
         </div>
@@ -380,6 +384,10 @@ export default function BusinessDashboard() {
                 perspective="business"
                 onStatusChange={async (status: OrderStatus, options) => {
                   await orderService.updateStatus(o.id, status, options)
+                  reload()
+                }}
+                onSaveNote={async (nota) => {
+                  await orderService.guardarNotaAvance(o.id, nota)
                   reload()
                 }}
               />

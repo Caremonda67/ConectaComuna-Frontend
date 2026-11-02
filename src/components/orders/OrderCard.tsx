@@ -26,10 +26,16 @@ interface Props {
   /** 'business' habilita las transiciones de estado; 'client' habilita reseñar. */
   perspective: 'client' | 'business'
   onStatusChange?: (status: OrderStatus, options?: UpdateOrderStatusOptions) => Promise<void>
+  /**
+   * Guarda la nota de avance. Va aparte de `onStatusChange` porque dejar una
+   * nota no mueve el pedido: mezclarlas era justamente el fallo —la nota se
+   * enviaba por la función que exige transición de estado y nunca se guardaba.
+   */
+  onSaveNote?: (nota: string | null) => Promise<void>
   onReview?: (rating: number, comment: string) => Promise<void>
 }
 
-export function OrderCard({ order, perspective, onStatusChange, onReview }: Props) {
+export function OrderCard({ order, perspective, onStatusChange, onSaveNote, onReview }: Props) {
   const [busy, setBusy] = useState(false)
   const [reviewing, setReviewing] = useState(false)
   const [rating, setRating] = useState(5)
@@ -96,10 +102,10 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
   }
 
   async function guardarNota(nota: string | null) {
-    if (!onStatusChange) return
+    if (!onSaveNote) return
     setBusy(true)
     try {
-      await onStatusChange(order.status, { businessNotes: nota })
+      await onSaveNote(nota)
       setNoteOpen(false)
     } finally {
       setBusy(false)
@@ -246,11 +252,16 @@ export function OrderCard({ order, perspective, onStatusChange, onReview }: Prop
           </Button>
         ))}
 
-        {perspective === 'business' && order.status === 'in_progress' && (
-          <Button size="sm" variant="secondary" onClick={() => setNoteOpen(true)}>
-            Nota de avance
-          </Button>
-        )}
+        {/* También en 'accepted': el taller suele querer avisar algo ("ya
+            compré el material") antes de empezar formalmente el trabajo. La
+            base lo permite en los dos estados. */}
+        {perspective === 'business' &&
+          onSaveNote &&
+          (order.status === 'accepted' || order.status === 'in_progress') && (
+            <Button size="sm" variant="secondary" onClick={() => setNoteOpen(true)}>
+              {order.business_notes ? 'Editar nota de avance' : 'Nota de avance'}
+            </Button>
+          )}
 
         {/* Comprobante de Trato Seguro si no está cancelado */}
         {order.status !== 'cancelled' && (

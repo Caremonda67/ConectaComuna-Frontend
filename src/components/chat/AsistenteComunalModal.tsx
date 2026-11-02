@@ -344,6 +344,9 @@ export function AsistenteComunalModal() {
                 categoria: business.category,
                 serviciosCount: business.services_catalog?.length || 0,
                 verificado: business.verification_status === 'verified',
+                pedidosFinalizados: business.completed_orders ?? 0,
+                calificacion: business.rating_avg ?? 0,
+                resenas: business.rating_count ?? 0,
               }
             : { tieneNegocio: false },
           pedidosActivos: pedidosUsuario,
