@@ -118,6 +118,26 @@ function categoriaPedida(texto: string): string | null {
 }
 
 /**
+ * Lee un monto en pesos de una frase, como lo diría una persona del barrio.
+ *
+ * "30 mil", "30.000", "treinta mil" y "30" quieren decir lo mismo. El punto
+ * es separador de miles en Colombia, nunca decimal. Un número suelto menor a
+ * mil se entiende como miles: nadie cobra 30 pesos por un corte.
+ *
+ * Devuelve null si no hay un monto reconocible, y eso importa: antes se
+ * tomaba cualquier número de la frase, así que "cambia el precio del
+ * servicio 2" acababa poniendo un precio de $2.000.
+ */
+export function leerMonto(texto: string): number | null {
+  const m = texto.match(/(\d{1,3}(?:\.\d{3})+|\d+)\s*(mil|lucas)?/u)
+  if (!m) return null
+  const crudo = parseInt(m[1].replace(/\./gu, ''), 10)
+  if (!Number.isFinite(crudo) || crudo <= 0) return null
+  if (m[2]) return crudo * 1000
+  return crudo < 1000 ? crudo * 1000 : crudo
+}
+
+/**
  * Exportada solo para las pruebas: es el motor que responde cuando no hay
  * backend, y el que decide qué sabe el copiloto de su propio negocio.
  */
@@ -539,46 +559,128 @@ export function generarRespuestaLocal(
     }
   }
 
-  // 10. Intención de cambiar el precio
+  // 10 y 11. Cambiar el precio de un servicio que YA existe.
+  //
+  // El flujo anterior era falso de arriba abajo: contestaba "¡Precio
+  // actualizado! He guardado este cambio en la ficha" sin guardar nada, y
+  // ofrecía una tarjeta con un servicio inventado llamado "Servicio de oficio
+  // comunal". Al confirmar no editaba el precio: **creaba un producto nuevo**
+  // sin nombre. Quien lo usaba terminaba con el catálogo sucio creyendo que
+  // había cambiado una tarifa.
+  //
+  // Ahora se resuelve contra el catálogo real y se ejecuta de verdad.
+  // Si la pregunta anterior fue "¿A qué valor dejo X?" y ahora solo llega un
+  // monto, es la respuesta a esa pregunta. Sin esto la conversación perdía el
+  // hilo: el asistente preguntaba el precio, la persona tocaba "$40.000" y
+  // recibía una respuesta genérica, con el cambio sin hacer.
+  const preguntoPorValorDe = ultimoMensajeBot.match(/a qué valor dejo "(.+?)"/u)
+
   const esPeticionCambiarPrecio =
-    texto === 'cambiar el precio' ||
     texto.includes('cambiar el precio') ||
     texto.includes('cambiar precio') ||
+    texto.includes('cámbiale el precio') ||
+    texto.includes('cambiale el precio') ||
     texto.includes('modificar precio') ||
     texto.includes('ajustar precio') ||
     texto.includes('otro precio') ||
-    texto.includes('cambiar valor')
+    texto.includes('cambiar valor') ||
+    texto.includes('subir el precio') ||
+    texto.includes('bajar el precio') ||
+    /\b(sube|súbe|subir|baja|bája|bajar|ponle|pon|cobrar|cobro)\b[^]*\d/u.test(texto)
 
-  if (esPeticionCambiarPrecio) {
-    return {
-      mensaje: `¿A qué valor deseas cambiar el precio de tu servicio? Dime el nuevo monto (por ejemplo: "30 mil pesos") o toca uno de los valores rápidos:`,
-      tipo: 'conversacion',
-      sugerencias: ['$15.000', '$20.000', '$30.000', '$40.000'],
+  if ((esPeticionCambiarPrecio || preguntoPorValorDe) && esEmprendedor) {
+    if (!tieneNegocio) {
+      return {
+        mensaje:
+          'Para manejar precios primero hay que crear tu negocio y su catálogo de servicios.',
+        tipo: 'navegacion',
+        rutaNavegacion: '/panel/negocio',
+        sugerencias: ['Crear mi negocio'],
+      }
     }
-  }
 
-  // 11. Respuesta con un nuevo monto tras pedir cambio de precio
-  const precioSoloMatch = texto.match(/\b(\d{1,3}(?:\.\d{3})*|\d+)\s*(?:mil|pesos|\$)?\b/)
-  const contextoPrevioPidePrecio =
-    ultimoMensajeBot.includes('precio') ||
-    ultimoMensajeBot.includes('monto') ||
-    ultimoMensajeBot.includes('valor') ||
-    ultimoMensajeBot.includes('servicio identificado')
+    const serviciosPropios = contexto?.negocioPropio?.servicios ?? []
 
-  if (precioSoloMatch && contextoPrevioPidePrecio && !texto.includes('vendo') && !texto.includes('hago')) {
-    const num = parseInt(precioSoloMatch[1].replace(/\./g, ''), 10)
-    const nuevoPrecio = num < 1000 ? num * 1000 : num
+    if (serviciosPropios.length === 0) {
+      return {
+        mensaje: `${nombreUsuario}, todavía no tienes servicios en el catálogo de ${nombreNegocio}, así que no hay precio que cambiar. Dime qué haces y cuánto cobras y lo agregamos.`,
+        tipo: 'conversacion',
+        sugerencias: ['🎙️ Dictar mi servicio para el catálogo', 'Ir al panel de mi negocio'],
+      }
+    }
+
+    const precioNuevo = leerMonto(texto)
+
+    // Cuál servicio: se busca por el nombre dentro de lo que dijo la persona.
+    // Si hay empate o no se reconoce ninguno NO se elige, porque cambiar el
+    // precio del servicio equivocado es un error real en la ficha que ven los
+    // vecinos del barrio.
+    // El servicio del que veníamos hablando, si la pregunta anterior lo nombró.
+    const servicioEnCurso = preguntoPorValorDe
+      ? serviciosPropios.find(
+          (sv) => sv.nombre.toLowerCase() === preguntoPorValorDe[1].toLowerCase(),
+        )
+      : undefined
+
+    const candidatos = serviciosPropios.filter((sv) => {
+      const palabras = sv.nombre
+        .toLowerCase()
+        .split(/\s+/u)
+        .filter((w) => w.length > 3)
+      return palabras.some((w) => texto.includes(w))
+    })
+    const elegido =
+      servicioEnCurso ??
+      (candidatos.length === 1
+        ? candidatos[0]
+        : candidatos.length === 0 && serviciosPropios.length === 1
+          ? serviciosPropios[0]
+          : null)
+
+    if (!elegido) {
+      const cuales = candidatos.length > 1 ? candidatos : serviciosPropios
+      return {
+        mensaje: `¿A cuál servicio le cambio el precio?\n\n${cuales
+          .map(
+            (sv) =>
+              `• ${sv.nombre}${sv.precio ? ` — $ ${sv.precio.toLocaleString('es-CO')}` : ' — sin precio'}`,
+          )
+          .join('\n')}`,
+        tipo: 'conversacion',
+        sugerencias: cuales.slice(0, 4).map((sv) => `Cambiar el precio de ${sv.nombre}`),
+      }
+    }
+
+    if (precioNuevo === null) {
+      return {
+        mensaje: `¿A qué valor dejo "${elegido.nombre}"?${
+          elegido.precio ? ` Ahora está en $ ${elegido.precio.toLocaleString('es-CO')}.` : ''
+        }`,
+        tipo: 'conversacion',
+        sugerencias: ['$15.000', '$20.000', '$30.000', '$40.000'],
+      }
+    }
+
+    const antes = elegido.precio
+      ? `De $ ${elegido.precio.toLocaleString('es-CO')}`
+      : 'Sin precio'
 
     return {
-      mensaje: `¡Precio actualizado a $${nuevoPrecio.toLocaleString('es-CO')} COP! He guardado este cambio en la ficha. Cuando quieras puedes guardarlo en tu catálogo:`,
-      tipo: 'servicio_catalogo',
-      servicio: {
-        titulo: 'Servicio de oficio comunal',
-        descripcion: 'Tarifa ajustada según solicitud',
-        precioSugerido: nuevoPrecio,
-        categoria: 'costura',
+      mensaje: `Voy a dejar "${elegido.nombre}" en $ ${precioNuevo.toLocaleString('es-CO')}${
+        elegido.precio
+          ? `, en vez de los $ ${elegido.precio.toLocaleString('es-CO')} que tiene ahora`
+          : ''
+      }. ¿Lo cambio?`,
+      tipo: 'confirmacion_accion',
+      accionPendiente: {
+        tipo: 'cambiar_precio_servicio',
+        titulo: `Cambiar el precio de "${elegido.nombre}"`,
+        descripcion: `${antes} a $ ${precioNuevo.toLocaleString('es-CO')}. Así se verá en tu ficha del directorio.`,
+        payload: { servicioId: elegido.id, precioNuevo },
+        botonConfirmar: '✅ Sí, cambiar el precio',
+        botonCancelar: '❌ Ahora no',
       },
-      sugerencias: ['Guardar en mi catálogo', 'Cambiar el precio', '¿Cómo funciona el anticipo?'],
+      sugerencias: ['✅ Sí, cambiar el precio', '❌ Ahora no'],
     }
   }
 
