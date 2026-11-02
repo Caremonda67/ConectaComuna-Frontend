@@ -134,6 +134,14 @@ export interface ContextoUsuarioCopiloto {
     servicios?: Array<{ id: string; nombre: string; precio: number | null }>
   } | null
   pedidosActivos?: PedidoActivoCopiloto[]
+  /**
+   * Cuántos pedidos activos hay en total.
+   *
+   * `pedidosActivos` viene recortado para no inflar el prompt. Sin este
+   * número el asistente presentaba la lista recortada como si fuera completa
+   * y afirmaba "tienes 5 pedidos" cuando había más.
+   */
+  totalPedidosActivos?: number
   pantallaActual?: {
     ruta: string
     negocioId?: string | null

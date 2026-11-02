@@ -178,6 +178,8 @@ export function AsistenteComunalModal() {
    * un número que la pantalla de al lado desmiente.
    */
   const [finalizadosReales, setFinalizadosReales] = useState(0)
+  /** Cuántos pedidos activos hay en total, aunque se manden menos al modelo. */
+  const [totalPedidosActivos, setTotalPedidosActivos] = useState(0)
   const [comprobante, setComprobante] = useState<Order | null>(null)
   const [cargandoComprobante, setCargandoComprobante] = useState<string | null>(null)
 
@@ -200,9 +202,19 @@ export function AsistenteComunalModal() {
         }
         if (cancelado) return
 
-        const filtrados: PedidoActivoCopiloto[] = orders
-          .filter((o) => ['pending', 'accepted', 'in_progress'].includes(o.status))
-          .slice(0, 5)
+        // Antes se cortaba en 5, ordenados del mas nuevo al mas viejo, y el
+        // copiloto no sabia que faltaban: con 7 pedidos activos decia "tienes
+        // 5" con total seguridad, y los invisibles eran los mas antiguos,
+        // justo los que llevan mas tiempo esperando respuesta.
+        //
+        // Ahora se mandan hasta 15 y, por separado, cuantos hay de verdad,
+        // para que nunca presente una lista recortada como si fuera completa.
+        const activos = orders.filter((o) =>
+          ['pending', 'accepted', 'in_progress'].includes(o.status),
+        )
+        setTotalPedidosActivos(activos.length)
+        const filtrados: PedidoActivoCopiloto[] = activos
+          .slice(0, 15)
           .map((o) => ({
             id: o.id,
             codigo: `CC-${o.id.slice(0, 8).toUpperCase()}`,
@@ -367,6 +379,7 @@ export function AsistenteComunalModal() {
               }
             : { tieneNegocio: false },
           pedidosActivos: pedidosUsuario,
+          totalPedidosActivos,
           pantallaActual: {
             ruta: location.pathname,
           },
@@ -422,7 +435,7 @@ export function AsistenteComunalModal() {
         setCargando(false)
       }
     },
-    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario, finalizadosReales]
+    [textoEntrada, cargando, escuchandoVoz, mensajes, ttsActivo, detenerLecturaVoz, leerTextoEnVozAlta, userId, email, profile, business, activeRole, location.pathname, barrioActivo, tieneUbicacionDefinida, ubicacion, pedidosUsuario, finalizadosReales, totalPedidosActivos]
   )
 
   const solicitarUbicacionGps = useCallback(() => {
