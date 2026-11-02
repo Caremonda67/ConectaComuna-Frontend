@@ -142,8 +142,44 @@ export default function BusinessDetailPage() {
     }
   }
 
+  const portada = business.photos[0]
+  const restoDelPortafolio = business.photos.slice(1)
+
   return (
     <div className="space-y-5">
+      {/*
+        La portada, arriba y grande.
+        Antes la ficha no la mostraba en ningún sitio: `photos[0]` solo servía
+        como imagen de vista previa al compartir el enlace, y las fotos salían
+        todas juntas en el portafolio. Así, elegir portada no cambiaba nada de
+        lo que ve un cliente al entrar, y la foto elegida se perdía entre las
+        demás.
+      */}
+      {portada && (
+        <button
+          type="button"
+          onClick={() => setLightboxIndex(0)}
+          aria-label={`Ver la foto principal de ${business.name} en tamaño completo`}
+          className="group relative block w-full overflow-hidden rounded-2xl bg-ink-100 dark:bg-ink-800 border border-ink-200/60 dark:border-ink-700/40 shadow-2xs hover:shadow-md transition-shadow focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer"
+        >
+          <img
+            src={portada}
+            alt={`Foto principal de ${business.name}`}
+            /* La portada es lo primero que se ve: cargarla con prioridad y sin
+               `lazy` evita el hueco gris en los primeros instantes, que en
+               gama baja y 3G se nota mucho. */
+            fetchPriority="high"
+            decoding="async"
+            className="aspect-16/9 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
+            <span className="opacity-0 group-hover:opacity-100 transition-all duration-200 bg-black/65 text-white rounded-full p-2.5 shadow-lg scale-75 group-hover:scale-100">
+              <UI_ICONS.zoomIn size={18} />
+            </span>
+          </div>
+        </button>
+      )}
+
       <header className="card p-4">
         <p className="text-xs font-medium text-brand-700">
           {categoryLabel(business.category)}
@@ -559,24 +595,32 @@ export default function BusinessDetailPage() {
         </section>
       )}
 
-      {business.photos.length > 0 && (
+      {/*
+        El portafolio empieza en la SEGUNDA foto: la primera ya está arriba
+        como portada y repetirla hacía que el cliente viera dos veces la misma
+        imagen en la misma pantalla.
+      */}
+      {restoDelPortafolio.length > 0 && (
         <section aria-labelledby="portafolio">
           <div className="mb-2.5 flex items-center justify-between">
             <h2 id="portafolio" className="text-lg font-bold">
-              Portafolio
+              Más trabajos
             </h2>
             <span className="text-xs text-ink-500 font-medium">
               Toca para ampliar y hacer zoom
             </span>
           </div>
           <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-            {business.photos.map((src, idx) => (
+            {restoDelPortafolio.map((src, idx) => (
               <li key={src}>
                 <button
                   type="button"
-                  onClick={() => setLightboxIndex(idx)}
+                  /* +1 porque el visor recorre `business.photos` entera, con
+                     la portada en la posición 0. Sin el desplazamiento, tocar
+                     una foto abría la anterior. */
+                  onClick={() => setLightboxIndex(idx + 1)}
                   className="group relative aspect-square w-full overflow-hidden rounded-xl bg-ink-100 dark:bg-ink-800 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500 cursor-pointer block border border-ink-200/60 dark:border-ink-700/40 shadow-2xs hover:shadow-md transition-shadow"
-                  aria-label={`Ver foto ${idx + 1} de ${business.name} en tamaño completo`}
+                  aria-label={`Ver foto ${idx + 2} de ${business.name} en tamaño completo`}
                 >
                   <img
                     src={src}
