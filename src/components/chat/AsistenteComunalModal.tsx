@@ -1091,7 +1091,7 @@ export function AsistenteComunalModal() {
                                 #{estructurada.acuerdo.codigo}
                               </span>
                             </div>
-                            <div className="rounded-xl border border-ink-200 dark:border-ink-800 bg-white/70 dark:bg-ink-900/60 p-3 space-y-1.5 text-xs">
+                            <div className="rounded-xl border border-ink-200 dark:border-brand-200 bg-white/70 dark:bg-cream-200 p-3 space-y-1.5 text-xs">
                               <div className="flex justify-between">
                                 <span className="text-ink-600">Presupuesto total:</span>
                                 <span className="font-bold text-ink-900">{formatCurrency(estructurada.acuerdo.precioEstimado)}</span>
