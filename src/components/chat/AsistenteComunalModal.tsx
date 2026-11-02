@@ -357,6 +357,11 @@ export function AsistenteComunalModal() {
                 serviciosCount: business.services_catalog?.length || 0,
                 verificado: business.verification_status === 'verified',
                 pedidosFinalizados: finalizadosReales,
+                servicios: (business.services_catalog ?? []).map((sv) => ({
+                  id: sv.id,
+                  nombre: sv.name,
+                  precio: sv.price,
+                })),
                 calificacion: business.rating_avg ?? 0,
                 resenas: business.rating_count ?? 0,
               }
@@ -604,6 +609,115 @@ export function AsistenteComunalModal() {
         return
       }
 
+      if (accion.tipo === 'cambiar_precio_servicio') {
+        const { servicioId, precioNuevo } = (accion.payload ?? {}) as {
+          servicioId?: string
+          precioNuevo?: number
+        }
+        const catalogo = business?.services_catalog ?? []
+        const servicio = catalogo.find((s) => s.id === servicioId)
+        if (!business?.id || !servicio || typeof precioNuevo !== 'number') {
+          responderEnChat(
+            'No tengo claro cuál servicio ni a qué precio. Dímelo así: «sube el corte de cabello a 30 mil».',
+            ['Ver mi catálogo'],
+          )
+          return
+        }
+        await businessService.upsert(business.owner_id, {
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          services_catalog: catalogo.map((s) =>
+            s.id === servicioId ? { ...s, price: precioNuevo } : s,
+          ),
+        })
+        await refresh()
+        responderEnChat(
+          `Listo. "${servicio.name}" queda en $ ${precioNuevo.toLocaleString('es-CO')}. Ya se ve así en tu ficha del directorio.`,
+          ['Ver mi catálogo', 'Cambiar otro precio'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'aceptar_pedido') {
+        const { pedidoId, precioFinal, anticipo } = (accion.payload ?? {}) as {
+          pedidoId?: string
+          precioFinal?: number
+          anticipo?: number
+        }
+        if (!pedidoId || typeof precioFinal !== 'number') {
+          responderEnChat('Para aceptar el pedido necesito el precio acordado.', ['Ver mis pedidos'])
+          return
+        }
+        // El tope del 50% no se comprueba aquí a propósito: lo impone la base
+        // con un CHECK. Si el modelo propusiera más, la base lo rechaza y el
+        // error llega al catch. Validar en dos sitios invita a que se
+        // desincronicen y a que alguien crea que basta con el de arriba.
+        await orderService.updateStatus(pedidoId, 'accepted', {
+          finalPrice: precioFinal,
+          advancePayment: anticipo ?? 0,
+        })
+        responderEnChat(
+          `Pedido aceptado por $ ${precioFinal.toLocaleString('es-CO')}${
+            anticipo ? `, con anticipo de $ ${anticipo.toLocaleString('es-CO')}` : ''
+          }. El cliente ya puede ver el comprobante del Trato Seguro.`,
+          ['Ver mis pedidos'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'nota_avance_pedido') {
+        const { pedidoId, nota } = (accion.payload ?? {}) as { pedidoId?: string; nota?: string }
+        if (!pedidoId || !nota?.trim()) {
+          responderEnChat('¿Qué le cuento al cliente sobre cómo va el trabajo?', ['Ver mis pedidos'])
+          return
+        }
+        await orderService.guardarNotaAvance(pedidoId, nota.trim())
+        responderEnChat(
+          `Nota guardada. El cliente la va a ver en su panel: "${nota.trim()}"`,
+          ['Ver mis pedidos'],
+        )
+        return
+      }
+
+      if (accion.tipo === 'actualizar_horario') {
+        const { dias, opens, closes, cerrado } = (accion.payload ?? {}) as {
+          dias?: number[]
+          opens?: string
+          closes?: string
+          cerrado?: boolean
+        }
+        if (!business?.id || !Array.isArray(dias) || dias.length === 0) {
+          responderEnChat(
+            'Dime qué días y a qué horas, por ejemplo: «los sábados abro de 9 a 2».',
+            ['Ir a mi negocio'],
+          )
+          return
+        }
+        const horarioActual = business.hours ?? []
+        const nuevos = horarioActual.map((h) =>
+          dias.includes(h.day)
+            ? {
+                ...h,
+                closed: !!cerrado,
+                opens: cerrado ? null : (opens ?? h.opens),
+                closes: cerrado ? null : (closes ?? h.closes),
+              }
+            : h,
+        )
+        await businessService.upsert(business.owner_id, {
+          id: business.id,
+          name: business.name,
+          category: business.category,
+          hours: nuevos,
+        })
+        await refresh()
+        responderEnChat('Horario actualizado. Así lo van a ver los vecinos en tu ficha.', [
+          'Ver mi negocio',
+        ])
+        return
+      }
+
       // Tipos declarados pero todavía sin implementar. Antes el botón se
       // quedaba girando sin hacer nada y sin decir por qué.
       responderEnChat(
@@ -612,8 +726,15 @@ export function AsistenteComunalModal() {
       )
     } catch (err) {
       console.error('Error al ejecutar acción confirmada:', err)
+      // El motivo que da la base suele ser la respuesta correcta y está
+      // escrito para la persona: «El anticipo no puede pasar del 50% del
+      // precio», «Ese cambio de estado no está permitido». Esconderlo tras un
+      // mensaje genérico deja a alguien sin saber qué corregir.
+      const motivo = err instanceof Error ? err.message : ''
       responderEnChat(
-        'No pude completar la acción. Vuelve a intentarlo en un momento, o hazlo desde el panel de tu negocio.',
+        motivo
+          ? `No se pudo: ${motivo}`
+          : 'No pude completar la acción. Vuelve a intentarlo en un momento, o hazlo desde el panel de tu negocio.',
         ['Ir a mi negocio'],
       )
     } finally {
