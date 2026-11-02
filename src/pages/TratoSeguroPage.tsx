@@ -116,7 +116,14 @@ export default function TratoSeguroPage() {
           </Link>
 
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 dark:bg-brand-950/80 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200 dark:border-brand-800/60">
+            {/* Sin variantes `dark:`: la escala `brand` ya se invierte sola bajo
+                `html.dark`, donde el 100 es fondo oscuro y el 800 texto claro.
+                El `dark:bg-brand-950/80` ponía un fondo casi blanco (#f2fcf4)
+                debajo de ese texto claro y dejaba la píldora en 1,28:1, por
+                debajo del 4,5 que pide WCAG AA. Quitándolo: 10,89:1 en oscuro
+                y 5,88:1 en claro. Es la familia de fallos del paso de
+                contraste; esta se escapó. */}
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 border border-brand-200">
               <UI_ICONS.shieldCheck size={14} className="text-brand-700" />
               Pacto vecinal con comprobante público
             </span>
@@ -174,7 +181,10 @@ export default function TratoSeguroPage() {
       <div className="craft-stitch-divider" aria-hidden="true" />
 
       {/* Caja de verificación rápida de pactos */}
-      <section aria-labelledby="verificador-rapido" className="card p-5 sm:p-6 border-brand-300 dark:border-brand-800 bg-brand-50/70 dark:bg-brand-950/40 space-y-3">
+      {/* Mismo caso que la píldora de arriba: `dark:bg-brand-950/40` dejaba un
+          fondo gris medio (#717974) y el texto bajaba a 4,08:1. Con la escala
+          sin tocar, `brand-50` ya es superficie oscura en modo oscuro. */}
+      <section aria-labelledby="verificador-rapido" className="card p-5 sm:p-6 border-brand-300 bg-brand-50/70 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-800 dark:text-emerald-400 inline-flex items-center gap-1.5">

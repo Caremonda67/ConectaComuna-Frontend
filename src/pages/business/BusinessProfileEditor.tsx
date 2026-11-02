@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -228,6 +228,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
     managedBusiness ? { lat: managedBusiness.lat, lng: managedBusiness.lng } : COMUNA_CENTER,
   )
   const [resolviendoBarrio, setResolviendoBarrio] = useState(false)
+  const inputFotosRef = useRef<HTMLInputElement>(null)
   const [buscandoDireccion, setBuscandoDireccion] = useState(false)
   const [opcionesDireccion, setOpcionesDireccion] = useState<UbicacionGeocodificada[]>([])
   const [avisoDireccion, setAvisoDireccion] = useState<string | null>(null)
@@ -351,9 +352,12 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
 
   const pasos: PasoFicha[] = [
     { id: 'ficha-basico', etiqueta: 'Nombre, oficio y descripción', listo: tieneBasico, esencial: true },
+    // Las fotos van en segundo lugar, igual que en la página: es lo que más
+    // convence a un vecino y lo que la persona tiene más a mano en el celular.
+    // Dejarlas al final hacía que mucha ficha se publicara sin ninguna.
+    { id: 'ficha-fotos', etiqueta: 'Fotos de tus trabajos', listo: photos.length > 0, esencial: false },
     { id: 'ficha-contacto', etiqueta: 'Contacto y punto en el mapa', listo: tieneContacto, esencial: true },
     { id: 'ficha-catalogo', etiqueta: 'Precios de referencia', listo: tieneCatalogo, esencial: true },
-    { id: 'ficha-fotos', etiqueta: 'Fotos de tus trabajos', listo: photos.length > 0, esencial: false },
     { id: 'ficha-horarios', etiqueta: 'Horarios de atención', listo: hours.some((h) => !h.closed), esencial: false },
   ]
 
@@ -469,6 +473,113 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       </SeccionFicha>
 
       <SeccionFicha
+        id="ficha-fotos"
+        icon={UI_ICONS.gallery}
+        titulo="Fotos de tus trabajos"
+        porQue="Una foto real de lo que haces convence más que cualquier descripción."
+        completa={photos.length > 0}
+      >
+        <p className="text-sm text-ink-500">
+          Sube hasta 6 fotos. Con una ya se nota la diferencia. La que marques como
+          portada es la que ven los vecinos en el directorio y en el mapa.
+        </p>
+        {/*
+          Sin `capture="environment"`.
+          Ese atributo obligaba al celular a abrir la camara: no dejaba elegir
+          una foto que la persona ya tuviera en la galeria, que es como la
+          mayoria tiene las fotos de sus trabajos. Sin el, Android e iOS
+          ofrecen las dos cosas, camara y galeria, y la persona decide.
+
+          El `input` va oculto y el boton de al lado lo dispara: el control
+          nativo de archivos es diminuto y en un celular no se ve que sea algo
+          que hay que tocar.
+        */}
+        <input
+          ref={inputFotosRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => handleFiles(e.target.files)}
+          disabled={uploading || photos.length >= 6}
+          className="sr-only"
+          aria-label="Subir fotos del portafolio"
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          fullWidth
+          loading={uploading}
+          disabled={photos.length >= 6}
+          onClick={() => inputFotosRef.current?.click()}
+        >
+          {photos.length === 0 ? 'Agregar fotos de mis trabajos' : 'Agregar más fotos'}
+        </Button>
+        <p className="text-xs text-ink-500">
+          Puedes tomar una foto en el momento o escoger una que ya tengas guardada.
+          {photos.length > 0 && ` Llevas ${photos.length} de 6.`}
+        </p>
+        {uploading && <p className="text-sm text-ink-500">Subiendo fotos…</p>}
+        {/*
+          La portada es la PRIMERA foto del arreglo: así la lee `BusinessCard`
+          y así la toma la vista previa al compartir el enlace. Antes eso no se
+          decía en ninguna parte y no había forma de cambiarla, de modo que la
+          foto de la tarjeta la decidía el orden en que se subieron los
+          archivos. Quien subía primero una foto del local y después la del
+          trabajo terminado se quedaba con la peor de las dos en el directorio,
+          sin saber por qué.
+
+          Elegir portada reordena en vez de guardar un campo nuevo: no toca el
+          esquema, y una columna más en `businesses` habría que añadirla además
+          a los permisos por columna de `anon` —el olvido que tumbó el
+          directorio al aplicar `migracion-codigo-no-publico.sql`—.
+        */}
+        {photos.length > 0 && (
+          <ul className="grid grid-cols-3 gap-2">
+            {photos.map((src, i) => {
+              const esPortada = i === 0
+              return (
+                <li key={src} className="relative">
+                  <img
+                    src={src}
+                    alt={esPortada ? 'Foto de portada del negocio' : `Foto ${i + 1} del portafolio`}
+                    loading="lazy"
+                    className={cn(
+                      'aspect-square w-full rounded-xl object-cover',
+                      esPortada && 'ring-2 ring-brand-600 ring-offset-2 ring-offset-cream-100',
+                    )}
+                  />
+
+                  {esPortada ? (
+                    <span className="absolute left-1 top-1 rounded-full bg-brand-700 px-2 py-0.5 text-xs font-semibold text-white dark:text-brand-50">
+                      Portada
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPhotos((p) => [src, ...p.filter((x) => x !== src)])
+                      }
+                      className="absolute left-1 top-1 rounded-full bg-black/60 hover:bg-brand-700 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
+                    >
+                      Usar de portada
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setPhotos((p) => p.filter((x) => x !== src))}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 hover:bg-rose-600 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
+                  >
+                    Quitar<span className="sr-only"> foto {i + 1}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </SeccionFicha>
+
+      <SeccionFicha
         id="ficha-contacto"
         icon={UI_ICONS.map}
         titulo="Contacto y ubicación"
@@ -581,88 +692,6 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
             Coordenadas: {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
           </p>
         </div>
-      </SeccionFicha>
-
-      <SeccionFicha
-        id="ficha-fotos"
-        icon={UI_ICONS.gallery}
-        titulo="Fotos de tus trabajos"
-        porQue="Una foto real de lo que haces convence más que cualquier descripción."
-        completa={photos.length > 0}
-      >
-        <p className="text-sm text-ink-500">
-          Sube hasta 6 fotos. Con una ya se nota la diferencia. La que marques como
-          portada es la que ven los vecinos en el directorio y en el mapa.
-        </p>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          capture="environment"
-          onChange={(e) => handleFiles(e.target.files)}
-          disabled={uploading || photos.length >= 6}
-          className="block w-full text-sm"
-          aria-label="Subir fotos del portafolio"
-        />
-        {uploading && <p className="text-sm text-ink-500">Subiendo fotos…</p>}
-        {/*
-          La portada es la PRIMERA foto del arreglo: así la lee `BusinessCard`
-          y así la toma la vista previa al compartir el enlace. Antes eso no se
-          decía en ninguna parte y no había forma de cambiarla, de modo que la
-          foto de la tarjeta la decidía el orden en que se subieron los
-          archivos. Quien subía primero una foto del local y después la del
-          trabajo terminado se quedaba con la peor de las dos en el directorio,
-          sin saber por qué.
-
-          Elegir portada reordena en vez de guardar un campo nuevo: no toca el
-          esquema, y una columna más en `businesses` habría que añadirla además
-          a los permisos por columna de `anon` —el olvido que tumbó el
-          directorio al aplicar `migracion-codigo-no-publico.sql`—.
-        */}
-        {photos.length > 0 && (
-          <ul className="grid grid-cols-3 gap-2">
-            {photos.map((src, i) => {
-              const esPortada = i === 0
-              return (
-                <li key={src} className="relative">
-                  <img
-                    src={src}
-                    alt={esPortada ? 'Foto de portada del negocio' : `Foto ${i + 1} del portafolio`}
-                    loading="lazy"
-                    className={cn(
-                      'aspect-square w-full rounded-xl object-cover',
-                      esPortada && 'ring-2 ring-brand-600 ring-offset-2 ring-offset-cream-100',
-                    )}
-                  />
-
-                  {esPortada ? (
-                    <span className="absolute left-1 top-1 rounded-full bg-brand-700 px-2 py-0.5 text-xs font-semibold text-white dark:text-brand-50">
-                      Portada
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPhotos((p) => [src, ...p.filter((x) => x !== src)])
-                      }
-                      className="absolute left-1 top-1 rounded-full bg-black/60 hover:bg-brand-700 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
-                    >
-                      Usar de portada
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setPhotos((p) => p.filter((x) => x !== src))}
-                    className="absolute right-1 top-1 rounded-full bg-black/60 hover:bg-rose-600 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
-                  >
-                    Quitar<span className="sr-only"> foto {i + 1}</span>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
       </SeccionFicha>
 
       {/* Venta al por mayor y distribuidores */}
@@ -914,7 +943,16 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         )}
       </div>
 
-      <div className="sticky bottom-20 flex flex-col sm:flex-row gap-2 bg-white/95 dark:bg-cream-50/95 p-3 rounded-2xl border border-ink-200 shadow-md backdrop-blur-xs">
+      {/*
+        Los dos botones en FILA también en el celular.
+        Apilados medían 122 px y, con el menú inferior de 57, tapaban casi una
+        cuarta parte de una pantalla de 812: la persona escribía en un campo
+        que la barra le estaba cubriendo. En fila bajan a unos 60.
+
+        "Guardar" se lleva el ancho y "Cancelar" solo el suyo, para que la
+        acción que la gente busca sea la grande.
+      */}
+      <div className="sticky bottom-20 flex flex-row items-center gap-2 bg-white/95 dark:bg-cream-50/95 p-3 rounded-2xl border border-ink-200 shadow-md backdrop-blur-xs">
         <Button type="submit" fullWidth loading={isSubmitting}>
           Guardar negocio
         </Button>
@@ -922,8 +960,8 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           type="button"
           variant="secondary"
           onClick={() => navigate('/panel')}
-          fullWidth
           disabled={isSubmitting}
+          className="shrink-0"
         >
           Cancelar
         </Button>

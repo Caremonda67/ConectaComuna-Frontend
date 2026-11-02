@@ -110,6 +110,29 @@ export const authService = {
     })
     if (error) throw new Error(translateAuthError(error.message))
     if (!data.user) throw new Error('No se pudo crear la cuenta.')
+
+    /*
+     * El correo ya tenía cuenta.
+     *
+     * Con la confirmación por email activada, Supabase NO devuelve error en
+     * ese caso: manda un usuario de pega, sin sesión y con `identities`
+     * vacío, y no envía ningún correo. Lo hace a propósito, para que nadie
+     * pueda averiguar qué correos están registrados probándolos uno a uno.
+     *
+     * El efecto para la persona era un callejón sin salida: se registraba con
+     * el mismo correo de su cuenta de Google, la pantalla prometía un correo
+     * de verificación, y ese correo no llegaba nunca porque no se envió. Sin
+     * saberlo, se quedaba fuera.
+     *
+     * `identities` vacío es la señal documentada para detectarlo sin
+     * preguntarle nada a la base.
+     */
+    if (Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw new Error(
+        'Ese correo ya tiene una cuenta en ConectaComuna. Si la creaste con Google, entra con el botón de Google; si no, usa "olvidé mi contraseña" para recuperarla.',
+      )
+    }
+
     const requiresEmailConfirmation = !data.session
     return {
       userId: data.user.id,

@@ -8,7 +8,7 @@ import { usePageMeta } from '@/hooks/usePageMeta'
 import { useNeighborhoodLocator } from '@/hooks/useNeighborhoodLocator'
 import { BARRIOS_COMUNA } from '@/services/direccionService'
 import { Button } from '@/components/ui/Button'
-import { TextField } from '@/components/ui/Field'
+import { PasswordField, TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
 import { cn } from '@/lib/utils'
 import type { AccountType } from '@/types'
@@ -148,9 +148,8 @@ export default function RegisterPage() {
           error={errors.email?.message}
           {...register('email')}
         />
-        <TextField
+        <PasswordField
           label="Contraseña"
-          type="password"
           autoComplete="new-password"
           error={errors.password?.message}
           {...register('password')}

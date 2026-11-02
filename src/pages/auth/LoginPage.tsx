@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { Button } from '@/components/ui/Button'
-import { TextField } from '@/components/ui/Field'
+import { PasswordField, TextField } from '@/components/ui/Field'
 import { SocialAuthButtons } from '@/components/auth/SocialAuthButtons'
 import { isDemoMode } from '@/lib/env'
 import { takeAuthFrom } from '@/lib/authRedirect'
@@ -99,9 +99,8 @@ export default function LoginPage() {
           error={errors.email?.message}
           {...register('email')}
         />
-        <TextField
+        <PasswordField
           label="Contraseña"
-          type="password"
           autoComplete="current-password"
           error={errors.password?.message}
           {...register('password')}
