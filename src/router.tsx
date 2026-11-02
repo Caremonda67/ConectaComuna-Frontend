@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import HomePage from '@/pages/HomePage'
+import RouteErrorPage from '@/pages/RouteErrorPage'
 
 // Code splitting por ruta: el primer render solo baja Home + layout.
 const ExplorePage = lazy(() => import('@/pages/ExplorePage'))
@@ -31,6 +32,9 @@ function Lazy({ children }: { children: React.ReactNode }) {
 const router = createBrowserRouter([
   {
     element: <AppLayout />,
+    // Un archivo que no carga o una ruta rota caen aquí en vez de dejar la
+    // pantalla en blanco.
+    errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
       {
