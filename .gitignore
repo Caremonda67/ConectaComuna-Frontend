@@ -34,3 +34,7 @@ docs/
 # Credenciales de cuentas de prueba locales: nunca al repositorio.
 supabase/cuentas-de-prueba.local.md
 .claude/
+
+# Modo demo para auditoria local: nunca al repositorio.
+.env.demo
+vite.auditoria.config.ts

@@ -15,9 +15,8 @@ import {
 import { reverseGeocodificar } from '@/services/direccionService'
 import { estaEnZonaPiloto, PUNTO_PILOTO } from '@/lib/zonaPiloto'
 import { businessService } from '@/services/businessService'
-import { profileService } from '@/services/profileService'
 import { orderService } from '@/services/orderService'
-import { facilitadorService } from '@/services/facilitadorService'
+import { ejecutarAccionCopiloto } from '@/lib/accionesCopiloto'
 import { TratoSeguroReceiptModal } from '@/components/trust/TratoSeguroReceiptModal'
 import type { AccionPendienteAi, ContextoUsuarioCopiloto, MensajeChat, NegocioSugeridoAi, PedidoActivoCopiloto, ServicioSugeridoAi } from '@/types/ai'
 import type { Order, ServiceCatalogItem } from '@/types'
@@ -593,163 +592,14 @@ export function AsistenteComunalModal() {
   const ejecutarAccionConfirmada = async (accion?: AccionPendienteAi) => {
     setEjecutandoAccion(true)
     try {
-      // Sin acción declarada se asume la única que existía antes, para no
-      // romper conversaciones ya abiertas cuando el modelo responde sin tipo.
-      if (accion?.tipo === 'activar_negocio' || !accion) {
-        if (userId) {
-          await profileService.update(userId, { account_type: 'business' })
-          await refresh()
-        }
+      const r = await ejecutarAccionCopiloto(accion, { userId, negocio: business })
+      if (r.recargar) await refresh()
+      if (r.mensaje) responderEnChat(r.mensaje, r.sugerencias)
+      if (r.navegarA) {
         detenerLecturaVoz()
         cerrarAsistente()
-        navigate('/panel/negocio')
-        return
+        navigate(r.navegarA)
       }
-
-      if (accion.tipo === 'generar_codigo_apadrinamiento') {
-        if (!business?.id) {
-          responderEnChat(
-            'Para generar el código primero necesitas tener tu negocio creado. Te llevo a crearlo cuando quieras.',
-            ['Ir a mi negocio'],
-          )
-          return
-        }
-        const codigo = await facilitadorService.generarCodigo(business.id)
-        responderEnChat(
-          `Listo. Tu código de apadrinamiento es **${codigo}**.\n\nEntrégaselo en persona a quien va a ayudarte —un familiar, un vecino o tu facilitador comunitario—. Sirve una sola vez y vence en 24 horas. Con él podrá editar tu negocio: fotos, precios y catálogo.\n\nNo lo publiques ni lo mandes a grupos: quien lo tenga puede tomar el control de tu ficha.`,
-          ['Ir a mi negocio', 'Ver quién puede editar mi negocio'],
-        )
-        return
-      }
-
-      if (accion.tipo === 'cambiar_precio_servicio') {
-        const { servicioId, precioNuevo } = (accion.payload ?? {}) as {
-          servicioId?: string
-          precioNuevo?: number
-        }
-        const catalogo = business?.services_catalog ?? []
-        const servicio = catalogo.find((s) => s.id === servicioId)
-        if (!business?.id || !servicio || typeof precioNuevo !== 'number') {
-          responderEnChat(
-            'No tengo claro cuál servicio ni a qué precio. Dímelo así: «sube el corte de cabello a 30 mil».',
-            ['Ver mi catálogo'],
-          )
-          return
-        }
-        await businessService.upsert(business.owner_id, {
-          id: business.id,
-          name: business.name,
-          category: business.category,
-          services_catalog: catalogo.map((s) =>
-            s.id === servicioId ? { ...s, price: precioNuevo } : s,
-          ),
-        })
-        await refresh()
-        responderEnChat(
-          `Listo. "${servicio.name}" queda en $ ${precioNuevo.toLocaleString('es-CO')}. Ya se ve así en tu ficha del directorio.`,
-          ['Ver mi catálogo', 'Cambiar otro precio'],
-        )
-        return
-      }
-
-      if (accion.tipo === 'aceptar_pedido') {
-        const { pedidoId, precioFinal, anticipo } = (accion.payload ?? {}) as {
-          pedidoId?: string
-          precioFinal?: number
-          anticipo?: number
-        }
-        if (!pedidoId || typeof precioFinal !== 'number') {
-          responderEnChat('Para aceptar el pedido necesito el precio acordado.', ['Ver mis pedidos'])
-          return
-        }
-        // El tope del 50% no se comprueba aquí a propósito: lo impone la base
-        // con un CHECK. Si el modelo propusiera más, la base lo rechaza y el
-        // error llega al catch. Validar en dos sitios invita a que se
-        // desincronicen y a que alguien crea que basta con el de arriba.
-        await orderService.updateStatus(pedidoId, 'accepted', {
-          finalPrice: precioFinal,
-          advancePayment: anticipo ?? 0,
-        })
-        responderEnChat(
-          `Pedido aceptado por $ ${precioFinal.toLocaleString('es-CO')}${
-            anticipo ? `, con anticipo de $ ${anticipo.toLocaleString('es-CO')}` : ''
-          }. El cliente ya puede ver el comprobante del Trato Seguro.`,
-          ['Ver mis pedidos'],
-        )
-        return
-      }
-
-      if (accion.tipo === 'nota_avance_pedido') {
-        const { pedidoId, nota } = (accion.payload ?? {}) as { pedidoId?: string; nota?: string }
-        if (!pedidoId || !nota?.trim()) {
-          responderEnChat('¿Qué le cuento al cliente sobre cómo va el trabajo?', ['Ver mis pedidos'])
-          return
-        }
-        await orderService.guardarNotaAvance(pedidoId, nota.trim())
-        responderEnChat(
-          `Nota guardada. El cliente la va a ver en su panel: "${nota.trim()}"`,
-          ['Ver mis pedidos'],
-        )
-        return
-      }
-
-      if (accion.tipo === 'actualizar_horario') {
-        const { dias, opens, closes, cerrado } = (accion.payload ?? {}) as {
-          dias?: number[]
-          opens?: string
-          closes?: string
-          cerrado?: boolean
-        }
-        if (!business?.id || !Array.isArray(dias) || dias.length === 0) {
-          responderEnChat(
-            'Dime qué días y a qué horas, por ejemplo: «los sábados abro de 9 a 2».',
-            ['Ir a mi negocio'],
-          )
-          return
-        }
-        const horarioActual = business.hours ?? []
-        const nuevos = horarioActual.map((h) =>
-          dias.includes(h.day)
-            ? {
-                ...h,
-                closed: !!cerrado,
-                opens: cerrado ? null : (opens ?? h.opens),
-                closes: cerrado ? null : (closes ?? h.closes),
-              }
-            : h,
-        )
-        await businessService.upsert(business.owner_id, {
-          id: business.id,
-          name: business.name,
-          category: business.category,
-          hours: nuevos,
-        })
-        await refresh()
-        responderEnChat('Horario actualizado. Así lo van a ver los vecinos en tu ficha.', [
-          'Ver mi negocio',
-        ])
-        return
-      }
-
-      // Tipos declarados pero todavía sin implementar. Antes el botón se
-      // quedaba girando sin hacer nada y sin decir por qué.
-      responderEnChat(
-        'Esa acción todavía no la puedo hacer yo desde el chat. Te llevo a la pantalla donde sí se puede.',
-        ['Ir a mi negocio'],
-      )
-    } catch (err) {
-      console.error('Error al ejecutar acción confirmada:', err)
-      // El motivo que da la base suele ser la respuesta correcta y está
-      // escrito para la persona: «El anticipo no puede pasar del 50% del
-      // precio», «Ese cambio de estado no está permitido». Esconderlo tras un
-      // mensaje genérico deja a alguien sin saber qué corregir.
-      const motivo = err instanceof Error ? err.message : ''
-      responderEnChat(
-        motivo
-          ? `No se pudo: ${motivo}`
-          : 'No pude completar la acción. Vuelve a intentarlo en un momento, o hazlo desde el panel de tu negocio.',
-        ['Ir a mi negocio'],
-      )
     } finally {
       setEjecutandoAccion(false)
     }
@@ -1241,7 +1091,7 @@ export function AsistenteComunalModal() {
                                 #{estructurada.acuerdo.codigo}
                               </span>
                             </div>
-                            <div className="rounded-xl border border-ink-200 dark:border-ink-800 bg-white/70 dark:bg-ink-900/60 p-3 space-y-1.5 text-xs">
+                            <div className="rounded-xl border border-ink-200 dark:border-brand-200 bg-white/70 dark:bg-cream-200 p-3 space-y-1.5 text-xs">
                               <div className="flex justify-between">
                                 <span className="text-ink-600">Presupuesto total:</span>
                                 <span className="font-bold text-ink-900">{formatCurrency(estructurada.acuerdo.precioEstimado)}</span>
@@ -1322,7 +1172,7 @@ export function AsistenteComunalModal() {
                         tarjeta no salía, la acción no se ejecutaba y el texto
                         decía que sí. Mejor pintarla de más que tragarse una
                         acción que la persona pidió. */}
-                    {estructurada && (estructurada.tipo === 'confirmacion_accion' || estructurada.accionPendiente) && (
+                    {estructurada?.accionPendiente?.tipo && (
                       <div className="mt-3 w-full max-w-[95%] card-soft p-3.5 border-2 border-amber-400/80 dark:border-amber-500/60 rounded-2xl shadow-xs">
                         <div className="flex items-center gap-2 text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1.5">
                           <UI_ICONS.alert size={15} />
@@ -1333,7 +1183,7 @@ export function AsistenteComunalModal() {
                         </div>
                         <p className="text-[11px] text-ink-700 mt-1 leading-snug">
                           {estructurada.accionPendiente?.descripcion ||
-                            'Para continuar, confirma si deseas realizar este cambio en tu perfil.'}
+                            'Confirma para aplicar este cambio.'}
                         </p>
 
                         <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -1349,7 +1199,7 @@ export function AsistenteComunalModal() {
                               <UI_ICONS.checkCircle size={14} />
                             )}
                             <span>
-                              {estructurada.accionPendiente?.botonConfirmar || '✅ Sí, activar mi negocio'}
+                              {estructurada.accionPendiente?.botonConfirmar || '✅ Confirmar'}
                             </span>
                           </button>
 
