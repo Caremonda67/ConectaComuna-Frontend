@@ -13,7 +13,7 @@ import { SelectField, TextAreaField, TextField } from '@/components/ui/Field'
 import { CATEGORIES } from '@/data/categories'
 import { COMUNA_CENTER } from '@/lib/env'
 import { reverseGeocodificar } from '@/services/direccionService'
-import { DAY_NAMES, formatCurrency } from '@/lib/utils'
+import { DAY_NAMES, cn, formatCurrency } from '@/lib/utils'
 import { UI_ICONS } from '@/components/ui/icons'
 import type { Business, BusinessHours, CategorySlug, Coordinates, ServiceCatalogItem } from '@/types'
 import { FormSkeleton } from '@/components/ui/Skeleton'
@@ -475,7 +475,10 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         porQue="Una foto real de lo que haces convence más que cualquier descripción."
         completa={photos.length > 0}
       >
-        <p className="text-sm text-ink-500">Sube hasta 6 fotos. Con una ya se nota la diferencia.</p>
+        <p className="text-sm text-ink-500">
+          Sube hasta 6 fotos. Con una ya se nota la diferencia. La que marques como
+          portada es la que ven los vecinos en el directorio y en el mapa.
+        </p>
         <input
           type="file"
           accept="image/*"
@@ -487,25 +490,62 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
           aria-label="Subir fotos del portafolio"
         />
         {uploading && <p className="text-sm text-ink-500">Subiendo fotos…</p>}
+        {/*
+          La portada es la PRIMERA foto del arreglo: así la lee `BusinessCard`
+          y así la toma la vista previa al compartir el enlace. Antes eso no se
+          decía en ninguna parte y no había forma de cambiarla, de modo que la
+          foto de la tarjeta la decidía el orden en que se subieron los
+          archivos. Quien subía primero una foto del local y después la del
+          trabajo terminado se quedaba con la peor de las dos en el directorio,
+          sin saber por qué.
+
+          Elegir portada reordena en vez de guardar un campo nuevo: no toca el
+          esquema, y una columna más en `businesses` habría que añadirla además
+          a los permisos por columna de `anon` —el olvido que tumbó el
+          directorio al aplicar `migracion-codigo-no-publico.sql`—.
+        */}
         {photos.length > 0 && (
           <ul className="grid grid-cols-3 gap-2">
-            {photos.map((src) => (
-              <li key={src} className="relative">
-                <img
-                  src={src}
-                  alt=""
-                  loading="lazy"
-                  className="aspect-square w-full rounded-xl object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => setPhotos((p) => p.filter((x) => x !== src))}
-                  className="absolute right-1 top-1 rounded-full bg-black/60 hover:bg-rose-600 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
-                >
-                  Quitar<span className="sr-only"> foto</span>
-                </button>
-              </li>
-            ))}
+            {photos.map((src, i) => {
+              const esPortada = i === 0
+              return (
+                <li key={src} className="relative">
+                  <img
+                    src={src}
+                    alt={esPortada ? 'Foto de portada del negocio' : `Foto ${i + 1} del portafolio`}
+                    loading="lazy"
+                    className={cn(
+                      'aspect-square w-full rounded-xl object-cover',
+                      esPortada && 'ring-2 ring-brand-600 ring-offset-2 ring-offset-cream-100',
+                    )}
+                  />
+
+                  {esPortada ? (
+                    <span className="absolute left-1 top-1 rounded-full bg-brand-700 px-2 py-0.5 text-xs font-semibold text-white dark:text-brand-50">
+                      Portada
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPhotos((p) => [src, ...p.filter((x) => x !== src)])
+                      }
+                      className="absolute left-1 top-1 rounded-full bg-black/60 hover:bg-brand-700 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
+                    >
+                      Usar de portada
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setPhotos((p) => p.filter((x) => x !== src))}
+                    className="absolute right-1 top-1 rounded-full bg-black/60 hover:bg-rose-600 px-2 py-0.5 text-xs text-white hover:scale-105 active:scale-90 transition-all duration-150 cursor-pointer"
+                  >
+                    Quitar<span className="sr-only"> foto {i + 1}</span>
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         )}
       </SeccionFicha>
