@@ -550,9 +550,16 @@ export const businessService = {
     if (error) throw error
   },
 
-  /** Cuenta corta del equipo que media los reportes. No es un rol del producto. */
+  /**
+   * Cuenta corta del equipo que media los reportes. No es un rol del producto:
+   * en producción es una fila en `equipo_conecta`, puesta solo por SQL.
+   *
+   * En demostración era `true` para cualquiera que entrara, así que un jurado
+   * que se registrara por el QR se encontraba el panel interno sin que nadie
+   * se lo explicara. Ahora es una sola cuenta, igual que en producción.
+   */
   async esEquipoConecta(): Promise<boolean> {
-    if (isDemoMode) return true
+    if (isDemoMode) return readDb().sessionUserId === 'user-equipo'
     const { data, error } = await requireSupabase().rpc('es_equipo_conecta')
     if (error) {
       console.warn('No se pudo comprobar si la cuenta es del equipo:', error.message)

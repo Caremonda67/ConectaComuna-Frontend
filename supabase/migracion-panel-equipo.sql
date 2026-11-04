@@ -37,6 +37,11 @@ returns table (
   negocios int,
   negocios_activos int,
   negocios_verificados int,
+  facilitadores_activos int,
+  pedidos int,
+  pedidos_completados int,
+  con_trato_seguro int,
+  clientes_unicos int,
   pqr_abiertas int,
   resenas_negativas int
 )
@@ -56,6 +61,17 @@ begin
     (select count(*)::int from public.businesses),
     (select count(*)::int from public.businesses where is_active),
     (select count(*)::int from public.businesses where verification_status = 'verified'),
+    -- Facilitadores con al menos un sello puesto, no cuentas creadas. La
+    -- unidad de adopción es el facilitador activo: una cuenta que nunca salió
+    -- a verificar a nadie no mueve el proyecto.
+    (select count(distinct verification_by)::int from public.businesses
+      where verification_status = 'verified' and verification_by is not null),
+    (select count(*)::int from public.orders),
+    (select count(*)::int from public.orders where status = 'completed'),
+    (select count(*)::int from public.orders where coalesce(advance_payment, 0) > 0),
+    -- Personas distintas que han pedido alguna vez. No es el número de
+    -- pedidos: en un barrio la misma vecina vuelve al mismo taller.
+    (select count(distinct client_id)::int from public.orders),
     (select count(*)::int from public.reportes_comunitarios where estado = 'pendiente'),
     (select count(*)::int from public.reviews where rating <= 2);
 end;

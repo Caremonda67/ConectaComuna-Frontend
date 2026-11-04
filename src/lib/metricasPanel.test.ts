@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Business, Order, Profile, ReporteComunitario, Review } from '@/types'
 import {
   type DatosPanel,
+  comunasConPresencia,
   inicioDePeriodo,
   negociosPorComuna,
   resumenPanel,
@@ -248,5 +249,51 @@ describe('negociosPorComuna', () => {
     ])
     const c15 = filas.find((f) => f.comuna === 15)
     expect(c15).toMatchObject({ negocios: 2, verificados: 1 })
+  })
+})
+
+describe('métricas de adopción', () => {
+  it('cuenta facilitadores que pusieron un sello, no cuentas creadas', () => {
+    // La unidad de adopción es el facilitador activo. Dos sellos de la misma
+    // persona son una persona, y un sello sin firma no cuenta a nadie.
+    const r = resumenPanel({
+      ...VACIO,
+      businesses: [
+        negocio('n1', { verification_status: 'verified', verification_by: 'ana' }),
+        negocio('n2', { verification_status: 'verified', verification_by: 'ana' }),
+        negocio('n3', { verification_status: 'verified', verification_by: 'luis' }),
+        negocio('n4', { verification_status: 'verified' }),
+        negocio('n5'),
+      ],
+    })
+    expect(r.facilitadoresActivos).toBe(2)
+    expect(r.negociosVerificados).toBe(4)
+  })
+
+  it('Trato Seguro son los pedidos con anticipo', () => {
+    const r = resumenPanel({
+      ...VACIO,
+      orders: [
+        pedido('p1', { advance_payment: 10000 }),
+        pedido('p2', { advance_payment: 0 }),
+        pedido('p3'),
+      ],
+    })
+    expect(r.conTratoSeguro).toBe(1)
+    expect(r.pedidos).toBe(3)
+  })
+
+  it('la cobertura cuenta comunas con negocios, no la fila de sin clasificar', () => {
+    const conteos = negociosPorComuna([
+      negocio('n1', { comuna: 15 }),
+      negocio('n2', { comuna: 15 }),
+      negocio('n3', { comuna: 16 }),
+      negocio('n4', { comuna: null }),
+    ])
+    expect(comunasConPresencia(conteos)).toBe(2)
+  })
+
+  it('sin negocios la cobertura es cero, no 22', () => {
+    expect(comunasConPresencia(negociosPorComuna([]))).toBe(0)
   })
 })

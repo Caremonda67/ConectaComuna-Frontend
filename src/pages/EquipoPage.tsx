@@ -43,7 +43,7 @@ export default function EquipoPage() {
         </p>
       </header>
 
-      <ResumenEquipo />
+      <ResumenEquipo comunas={comunas} />
 
       {comunas && <MapaComunas conteos={comunas} />}
 

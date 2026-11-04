@@ -22,6 +22,18 @@ export interface ResumenPanel {
   negocios: number
   negociosActivos: number
   negociosVerificados: number
+  /**
+   * Facilitadores con al menos un sello puesto, no cuentas creadas. La unidad
+   * de adopción del proyecto es el facilitador activo, no el usuario
+   * registrado (ver vault/DIFERENCIADOR-Y-ADOPCION.md): una cuenta que nunca
+   * salió a verificar a nadie no mueve el proyecto y no se cuenta.
+   */
+  facilitadoresActivos: number
+  pedidos: number
+  pedidosCompletados: number
+  conTratoSeguro: number
+  /** Personas distintas que han pedido alguna vez, no número de pedidos. */
+  clientesUnicos: number
   pqrAbiertas: number
   resenasNegativas: number
 }
@@ -95,15 +107,37 @@ function tieneTratoSeguro(o: Order): boolean {
 }
 
 export function resumenPanel(datos: DatosPanel): ResumenPanel {
+  const selladores = new Set(
+    datos.businesses
+      .filter((b) => b.verification_status === 'verified' && b.verification_by)
+      .map((b) => b.verification_by as string),
+  )
+
   return {
     usuarios: datos.profiles.length,
     negocios: datos.businesses.length,
     negociosActivos: datos.businesses.filter((b) => b.is_active).length,
     negociosVerificados: datos.businesses.filter((b) => b.verification_status === 'verified')
       .length,
+    facilitadoresActivos: selladores.size,
+    pedidos: datos.orders.length,
+    pedidosCompletados: datos.orders.filter((o) => o.status === 'completed').length,
+    conTratoSeguro: datos.orders.filter(tieneTratoSeguro).length,
+    clientesUnicos: new Set(datos.orders.map((o) => o.client_id).filter(Boolean)).size,
     pqrAbiertas: datos.reportes.filter((r) => r.estado === 'pendiente').length,
     resenasNegativas: datos.reviews.filter((r) => r.rating <= 2).length,
   }
+}
+
+/**
+ * Cuántas de las 22 comunas tienen al menos un negocio.
+ *
+ * Es la métrica de cobertura territorial: dice dónde llegó el proyecto mucho
+ * mejor que el total de negocios, porque veinte negocios en una sola comuna y
+ * veinte repartidos en diez no son lo mismo.
+ */
+export function comunasConPresencia(conteos: ConteoComuna[]): number {
+  return conteos.filter((c) => c.comuna != null && c.negocios > 0).length
 }
 
 /**

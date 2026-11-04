@@ -70,6 +70,11 @@ export const panelService = {
       negocios: f.negocios,
       negociosActivos: f.negocios_activos,
       negociosVerificados: f.negocios_verificados,
+      facilitadoresActivos: f.facilitadores_activos,
+      pedidos: f.pedidos,
+      pedidosCompletados: f.pedidos_completados,
+      conTratoSeguro: f.con_trato_seguro,
+      clientesUnicos: f.clientes_unicos,
       pqrAbiertas: f.pqr_abiertas,
       resenasNegativas: f.resenas_negativas,
     }
