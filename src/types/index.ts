@@ -76,6 +76,16 @@ export interface Business {
   neighborhood: string | null
   lat: number
   lng: number
+  /**
+   * Comuna de Cali calculada desde lat/lng, no escrita por nadie. La pone un
+   * trigger de Postgres con PostGIS al guardar la ficha (ver
+   * supabase/migracion-comunas-postgis.sql).
+   *
+   * `null` o ausente significa «sin clasificar»: fuera de Cali, o una
+   * coordenada que no cayó en ningún polígono. El panel lo cuenta aparte en
+   * vez de esconderlo.
+   */
+  comuna?: number | null
   photos: string[]
   hours: BusinessHours[]
   rating_avg: number
