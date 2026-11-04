@@ -24,6 +24,11 @@
 -- migracion-comunas-postgis.sql (businesses.comuna).
 --
 -- Aditiva: solo crea funciones. No toca ninguna tabla, política ni permiso.
+--
+-- Cada función lleva su `drop function if exists` delante. No es por gusto:
+-- `create or replace` NO puede cambiar el tipo de retorno de una función que
+-- ya existe, así que sin el drop la migración falla en cuanto se le añade una
+-- columna al resultado. Con el drop se puede correr cuantas veces haga falta.
 -- =====================================================================
 
 -- ---------- 1. LOS NÚMEROS DE ARRIBA ----------
@@ -31,6 +36,7 @@
 -- «negocios_activos» los que están publicados: son cosas distintas y el panel
 -- las rotula distinto, porque confundirlas es como se infla un número sin
 -- querer.
+drop function if exists public.panel_resumen();
 create or replace function public.panel_resumen()
 returns table (
   usuarios int,
@@ -89,6 +95,7 @@ grant execute on function public.panel_resumen() to authenticated;
 --
 -- Solo salen los periodos con actividad. Con los datos de hoy, rellenar los
 -- huecos con ceros daría una gráfica casi toda plana que parece un fallo.
+drop function if exists public.panel_serie(text, int);
 create or replace function public.panel_serie(p_gran text, p_limite int default 12)
 returns table (
   periodo date,
@@ -160,6 +167,7 @@ grant execute on function public.panel_serie(text, int) to authenticated;
 -- es exactamente donde hace falta un facilitador, que es la unidad de adopción
 -- del proyecto. Y esconder los «sin clasificar» haría que los números del mapa
 -- no sumaran el total, que es peor que enseñar el hueco.
+drop function if exists public.panel_por_comuna();
 create or replace function public.panel_por_comuna()
 returns table (comuna int, negocios int, verificados int)
 language plpgsql
@@ -203,6 +211,7 @@ grant execute on function public.panel_por_comuna() to authenticated;
 -- públicas (`reviews_select_public`), así que el texto no expone nada nuevo;
 -- el nombre del cliente sí sería información que el panel no necesita para
 -- hacer su trabajo.
+drop function if exists public.panel_resenas_negativas(int);
 create or replace function public.panel_resenas_negativas(p_limite int default 20)
 returns table (
   review_id uuid,

@@ -82,6 +82,7 @@ function Tarjeta({
   nombrePeriodo: periodo,
   enCurso,
   serie,
+  vacio,
 }: {
   titulo: string
   total: number
@@ -90,8 +91,23 @@ function Tarjeta({
   nombrePeriodo: string
   enCurso: boolean
   serie: number[]
+  /** Qué decir cuando todavía no ha pasado nada de esto. */
+  vacio: string
 }) {
   const diferencia = deltaAnterior == null ? null : delta - deltaAnterior
+
+  // Sin nada que contar, la comparación con el periodo anterior es ruido:
+  // «0 en septiembre · igual que el anterior» parece un fallo, cuando lo que
+  // pasa es que el piloto va empezando. Se dice en palabras.
+  if (total === 0) {
+    return (
+      <div className="rounded-xl border border-ink-200 bg-cream-100 p-3">
+        <p className="text-sm font-medium text-ink-700">{titulo}</p>
+        <p className="mt-0.5 text-3xl font-bold tabular-nums leading-none text-ink-400">0</p>
+        <p className="mt-1.5 text-xs text-ink-600">{vacio}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-xl border border-ink-200 bg-cream-100 p-3">
@@ -135,7 +151,18 @@ function Proporcion({
   unidad: string
   nota: string
 }) {
-  const pct = total > 0 ? Math.round((parte / total) * 100) : 0
+  // «0 de 0» se lee como un error. Si no hay de qué, se dice que no hay.
+  if (total === 0) {
+    return (
+      <div className="rounded-xl border border-ink-200 bg-cream-100 p-3">
+        <p className="text-sm font-medium text-ink-700">{titulo}</p>
+        <p className="mt-0.5 text-xl font-bold text-ink-400">Sin datos todavía</p>
+        <p className="mt-2 text-xs text-ink-600">{nota}</p>
+      </div>
+    )
+  }
+
+  const pct = Math.round((parte / total) * 100)
   return (
     <div className="rounded-xl border border-ink-200 bg-cream-100 p-3">
       <p className="text-sm font-medium text-ink-700">{titulo}</p>
@@ -295,6 +322,7 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
       <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
         <Tarjeta
           titulo="Usuarios"
+          vacio="nadie se ha registrado todavía"
           total={resumen.usuarios}
           delta={ultimo?.usuarios ?? 0}
           deltaAnterior={penultimo?.usuarios ?? null}
@@ -304,6 +332,7 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
         />
         <Tarjeta
           titulo="Negocios activos"
+          vacio="ningún negocio publicado todavía"
           total={resumen.negociosActivos}
           delta={ultimo?.negocios ?? 0}
           deltaAnterior={penultimo?.negocios ?? null}
@@ -313,6 +342,7 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
         />
         <Tarjeta
           titulo="Personas pidiendo"
+          vacio="todavía nadie ha pedido un servicio"
           total={resumen.clientesUnicos}
           delta={ultimo?.clientesActivos ?? 0}
           deltaAnterior={penultimo?.clientesActivos ?? null}
@@ -322,6 +352,7 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
         />
         <Tarjeta
           titulo="Trabajos terminados"
+          vacio="ningún trabajo cerrado todavía"
           total={resumen.pedidosCompletados}
           delta={ultimo?.pedidosCompletados ?? 0}
           deltaAnterior={penultimo?.pedidosCompletados ?? null}
