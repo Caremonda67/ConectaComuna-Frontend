@@ -41,6 +41,7 @@ export function AppLayout() {
   const { businessPendingCount, activeCount } = usePendingOrdersCount()
   const navigate = useNavigate()
   const location = useLocation()
+  const enPanelEquipo = location.pathname.startsWith('/panel/equipo')
   const prefersReduced = useReducedMotion()
 
   // Solo la lista corta del equipo ve el acceso a la mesa de reportes. La
@@ -487,9 +488,20 @@ export function AppLayout() {
         </div>
       </nav>
 
-      {/* Asistente Comunal con IA y soporte de voz para oficios y trámites */}
-      <FloatingChatButton />
-      <AsistenteBajoDemanda />
+      {/* Asistente Comunal con IA y soporte de voz para oficios y trámites.
+
+          No aparece en el panel del equipo. El contexto que el copiloto manda
+          al modelo incluye la ruta actual, y abierto ahí el modelo se pone a
+          improvisar sobre métricas que no ve. Más importante: deja cerrada la
+          puerta a que alguien, para «ayudar a moderar», le pase el texto de un
+          reporte — que es un vecino acusando por escrito a un negocio con
+          nombre y dirección. Eso no sale de nuestra base. */}
+      {!enPanelEquipo && (
+        <>
+          <FloatingChatButton />
+          <AsistenteBajoDemanda />
+        </>
+      )}
     </div>
     </AsistenteProvider>
   )

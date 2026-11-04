@@ -4,6 +4,10 @@ import { useAsync } from '@/hooks/useAsync'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { businessService } from '@/services/businessService'
 import { ReportesComunitariosPanel } from '@/components/trust/ReportesComunitariosPanel'
+import { ResumenEquipo } from '@/components/equipo/ResumenEquipo'
+import { MapaComunas } from '@/components/equipo/MapaComunas'
+import { ResenasNegativas } from '@/components/equipo/ResenasNegativas'
+import { panelService } from '@/services/panelService'
 import { CardSkeletonList } from '@/components/ui/Skeleton'
 import { UI_ICONS } from '@/components/ui/icons'
 
@@ -13,12 +17,16 @@ import { UI_ICONS } from '@/components/ui/icons'
  */
 export default function EquipoPage() {
   usePageMeta({
-    title: 'Mesa de reportes · ConectaComuna',
-    description: 'Revisión de los reportes vecinales que llegan a la comuna.',
+    title: 'Panel del equipo · ConectaComuna',
+    description: 'Cifras de la red y revisión de los reportes vecinales.',
   })
 
   const { userId } = useAuth()
   const { data: esEquipo, loading } = useAsync(() => businessService.esEquipoConecta(), [userId])
+  const { data: comunas } = useAsync(
+    () => (esEquipo ? panelService.porComuna() : Promise.resolve(null)),
+    [esEquipo],
+  )
 
   if (loading) return <CardSkeletonList count={2} />
   if (!esEquipo || !userId) return <Navigate to="/panel" replace />
@@ -27,14 +35,24 @@ export default function EquipoPage() {
     <div className="space-y-6">
       <header className="border-b border-ink-200 pb-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Equipo Conecta Comuna</p>
-        <h1 className="mt-1 text-2xl font-bold">Mesa de reportes</h1>
+        <h1 className="mt-1 text-2xl font-bold">Panel del equipo</h1>
         <p className="mt-1 max-w-2xl text-sm text-ink-600">
-          Aquí llegan los reportes de toda la red. Confirma solo lo que puedas comprobar:
-          dos reportes confirmados dejan el negocio bajo observación y se le quita el sello público.
+          Cómo va la red y los reportes que llegan de toda la comuna. Confirma solo lo que
+          puedas comprobar: dos reportes confirmados dejan el negocio bajo observación y se
+          le quita el sello público.
         </p>
       </header>
 
-      <ReportesComunitariosPanel modo="equipo" usuarioId={userId} />
+      <ResumenEquipo />
+
+      {comunas && <MapaComunas conteos={comunas} />}
+
+      <ResenasNegativas />
+
+      <section>
+        <h2 className="mb-2 font-bold text-ink-900">Mesa de reportes</h2>
+        <ReportesComunitariosPanel modo="equipo" usuarioId={userId} />
+      </section>
 
       <section className="card p-4 bg-cream-100 border-ink-200">
         <h2 className="font-bold text-ink-900 flex items-center gap-2">
