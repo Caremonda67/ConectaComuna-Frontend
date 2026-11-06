@@ -18,7 +18,18 @@ export type Granularidad = 'week' | 'month' | 'year'
 
 /** Lo de arriba del panel: fotografía de hoy, no del periodo. */
 export interface ResumenPanel {
+  /**
+   * Todas las cuentas. Se mantiene porque es el total, pero el panel no lo
+   * enseña solo: mezcla a la modista que ofrece y al vecino que pide, que no
+   * son lo mismo y crecen por motivos distintos.
+   */
   usuarios: number
+  /** Cuentas que no tienen negocio ni son facilitador: quien viene a pedir. */
+  vecinos: number
+  /** Cuentas de tipo negocio. */
+  duenosDeNegocio: number
+  /** Cuentas de facilitador, hayan sellado o no. */
+  facilitadores: number
   negocios: number
   negociosActivos: number
   negociosVerificados: number
@@ -115,6 +126,9 @@ export function resumenPanel(datos: DatosPanel): ResumenPanel {
 
   return {
     usuarios: datos.profiles.length,
+    vecinos: datos.profiles.filter((p) => p.account_type === 'client').length,
+    duenosDeNegocio: datos.profiles.filter((p) => p.account_type === 'business').length,
+    facilitadores: datos.profiles.filter((p) => p.account_type === 'facilitador').length,
     negocios: datos.businesses.length,
     negociosActivos: datos.businesses.filter((b) => b.is_active).length,
     negociosVerificados: datos.businesses.filter((b) => b.verification_status === 'verified')

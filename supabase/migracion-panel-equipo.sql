@@ -40,6 +40,9 @@ drop function if exists public.panel_resumen();
 create or replace function public.panel_resumen()
 returns table (
   usuarios int,
+  vecinos int,
+  duenos_de_negocio int,
+  facilitadores int,
   negocios int,
   negocios_activos int,
   negocios_verificados int,
@@ -64,6 +67,12 @@ begin
   return query
   select
     (select count(*)::int from public.profiles),
+    -- Separadas por tipo de cuenta. «Usuarios» a secas mezcla a quien ofrece
+    -- con quien pide, y con pocos registros esa mezcla infla la cifra que más
+    -- se mira.
+    (select count(*)::int from public.profiles where account_type = 'client'),
+    (select count(*)::int from public.profiles where account_type = 'business'),
+    (select count(*)::int from public.profiles where account_type = 'facilitador'),
     (select count(*)::int from public.businesses),
     (select count(*)::int from public.businesses where is_active),
     (select count(*)::int from public.businesses where verification_status = 'verified'),

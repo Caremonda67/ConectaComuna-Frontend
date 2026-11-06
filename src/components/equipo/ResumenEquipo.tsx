@@ -83,6 +83,7 @@ function Tarjeta({
   enCurso,
   serie,
   vacio,
+  pie,
 }: {
   titulo: string
   total: number
@@ -93,6 +94,8 @@ function Tarjeta({
   serie: number[]
   /** Qué decir cuando todavía no ha pasado nada de esto. */
   vacio: string
+  /** Contexto que evita leer el número como si fuera otra cosa. */
+  pie?: string
 }) {
   const diferencia = deltaAnterior == null ? null : delta - deltaAnterior
 
@@ -105,6 +108,7 @@ function Tarjeta({
         <p className="text-sm font-medium text-ink-700">{titulo}</p>
         <p className="mt-0.5 text-3xl font-bold tabular-nums leading-none text-ink-400">0</p>
         <p className="mt-1.5 text-xs text-ink-600">{vacio}</p>
+        {pie && <p className="mt-1 text-xs text-ink-600">{pie}</p>}
       </div>
     )
   }
@@ -130,6 +134,7 @@ function Tarjeta({
             : `${diferencia > 0 ? '▲' : '▼'} ${Math.abs(diferencia)} frente al anterior`}
         </p>
       )}
+      {pie && <p className="mt-1 text-xs text-ink-600">{pie}</p>}
       <Chispa valores={serie} titulo={`Evolución de ${titulo.toLowerCase()}`} />
     </div>
   )
@@ -257,7 +262,13 @@ function Serie({ datos, granularidad }: { datos: PuntoSerie[]; granularidad: Gra
   )
 }
 
-export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
+export function ResumenEquipo({
+  comunas,
+  errorComunas,
+}: {
+  comunas: ConteoComuna[] | null
+  errorComunas?: string | null
+}) {
   const [granularidad, setGranularidad] = useState<Granularidad>('month')
   const { data: resumen, loading, error } = useAsync(() => panelService.resumen(), [])
   const { data: serie } = useAsync(() => panelService.serie(granularidad), [granularidad])
@@ -321,9 +332,10 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
 
       <div className="mt-3 grid grid-cols-2 gap-2 lg:grid-cols-4">
         <Tarjeta
-          titulo="Usuarios"
-          vacio="nadie se ha registrado todavía"
-          total={resumen.usuarios}
+          titulo="Vecinos"
+          vacio="ningún vecino registrado todavía"
+          total={resumen.vecinos}
+          pie={`${resumen.usuarios} cuentas en total, contando negocios y facilitadores`}
           delta={ultimo?.usuarios ?? 0}
           deltaAnterior={penultimo?.usuarios ?? null}
           nombrePeriodo={etiquetaPeriodo}
@@ -334,6 +346,11 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
           titulo="Negocios activos"
           vacio="ningún negocio publicado todavía"
           total={resumen.negociosActivos}
+          pie={
+            resumen.facilitadores === 1
+              ? '1 facilitador en la red'
+              : `${resumen.facilitadores} facilitadores en la red`
+          }
           delta={ultimo?.negocios ?? 0}
           deltaAnterior={penultimo?.negocios ?? null}
           nombrePeriodo={etiquetaPeriodo}
@@ -370,9 +387,17 @@ export function ResumenEquipo({ comunas }: { comunas: ConteoComuna[] | null }) {
         <Proporcion
           titulo="Comunas con presencia"
           parte={conPresencia ?? 0}
-          total={22}
+          // Sin el reparto por comuna no se sabe cuántas hay, y pintar un 0
+          // es peor que no pintar nada: un cero inventado se lee como un dato.
+          total={conPresencia == null ? 0 : 22}
           unidad="comunas de Cali"
-          nota="al menos un negocio registrado"
+          nota={
+            conPresencia == null
+              ? errorComunas
+                ? `No se pudo calcular: ${errorComunas}`
+                : 'Calculando el reparto por comuna…'
+              : 'al menos un negocio registrado'
+          }
         />
         <Proporcion
           titulo="Con sello en territorio"

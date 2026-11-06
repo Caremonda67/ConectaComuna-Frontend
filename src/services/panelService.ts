@@ -67,6 +67,9 @@ export const panelService = {
     const f = data as Record<string, number>
     return {
       usuarios: f.usuarios,
+      vecinos: f.vecinos,
+      duenosDeNegocio: f.duenos_de_negocio,
+      facilitadores: f.facilitadores,
       negocios: f.negocios,
       negociosActivos: f.negocios_activos,
       negociosVerificados: f.negocios_verificados,

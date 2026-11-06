@@ -23,7 +23,7 @@ export default function EquipoPage() {
 
   const { userId } = useAuth()
   const { data: esEquipo, loading } = useAsync(() => businessService.esEquipoConecta(), [userId])
-  const { data: comunas } = useAsync(
+  const { data: comunas, error: errorComunas } = useAsync(
     () => (esEquipo ? panelService.porComuna() : Promise.resolve(null)),
     [esEquipo],
   )
@@ -43,9 +43,25 @@ export default function EquipoPage() {
         </p>
       </header>
 
-      <ResumenEquipo comunas={comunas} />
+      <ResumenEquipo comunas={comunas} errorComunas={errorComunas} />
 
       {comunas && <MapaComunas conteos={comunas} />}
+
+      {/* Si el reparto por comuna falla, el mapa no puede aparecer, pero
+          callarlo es peor: la pantalla queda sin mapa y sin explicación. */}
+      {!comunas && errorComunas && (
+        <section className="card p-4">
+          <h2 className="font-bold text-ink-900">Negocios por comuna</h2>
+          <p className="mt-2 text-sm text-ink-700">
+            No se pudo cargar el reparto por comuna, así que el mapa no se muestra.{' '}
+            {errorComunas}
+          </p>
+          <p className="mt-2 text-xs text-ink-600">
+            Suele ser que falte correr <code>migracion-panel-equipo.sql</code> o{' '}
+            <code>migracion-comunas-postgis.sql</code> en la base.
+          </p>
+        </section>
+      )}
 
       <ResenasNegativas />
 

@@ -301,6 +301,22 @@ export function MapaComunas({ conteos }: Props) {
         </p>
       )}
 
+      {/* La licencia ODbL de OpenStreetMap exige atribuir, y la diapositiva de
+          uso ético de las TIC afirma que la atribución está visible. Es una
+          obligación de la licencia, no un detalle de cortesía. */}
+      <p className="mt-3 text-xs text-ink-600">
+        Límites de las comunas:{' '}
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-ink-300 underline-offset-2"
+        >
+          © colaboradores de OpenStreetMap
+        </a>
+        , licencia ODbL.
+      </p>
+
       {sinClasificar && sinClasificar.negocios > 0 && (
         // Se muestra siempre que lo haya. Si los números del mapa no suman el
         // total, el mapa está mintiendo aunque cada celda se vea bien.

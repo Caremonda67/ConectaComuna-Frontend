@@ -9,13 +9,17 @@ import {
   seriePanel,
 } from './metricasPanel'
 
-function perfil(id: string, created_at: string): Profile {
+function perfil(
+  id: string,
+  created_at: string,
+  account_type: Profile['account_type'] = 'client',
+): Profile {
   return {
     id,
     full_name: id,
     phone: null,
     avatar_url: null,
-    account_type: 'client',
+    account_type,
     neighborhood: null,
     onboarding_completado: true,
     created_at,
@@ -295,5 +299,41 @@ describe('métricas de adopción', () => {
 
   it('sin negocios la cobertura es cero, no 22', () => {
     expect(comunasConPresencia(negociosPorComuna([]))).toBe(0)
+  })
+})
+
+describe('vecinos y negocios se cuentan aparte', () => {
+  it('separa por tipo de cuenta y el total los suma', () => {
+    // «Usuarios» a secas mezclaba a quien ofrece con quien pide. Con pocos
+    // registros esa mezcla infla justo la cifra que más se mira: cinco
+    // cuentas de las que cuatro son dueños de negocio no son cinco vecinos.
+    const r = resumenPanel({
+      ...VACIO,
+      profiles: [
+        perfil('ana', '2026-10-01T10:00:00Z'),
+        perfil('beto', '2026-10-02T10:00:00Z'),
+        perfil('marta', '2026-10-03T10:00:00Z', 'business'),
+        perfil('jose', '2026-10-04T10:00:00Z', 'business'),
+        perfil('ruth', '2026-10-05T10:00:00Z', 'facilitador'),
+      ],
+    })
+    expect(r.vecinos).toBe(2)
+    expect(r.duenosDeNegocio).toBe(2)
+    expect(r.facilitadores).toBe(1)
+    expect(r.usuarios).toBe(5)
+    expect(r.vecinos + r.duenosDeNegocio + r.facilitadores).toBe(r.usuarios)
+  })
+
+  it('facilitadores en la red no es lo mismo que facilitadores activos', () => {
+    // Una cuenta de facilitador que nunca salió a verificar está en la red
+    // pero no mueve la adopción. Confundirlos sería contar intención como
+    // resultado.
+    const r = resumenPanel({
+      ...VACIO,
+      profiles: [perfil('ruth', '2026-10-05T10:00:00Z', 'facilitador')],
+      businesses: [negocio('n1')],
+    })
+    expect(r.facilitadores).toBe(1)
+    expect(r.facilitadoresActivos).toBe(0)
   })
 })
