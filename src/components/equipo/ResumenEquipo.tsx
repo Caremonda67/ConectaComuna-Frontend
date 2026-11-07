@@ -347,7 +347,13 @@ export function ResumenEquipo({
           vacio="ningún negocio publicado todavía"
           total={resumen.negociosActivos}
           pie={
-            resumen.facilitadores === 1
+            // Si la base todavía tiene una versión anterior de panel_resumen()
+            // este campo no llega, y pintarlo igual deja un «undefined
+            // facilitadores en la red» a la vista del jurado. Mejor no decir
+            // nada que decir una palabra en inglés que nadie entiende.
+            resumen.facilitadores == null
+              ? undefined
+              : resumen.facilitadores === 1
               ? '1 facilitador en la red'
               : `${resumen.facilitadores} facilitadores en la red`
           }

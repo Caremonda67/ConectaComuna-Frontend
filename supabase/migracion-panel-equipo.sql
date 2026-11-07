@@ -200,12 +200,17 @@ begin
 
   union all
 
+  -- Todo calificado con el alias de la tabla, y no por pulcritud: esta
+  -- funcion DEVUELVE una columna llamada `comuna`, asi que un `comuna is
+  -- null` a secas es ambiguo entre la columna de salida y la de la tabla.
+  -- Postgres no lo avisa al crearla; revienta al llamarla, con
+  -- «column reference "comuna" is ambiguous», y el panel se queda sin mapa.
   select
     null::int,
     count(*)::int,
-    count(*) filter (where verification_status = 'verified')::int
-  from public.businesses
-  where is_active and comuna is null;
+    count(*) filter (where b2.verification_status = 'verified')::int
+  from public.businesses b2
+  where b2.is_active and b2.comuna is null;
 end;
 $$;
 
