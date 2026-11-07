@@ -40,6 +40,36 @@ const COLUMNAS_PUBLICAS =
 /** Lo mismo más el código de apadrinamiento, que solo ve el dueño del negocio. */
 const SELECT_CON_CODIGO = `${COLUMNAS_PUBLICAS}, codigo_apadrinamiento, codigo_apadrinamiento_expira_en`
 
+/**
+ * Búsqueda por cercanía resuelta en Postgres con PostGIS: `st_dwithin` acota
+ * por radio y `<->` ordena por distancia real, las dos con el índice GiST.
+ *
+ * Devuelve `null` si la función no está disponible —la migración no se ha
+ * corrido, o el servicio falla— para que quien llama use el camino de
+ * siempre. El directorio es lo que el jurado va a tocar en vivo: no se cambia
+ * la consulta más usada de la aplicación sin dejar por dónde caerse.
+ */
+async function buscarConPostgis(
+  filters: BusinessFilters,
+): Promise<BusinessWithDistance[] | null> {
+  if (!filters.center || !filters.radiusKm) return null
+  try {
+    const { data, error } = await requireSupabase().rpc('buscar_negocios_cerca', {
+      p_lat: filters.center.lat,
+      p_lng: filters.center.lng,
+      p_radio_km: filters.radiusKm,
+      p_limite: 60,
+      p_categoria: filters.category && filters.category !== 'all' ? filters.category : null,
+    })
+    if (error || !Array.isArray(data)) return null
+    return (data as (Business & { distancia_km: number })[]).map(
+      ({ distancia_km, ...negocio }) => ({ ...negocio, distanceKm: distancia_km }),
+    )
+  } catch {
+    return null
+  }
+}
+
 export const businessService = {
   async search(filters: BusinessFilters): Promise<BusinessWithDistance[]> {
     if (isDemoMode) {
@@ -73,6 +103,37 @@ export const businessService = {
         result = result.filter((b) => (b.distanceKm ?? 0) <= filters.radiusKm!)
       }
       return delay(applySort(result, filters.sort))
+    }
+
+    // Con ubicación y radio, la base ordena por distancia con PostGIS. El
+    // camino de abajo —caja envolvente más Haversine en el navegador— aplica
+    // `.limit(60)` ANTES de que exista la distancia: con muchos negocios en la
+    // caja, el más cercano puede no venir entre esas 60 y la lista enseña uno
+    // que no es. Se queda como respaldo, no como camino principal.
+    if (filters.center && filters.radiusKm) {
+      const cercanos = await buscarConPostgis(filters)
+      if (cercanos) {
+        let result = cercanos
+        if (filters.minRating) result = result.filter((b) => b.rating_avg >= filters.minRating!)
+        if (filters.wholesaleOnly) result = result.filter((b) => b.wholesale_enabled)
+        if (filters.query?.trim()) {
+          const tokens = filters.query
+            .toLowerCase()
+            .replace(/[,()%"'\\]/g, ' ')
+            .split(/\s+/)
+            .filter((t) => t.length > 0)
+          if (tokens.length > 0) {
+            result = result.filter((b) => {
+              const texto = `${b.name} ${b.description} ${b.neighborhood ?? ''}`.toLowerCase()
+              return tokens.some((t) => texto.includes(t))
+            })
+          }
+        }
+        if (filters.openNow) {
+          result = result.filter((b) => getBusinessOpenStatus(b.hours).isOpen)
+        }
+        return applySort(result, filters.sort)
+      }
     }
 
     // Filtrado en el servidor: menos bytes viajando, clave con conexiones lentas.
@@ -550,9 +611,16 @@ export const businessService = {
     if (error) throw error
   },
 
-  /** Cuenta corta del equipo que media los reportes. No es un rol del producto. */
+  /**
+   * Cuenta corta del equipo que media los reportes. No es un rol del producto:
+   * en producción es una fila en `equipo_conecta`, puesta solo por SQL.
+   *
+   * En demostración era `true` para cualquiera que entrara, así que un jurado
+   * que se registrara por el QR se encontraba el panel interno sin que nadie
+   * se lo explicara. Ahora es una sola cuenta, igual que en producción.
+   */
   async esEquipoConecta(): Promise<boolean> {
-    if (isDemoMode) return true
+    if (isDemoMode) return readDb().sessionUserId === 'user-equipo'
     const { data, error } = await requireSupabase().rpc('es_equipo_conecta')
     if (error) {
       console.warn('No se pudo comprobar si la cuenta es del equipo:', error.message)

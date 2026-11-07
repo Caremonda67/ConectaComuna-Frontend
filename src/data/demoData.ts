@@ -9,6 +9,156 @@ const defaultHours = (): BusinessHours[] =>
   }))
 
 export const demoProfiles: Profile[] = [
+  // Vecinos que han pedido trabajos en el piloto. Sin ellos el historial
+  // lo firmaban dos personas y el panel del equipo mostraba «2 tomando
+  // servicios» junto a cientos de pedidos.
+  // La cuenta del equipo. Es `client` a propósito: el administrador NO es un
+  // tipo de cuenta del producto, es una fila en `equipo_conecta`. Así no sale
+  // el selector de rol —que solo aparece con business o facilitador— y no hay
+  // que meter un cuarto valor en el enum `account_type`, que vive en doce
+  // condicionales del frontend y en varias políticas de la base.
+  {
+    id: 'user-equipo',
+    full_name: 'Equipo Conecta Comuna',
+    phone: null,
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: null,
+    onboarding_completado: true,
+    created_at: '2026-05-04T09:00:00Z',
+  },
+  // Aparecía firmando pedidos pero no existía como perfil, así que el panel
+  // contaba un cliente que no estaba en la lista de usuarios.
+  {
+    id: 'user-otro',
+    full_name: 'Jorge Benítez',
+    phone: '3011120099',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Rodeo',
+    onboarding_completado: true,
+    created_at: '2026-05-11T14:00:00Z',
+  },
+  {
+    id: 'vec-carmen',
+    full_name: 'Carmen Elena Viáfara',
+    phone: '3012003311',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Vallado',
+    onboarding_completado: true,
+    created_at: '2026-05-20T14:00:00Z',
+  },
+  {
+    id: 'vec-jairo',
+    full_name: 'Jairo Caicedo',
+    phone: '3145520018',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Rodeo',
+    onboarding_completado: true,
+    created_at: '2026-05-31T14:00:00Z',
+  },
+  {
+    id: 'vec-yuli',
+    full_name: 'Yuliana Mosquera',
+    phone: '3186640092',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'Antonio Nariño',
+    onboarding_completado: true,
+    created_at: '2026-06-11T14:00:00Z',
+  },
+  {
+    id: 'vec-dubal',
+    full_name: 'Dubal Angulo',
+    phone: '3104471125',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'Ciudad Córdoba',
+    onboarding_completado: true,
+    created_at: '2026-06-22T14:00:00Z',
+  },
+  {
+    id: 'vec-marleny',
+    full_name: 'Marleny Riascos',
+    phone: '3002218874',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'Mariano Ramos',
+    onboarding_completado: true,
+    created_at: '2026-07-03T14:00:00Z',
+  },
+  {
+    id: 'vec-oscar',
+    full_name: 'Óscar Hurtado',
+    phone: '3156690043',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Retiro',
+    onboarding_completado: true,
+    created_at: '2026-07-14T14:00:00Z',
+  },
+  {
+    id: 'vec-nidia',
+    full_name: 'Nidia Bonilla',
+    phone: '3173348890',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'Nueva Floresta',
+    onboarding_completado: true,
+    created_at: '2026-07-25T14:00:00Z',
+  },
+  {
+    id: 'vec-brayan',
+    full_name: 'Brayan Possú',
+    phone: '3024415567',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Vallado',
+    onboarding_completado: true,
+    created_at: '2026-08-05T14:00:00Z',
+  },
+  {
+    id: 'vec-esperanza',
+    full_name: 'Esperanza Lucumí',
+    phone: '3139982210',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'República de Israel',
+    onboarding_completado: true,
+    created_at: '2026-08-16T14:00:00Z',
+  },
+  {
+    id: 'vec-wilmar',
+    full_name: 'Wílmar Banguera',
+    phone: '3192276604',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'San Judas',
+    onboarding_completado: true,
+    created_at: '2026-08-27T14:00:00Z',
+  },
+  {
+    id: 'vec-leidy',
+    full_name: 'Leidy Johana Rentería',
+    phone: '3058813349',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'El Rodeo',
+    onboarding_completado: true,
+    created_at: '2026-09-07T14:00:00Z',
+  },
+  {
+    id: 'vec-fabio',
+    full_name: 'Fabio Nelson Gómez',
+    phone: '3167754428',
+    avatar_url: null,
+    account_type: 'client',
+    neighborhood: 'La Floresta',
+    onboarding_completado: true,
+    created_at: '2026-09-18T14:00:00Z',
+  },
   {
     id: 'user-cliente',
     full_name: 'Luisa Martínez',
@@ -17,7 +167,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'client',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-01-10T10:00:00Z',
+    created_at: '2026-05-17T10:00:00Z',
   },
   {
     id: 'user-facilitador',
@@ -27,7 +177,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'facilitador',
     neighborhood: 'Antonio Nariño',
     onboarding_completado: true,
-    created_at: '2025-02-01T09:30:00Z',
+    created_at: '2026-06-27T09:30:00Z',
   },
   {
     id: 'user-negocio',
@@ -37,7 +187,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Antonio Nariño',
     onboarding_completado: true,
-    created_at: '2024-11-02T10:00:00Z',
+    created_at: '2026-05-11T10:00:00Z',
   },
   {
     id: 'user-unas',
@@ -47,7 +197,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-02-15T10:00:00Z',
+    created_at: '2026-08-13T10:00:00Z',
   },
   {
     id: 'user-espiga',
@@ -57,7 +207,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-01-15T08:00:00Z',
+    created_at: '2026-05-24T08:00:00Z',
   },
   {
     id: 'user-motos',
@@ -67,7 +217,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Nueva Floresta',
     onboarding_completado: true,
-    created_at: '2025-01-18T09:00:00Z',
+    created_at: '2026-05-31T09:00:00Z',
   },
   {
     id: 'user-plomeria',
@@ -77,7 +227,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Antonio Nariño',
     onboarding_completado: true,
-    created_at: '2025-01-20T10:00:00Z',
+    created_at: '2026-06-07T10:00:00Z',
   },
   {
     id: 'user-empanadas',
@@ -87,7 +237,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Retiro',
     onboarding_completado: true,
-    created_at: '2025-01-22T06:30:00Z',
+    created_at: '2026-06-13T06:30:00Z',
   },
   {
     id: 'user-pintura',
@@ -97,7 +247,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Vallado',
     onboarding_completado: true,
-    created_at: '2025-01-25T07:30:00Z',
+    created_at: '2026-06-20T07:30:00Z',
   },
   {
     id: 'user-electricidad',
@@ -107,7 +257,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'La Floresta',
     onboarding_completado: true,
-    created_at: '2025-02-01T08:00:00Z',
+    created_at: '2026-06-27T08:00:00Z',
   },
   {
     id: 'user-almuerzos',
@@ -117,7 +267,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Antonio Nariño',
     onboarding_completado: true,
-    created_at: '2025-02-03T07:00:00Z',
+    created_at: '2026-07-04T07:00:00Z',
   },
   {
     id: 'user-calzado',
@@ -127,7 +277,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Nueva Floresta',
     onboarding_completado: true,
-    created_at: '2025-02-05T08:30:00Z',
+    created_at: '2026-07-10T08:30:00Z',
   },
   {
     id: 'user-tapiceria',
@@ -137,7 +287,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-02-08T09:00:00Z',
+    created_at: '2026-07-17T09:00:00Z',
   },
   {
     id: 'user-bici',
@@ -147,7 +297,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Vallado',
     onboarding_completado: true,
-    created_at: '2025-02-10T08:00:00Z',
+    created_at: '2026-10-13T08:00:00Z',
   },
   {
     id: 'user-canina',
@@ -157,7 +307,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Antonio Nariño',
     onboarding_completado: true,
-    created_at: '2025-02-12T09:30:00Z',
+    created_at: '2026-07-31T09:30:00Z',
   },
   {
     id: 'user-mandados',
@@ -167,7 +317,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-02-14T07:00:00Z',
+    created_at: '2026-08-06T07:00:00Z',
   },
   {
     id: 'user-vivero',
@@ -177,7 +327,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'Nueva Floresta',
     onboarding_completado: true,
-    created_at: '2025-02-16T08:30:00Z',
+    created_at: '2026-08-20T08:30:00Z',
   },
   {
     id: 'user-afro',
@@ -187,7 +337,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Retiro',
     onboarding_completado: true,
-    created_at: '2025-02-18T09:00:00Z',
+    created_at: '2026-08-26T09:00:00Z',
   },
   {
     id: 'user-aseo',
@@ -197,7 +347,7 @@ export const demoProfiles: Profile[] = [
     account_type: 'business',
     neighborhood: 'El Rodeo',
     onboarding_completado: true,
-    created_at: '2025-02-20T08:00:00Z',
+    created_at: '2026-09-02T08:00:00Z',
   },
 ]
 
@@ -213,8 +363,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3009876543',
     address: 'Calle 48 #40-12',
     neighborhood: 'Antonio Nariño',
-    lat: 3.4381,
-    lng: -76.5241,
+    lat: 3.4155,
+    lng: -76.5054,
     photos: [
       'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&q=60',
       'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=600&q=60',
@@ -224,7 +374,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.8,
     rating_count: 24,
     completed_orders: 61,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-06-10T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     wholesale_enabled: true,
     wholesale_min_order: '3 prendas o arreglos',
@@ -234,7 +387,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-2', name: 'Cambio de cremallera o cierre', price: 15000, description: 'Incluye cremallera estándar y costura reforzada' },
       { id: 'srv-3', name: 'Entallado de camisa o blusa', price: 18000, description: 'Ajuste de mangas, costados y pinzas' },
     ],
-    created_at: '2024-11-02T10:00:00Z',
+    created_at: '2026-05-11T10:00:00Z',
   },
   {
     id: 'biz-2',
@@ -247,8 +400,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3145558899',
     address: 'Carrera 39 #47-08',
     neighborhood: 'El Rodeo',
-    lat: 3.4342,
-    lng: -76.5198,
+    lat: 3.4352,
+    lng: -76.5045,
     photos: [
       'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=600&q=60',
       'https://images.unsplash.com/photo-1610992015732-2449b76344bc?w=600&q=60',
@@ -264,7 +417,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-22', name: 'Pedicure completo', price: 22000, description: 'Tratamiento de cutícula, durezas y esmaltado' },
       { id: 'srv-23', name: 'Semipermanente con diseño', price: 35000, description: 'Duración garantizada hasta 21 días' },
     ],
-    created_at: '2025-02-15T10:00:00Z',
+    created_at: '2026-08-13T10:00:00Z',
   },
   {
     id: 'biz-3',
@@ -277,8 +430,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: null,
     address: 'Calle 52 #42-30',
     neighborhood: 'Nueva Floresta',
-    lat: 3.4415,
-    lng: -76.5266,
+    lat: 3.4386,
+    lng: -76.4981,
     photos: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=60'],
     hours: defaultHours().map((h) => ({ ...h, closed: false, opens: '00:00', closes: '23:59' })),
     rating_avg: 4.2,
@@ -291,7 +444,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-32', name: 'Apertura de puerta residencial', price: 40000, description: 'Servicio a domicilio en la comuna sin romper chapa' },
       { id: 'srv-33', name: 'Instalación de cerrojo de seguridad', price: 55000, description: 'Mano de obra para perforación y anclaje' },
     ],
-    created_at: '2025-04-01T10:00:00Z',
+    created_at: '2026-09-16T10:00:00Z',
   },
   {
     id: 'biz-4',
@@ -304,8 +457,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3183334455',
     address: 'Carrera 41 #50-15',
     neighborhood: 'Antonio Nariño',
-    lat: 3.4398,
-    lng: -76.5182,
+    lat: 3.4151,
+    lng: -76.5045,
     photos: [
       'https://images.unsplash.com/photo-1445205170230-053b83016050?w=600&q=60',
       'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600&q=60',
@@ -323,7 +476,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-41', name: 'Lote de 12 camisetas surtidas', price: 90000, description: 'Tallas variadas para reventa' },
       { id: 'srv-42', name: 'Prenda individual seleccionada', price: 12000, description: 'Ropa americana de primera calidad' },
     ],
-    created_at: '2024-08-20T10:00:00Z',
+    created_at: '2026-05-04T10:00:00Z',
   },
   {
     id: 'biz-5',
@@ -336,16 +489,19 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3116667788',
     address: 'Parque principal, zona norte',
     neighborhood: 'El Rodeo',
-    lat: 3.4321,
-    lng: -76.5254,
+    lat: 3.4349,
+    lng: -76.5054,
     photos: [],
     hours: defaultHours(),
     rating_avg: 4.4,
     rating_count: 5,
     completed_orders: 6,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-07-11T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
-    created_at: '2025-06-05T10:00:00Z',
+    created_at: '2026-09-29T10:00:00Z',
   },
   {
     id: 'biz-6',
@@ -358,8 +514,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3129990011',
     address: 'Calle 46 #38-90',
     neighborhood: 'Nueva Floresta',
-    lat: 3.4359,
-    lng: -76.5301,
+    lat: 3.4394,
+    lng: -76.4976,
     photos: ['https://images.unsplash.com/photo-1512499617640-c74ae3a79d37?w=600&q=60'],
     hours: defaultHours(),
     rating_avg: 4.1,
@@ -367,7 +523,7 @@ export const demoBusinesses: Business[] = [
     completed_orders: 22,
     verification_status: 'unverified',
     is_active: true,
-    created_at: '2025-03-12T10:00:00Z',
+    created_at: '2026-09-09T10:00:00Z',
   },
   {
     id: 'biz-7',
@@ -380,8 +536,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3157778899',
     address: 'Carrera 40C #49-57',
     neighborhood: 'Vallado',
-    lat: 3.414,
-    lng: -76.505,
+    lat: 3.4059,
+    lng: -76.4983,
     photos: [
       'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=60',
       'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=600&q=60',
@@ -398,7 +554,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-barber-2', name: 'Perfilado de barba', price: 12000, description: 'Arreglo con toalla caliente y navaja' },
       { id: 'srv-barber-3', name: 'Combo Corte + Barba', price: 26000, description: 'Servicio completo de barbería' },
     ],
-    created_at: '2025-05-10T10:00:00Z',
+    created_at: '2026-09-22T10:00:00Z',
   },
   {
     id: 'biz-8',
@@ -411,8 +567,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3164448822',
     address: 'Carrera 38 # 45-19',
     neighborhood: 'El Rodeo',
-    lat: 3.4348,
-    lng: -76.5189,
+    lat: 3.4355,
+    lng: -76.5062,
     photos: [
       'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&q=60',
       'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=600&q=60',
@@ -422,7 +578,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.9,
     rating_count: 18,
     completed_orders: 42,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-08-12T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     wholesale_enabled: true,
     wholesale_min_order: '20 unidades surtidas',
@@ -433,7 +592,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-espiga-3', name: 'Combo refrigerio comunal (pan dulce + avena casera)', price: 6000, description: 'Ideal para talleres, reuniones y eventos barriales' },
       { id: 'srv-espiga-4', name: 'Pan aliñado tradicional de la casa', price: 5000, description: 'Pan suave con queso y mantequilla' },
     ],
-    created_at: '2025-01-15T08:00:00Z',
+    created_at: '2026-05-24T08:00:00Z',
   },
   {
     id: 'biz-9',
@@ -446,8 +605,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3127789012',
     address: 'Calle 50 # 39-14',
     neighborhood: 'Nueva Floresta',
-    lat: 3.4392,
-    lng: -76.5285,
+    lat: 3.4395,
+    lng: -76.4966,
     photos: [
       'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=600&q=60',
       'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=600&q=60',
@@ -464,7 +623,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-motos-3', name: 'Cambio de pastillas de freno', price: 18000, description: 'Instalación y purga básica' },
       { id: 'srv-motos-4', name: 'Despinche y parche vulcanizado', price: 10000, description: 'Atención rápida en taller o sector aledaño' },
     ],
-    created_at: '2025-01-18T09:00:00Z',
+    created_at: '2026-05-31T09:00:00Z',
   },
   {
     id: 'biz-10',
@@ -477,8 +636,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3156678901',
     address: 'Carrera 41B # 38-05',
     neighborhood: 'Antonio Nariño',
-    lat: 3.4305,
-    lng: -76.5230,
+    lat: 3.4134,
+    lng: -76.5050,
     photos: [
       'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=600&q=60',
       'https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=600&q=60',
@@ -495,7 +654,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-plomeria-3', name: 'Instalación o cambio de grifería para lavaplatos', price: 25000, description: 'Montaje de llave monomando o tradicional' },
       { id: 'srv-plomeria-4', name: 'Revisión y mantenimiento de estufa a gas', price: 40000, description: 'Calibración de quemadores y verificación de seguridad' },
     ],
-    created_at: '2025-01-20T10:00:00Z',
+    created_at: '2026-06-07T10:00:00Z',
   },
   {
     id: 'biz-11',
@@ -508,8 +667,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3178890123',
     address: 'Carrera 40 con Calle 48 Esquina',
     neighborhood: 'El Retiro',
-    lat: 3.4278,
-    lng: -76.5175,
+    lat: 3.4101,
+    lng: -76.4993,
     photos: [
       'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=60',
       'https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=600&q=60',
@@ -519,7 +678,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.9,
     rating_count: 45,
     completed_orders: 110,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-09-13T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     wholesale_enabled: true,
     wholesale_min_order: 'Ciento de empanadas medianas congeladas o fritas',
@@ -530,7 +692,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-fritos-3', name: 'Papa rellena casera de carne y arroz', price: 4000, description: 'Frita al momento con ají pique casero' },
       { id: 'srv-fritos-4', name: 'Ciento de empanadas cóctel congeladas', price: 65000, description: 'Listas para freír en reuniones familiares o de barrio' },
     ],
-    created_at: '2025-01-22T06:30:00Z',
+    created_at: '2026-06-13T06:30:00Z',
   },
   {
     id: 'biz-12',
@@ -543,8 +705,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3104567890',
     address: 'Calle 53 # 41A-22',
     neighborhood: 'El Vallado',
-    lat: 3.4285,
-    lng: -76.5140,
+    lat: 3.4065,
+    lng: -76.4984,
     photos: [
       'https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=600&q=60',
       'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=60',
@@ -561,7 +723,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-pintura-3', name: 'Impermeabilización de terraza (metro cuadrado)', price: 28000, description: 'Aplicación de manto líquido acrílico con tela de refuerzo' },
       { id: 'srv-pintura-4', name: 'Estucado y pulido de pared nueva (metro cuadrado)', price: 16000, description: 'Acabado liso listo para primera mano de pintura' },
     ],
-    created_at: '2025-01-25T07:30:00Z',
+    created_at: '2026-06-20T07:30:00Z',
   },
   {
     id: 'biz-13',
@@ -574,8 +736,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3137788990',
     address: 'Carrera 32 # 52-10',
     neighborhood: 'La Floresta',
-    lat: 3.4410,
-    lng: -76.5170,
+    lat: 3.4439,
+    lng: -76.5128,
     photos: [
       'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&q=60',
     ],
@@ -591,7 +753,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-elec-3', name: 'Instalación de punto de toma corriente o apagador', price: 22000, description: 'Incluye tubería conduit externa o pasada por tubería existente' },
       { id: 'srv-elec-4', name: 'Adecuación de circuito 220V para aire acondicionado', price: 95000, description: 'Tirada de cable calibre adecuado con breaker independiente' },
     ],
-    created_at: '2025-02-01T08:00:00Z',
+    created_at: '2026-06-27T08:00:00Z',
   },
   {
     id: 'biz-14',
@@ -604,8 +766,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3182233445',
     address: 'Calle 39 # 41-15',
     neighborhood: 'Antonio Nariño',
-    lat: 3.4312,
-    lng: -76.5245,
+    lat: 3.4155,
+    lng: -76.5056,
     photos: [
       'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=60',
       'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=600&q=60',
@@ -615,7 +777,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.8,
     rating_count: 36,
     completed_orders: 88,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-06-14T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     wholesale_enabled: true,
     wholesale_min_order: '10 almuerzos empresariales o para obras',
@@ -626,7 +791,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-almuerzo-3', name: 'Frijolada con chicharrón crocante y plátano maduro', price: 16000, description: 'Frijoles con garra cocidos lentamente en leña' },
       { id: 'srv-almuerzo-4', name: 'Menú semanal para trabajadores (5 almuerzos)', price: 65000, description: 'Ahorro semanal con entrega directa en el puesto de trabajo' },
     ],
-    created_at: '2025-02-03T07:00:00Z',
+    created_at: '2026-07-04T07:00:00Z',
   },
   {
     id: 'biz-15',
@@ -639,8 +804,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3146677889',
     address: 'Carrera 42 # 47-08',
     neighborhood: 'Nueva Floresta',
-    lat: 3.4380,
-    lng: -76.5270,
+    lat: 3.4379,
+    lng: -76.4961,
     photos: [
       'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600&q=60',
       'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600&q=60',
@@ -657,7 +822,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-calzado-3', name: 'Cambio de tapas antideslizantes para tacones', price: 12000, description: 'Par de tapas de poliuretano de alta durabilidad' },
       { id: 'srv-calzado-4', name: 'Limpieza, tintura y lustrado de calzado de cuero', price: 15000, description: 'Nutrición con crema de cera virgen y brillo a espejo' },
     ],
-    created_at: '2025-02-05T08:30:00Z',
+    created_at: '2026-07-10T08:30:00Z',
   },
   {
     id: 'biz-16',
@@ -670,8 +835,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3205566778',
     address: 'Calle 47 # 37-12',
     neighborhood: 'El Rodeo',
-    lat: 3.4335,
-    lng: -76.5210,
+    lat: 3.4359,
+    lng: -76.5063,
     photos: [
       'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&q=60',
     ],
@@ -687,7 +852,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-tapiceria-3', name: 'Lavado de cojinería completa de vehículo particular', price: 95000, description: 'Asientos delanteros, traseros y apoyacabezas' },
       { id: 'srv-tapiceria-4', name: 'Lavado de 4 sillas de comedor tapizadas', price: 40000, description: 'Recuperación de brillo y protección antimanchas' },
     ],
-    created_at: '2025-02-08T09:00:00Z',
+    created_at: '2026-07-17T09:00:00Z',
   },
   {
     id: 'biz-17',
@@ -700,8 +865,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3108899776',
     address: 'Calle 51 # 42-18',
     neighborhood: 'El Vallado',
-    lat: 3.4290,
-    lng: -76.5152,
+    lat: 3.4070,
+    lng: -76.4987,
     photos: [
       'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&q=60',
       'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=600&q=60',
@@ -718,7 +883,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-bici-3', name: 'Cambio de guayas y fundas de cambios/frenos', price: 18000, description: 'Incluye guayas de acero y calibración' },
       { id: 'srv-bici-4', name: 'Purgado y cambio de líquido hidráulico', price: 30000, description: 'Para frenos Shimano, Tektro o similares' },
     ],
-    created_at: '2025-02-10T08:00:00Z',
+    created_at: '2026-10-13T08:00:00Z',
   },
   {
     id: 'biz-18',
@@ -731,8 +896,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3189901122',
     address: 'Carrera 41 # 39-28',
     neighborhood: 'Antonio Nariño',
-    lat: 3.4318,
-    lng: -76.5235,
+    lat: 3.4133,
+    lng: -76.5054,
     photos: [
       'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=600&q=60',
       'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=600&q=60',
@@ -749,7 +914,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-canina-3', name: 'Baño e higienización para raza mediana/grande', price: 45000, description: 'Cepillado profundo de subpelo y secado térmico' },
       { id: 'srv-canina-4', name: 'Deslanado y retiro de nudos profesional', price: 20000, description: 'Sin rasurar al ras, cuidando la piel del animal' },
     ],
-    created_at: '2025-02-12T09:30:00Z',
+    created_at: '2026-07-31T09:30:00Z',
   },
   {
     id: 'biz-19',
@@ -762,8 +927,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3167788990',
     address: 'Calle 46 # 36-40',
     neighborhood: 'El Rodeo',
-    lat: 3.4340,
-    lng: -76.5195,
+    lat: 3.4368,
+    lng: -76.5060,
     photos: [
       'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=600&q=60',
     ],
@@ -771,7 +936,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.8,
     rating_count: 33,
     completed_orders: 95,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-07-15T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     services_catalog: [
       { id: 'srv-mandado-1', name: 'Carrera o entrega barrial interna en la comuna', price: 6000, description: 'Entrega rápida de documentos, llaves o paquetes chicos' },
@@ -779,7 +947,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-mandado-3', name: 'Domicilio desde la comuna hasta el centro de Cali', price: 12000, description: 'Trayecto ida con entrega puerta a puerta' },
       { id: 'srv-mandado-4', name: 'Compra y entrega express de farmacia o tienda', price: 8000, description: 'Compra de medicamentos o víveres con factura' },
     ],
-    created_at: '2025-02-14T07:00:00Z',
+    created_at: '2026-08-06T07:00:00Z',
   },
   {
     id: 'biz-20',
@@ -792,8 +960,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3154433221',
     address: 'Carrera 43 # 49-30',
     neighborhood: 'Nueva Floresta',
-    lat: 3.4370,
-    lng: -76.5260,
+    lat: 3.4384,
+    lng: -76.4959,
     photos: [
       'https://images.unsplash.com/photo-1463936575829-25148e1db1b8?w=600&q=60',
     ],
@@ -812,7 +980,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-vivero-3', name: 'Bolsa de abono orgánico compostado (5 kg)', price: 12000, description: 'Tierra negra enriquecida con cascarilla y humus' },
       { id: 'srv-vivero-4', name: 'Mantenimiento y poda básica de jardín residencial', price: 40000, description: 'Poda de setos, deshierbe y aplicación de nutrientes' },
     ],
-    created_at: '2025-02-16T08:30:00Z',
+    created_at: '2026-08-20T08:30:00Z',
   },
   {
     id: 'biz-21',
@@ -825,8 +993,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3175544332',
     address: 'Calle 50 # 39B-15',
     neighborhood: 'El Retiro',
-    lat: 3.4265,
-    lng: -76.5180,
+    lat: 3.4089,
+    lng: -76.4991,
     photos: [
       'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=600&q=60',
       'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=600&q=60',
@@ -835,7 +1003,10 @@ export const demoBusinesses: Business[] = [
     rating_avg: 4.9,
     rating_count: 38,
     completed_orders: 82,
-    verification_status: 'unverified',
+    verification_status: 'verified',
+    verification_by: 'user-facilitador',
+    verification_date: '2026-08-16T16:30:00Z',
+    verification_note: 'Visita en territorio: el taller existe y atiende en la dirección registrada.',
     is_active: true,
     services_catalog: [
       { id: 'srv-afro-1', name: 'Corte urbano Skin Fade + Perfilado de barba', price: 24000, description: 'Degradado limpio a navaja con toalla aromatizada' },
@@ -843,7 +1014,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-afro-3', name: 'Pigmentación semipermanente de barba', price: 18000, description: 'Relleno de sombras naturales con tinte hipoalergénico' },
       { id: 'srv-afro-4', name: 'Limpieza facial básica con mascarilla de carbón', price: 15000, description: 'Eliminación de puntos negros y tonificación' },
     ],
-    created_at: '2025-02-18T09:00:00Z',
+    created_at: '2026-08-26T09:00:00Z',
   },
   {
     id: 'biz-22',
@@ -856,8 +1027,8 @@ export const demoBusinesses: Business[] = [
     whatsapp: '3113339900',
     address: 'Calle 49 # 38-28',
     neighborhood: 'El Rodeo',
-    lat: 3.4355,
-    lng: -76.5200,
+    lat: 3.4371,
+    lng: -76.5051,
     photos: [
       'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=600&q=60',
     ],
@@ -876,7 +1047,7 @@ export const demoBusinesses: Business[] = [
       { id: 'srv-aseo-3', name: 'Galón de ambientador concentrado fragancia lavanda', price: 14000, description: 'Aroma duradero para pisos y superficies' },
       { id: 'srv-aseo-4', name: 'Kit ahorro aseo hogar (3 galones surtidos)', price: 35000, description: 'Límpido + Lavaplatos + Ambientador con entrega en el barrio' },
     ],
-    created_at: '2025-02-20T08:00:00Z',
+    created_at: '2026-09-02T08:00:00Z',
   },
 ]
 
@@ -910,30 +1081,51 @@ const TRABAJOS_CERRADOS: Array<{ negocio: string; trabajos: string[]; precio: nu
   { negocio: 'biz-22', trabajos: ['Kit ahorro aseo hogar', 'Galón de límpido concentrado', 'Galón de jabón lavaplatos'], precio: 35000, cuantos: 13 },
 ]
 
+/**
+ * Vecinos que han pedido trabajos. Antes el historial lo firmaban dos
+ * personas y nada más, así que el panel del equipo decía con toda razón «2
+ * tomando servicios» al lado de 168 pedidos del mes: coherente con los datos
+ * e imposible en la vida real. Un barrio son muchas personas pidiendo poco.
+ */
+const VECINOS_DEL_PILOTO = [
+  'user-cliente', 'user-otro', 'vec-carmen', 'vec-jairo', 'vec-yuli',
+  'vec-dubal', 'vec-marleny', 'vec-oscar', 'vec-nidia', 'vec-brayan',
+  'vec-esperanza', 'vec-wilmar', 'vec-leidy', 'vec-fabio',
+]
+
 /** Reparte los trabajos cerrados hacia atrás en el tiempo, uno cada pocos días. */
 function historialDelPiloto(): Order[] {
-  const inicio = new Date('2026-09-05T15:00:00Z').getTime()
+  const inicio = new Date('2026-10-28T15:00:00Z').getTime()
   const unDia = 24 * 60 * 60 * 1000
   const pedidos: Order[] = []
+  let n = 0
 
   TRABAJOS_CERRADOS.forEach(({ negocio, trabajos, precio, cuantos }) => {
-    for (let i = 0; i < cuantos; i += 1) {
-      const fecha = new Date(inicio - (i * 3 + 1) * unDia).toISOString()
-      const entrega = new Date(inicio - i * 3 * unDia).toISOString()
+    // Menos trabajos por negocio que antes. El piloto lleva unos meses, no
+    // años: veinte trabajos cerrados en un taller de barrio no cuadraban.
+    const reales = Math.max(2, Math.round(cuantos * 0.45))
+    for (let i = 0; i < reales; i += 1) {
+      const fecha = new Date(inicio - (i * 6 + 2) * unDia).toISOString()
+      const entrega = new Date(inicio - i * 6 * unDia).toISOString()
+      // Uno de cada cuatro se pactó con Trato Seguro. El anticipo nunca pasa
+      // del 50%, que es lo que impone el CHECK de Postgres.
+      const conAnticipo = n % 4 === 0
       pedidos.push({
         id: `${negocio}-hist-${i + 1}`,
         business_id: negocio,
-        client_id: i % 2 === 0 ? 'user-cliente' : 'user-otro',
+        client_id: VECINOS_DEL_PILOTO[n % VECINOS_DEL_PILOTO.length],
         title: trabajos[i % trabajos.length],
         description: 'Trabajo acordado y entregado en el barrio.',
         status: 'completed',
         scheduled_for: null,
         price_estimate: precio,
         final_price: precio,
+        advance_payment: conAnticipo ? Math.round(precio * 0.4) : 0,
         photos: [],
         created_at: fecha,
         updated_at: entrega,
       })
+      n += 1
     }
   })
 
@@ -952,8 +1144,8 @@ export const demoOrders: Order[] = [
     scheduled_for: '2026-09-12T09:00:00Z',
     price_estimate: 45000,
     photos: [],
-    created_at: '2026-09-01T14:00:00Z',
-    updated_at: '2026-09-01T14:00:00Z',
+    created_at: '2026-10-26T14:00:00Z',
+    updated_at: '2026-10-26T14:00:00Z',
   },
   {
     id: 'ord-2',
@@ -965,7 +1157,7 @@ export const demoOrders: Order[] = [
     scheduled_for: null,
     price_estimate: 30000,
     photos: [],
-    created_at: '2026-07-20T14:00:00Z',
+    created_at: '2026-10-06T14:00:00Z',
     updated_at: '2026-07-23T16:00:00Z',
   },
   {
@@ -978,7 +1170,7 @@ export const demoOrders: Order[] = [
     scheduled_for: '2026-09-10T10:00:00Z',
     price_estimate: 120000,
     photos: [],
-    created_at: '2026-08-28T09:00:00Z',
+    created_at: '2026-10-19T09:00:00Z',
     updated_at: '2026-09-02T09:00:00Z',
   },
 ]
@@ -1061,7 +1253,7 @@ export const demoReviews: Review[] = [
     client_id: 'user-cliente',
     rating: 5,
     comment: 'Quedaron perfectos y me los entregó al día siguiente.',
-    created_at: '2026-07-24T10:00:00Z',
+    created_at: '2026-10-13T10:00:00Z',
     client: { id: 'user-cliente', full_name: 'Luisa Martínez', avatar_url: null },
   },
 ]
