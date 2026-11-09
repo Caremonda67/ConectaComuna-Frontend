@@ -18,7 +18,11 @@ export function FloatingChatButton() {
         className={cn(
           'group relative flex items-center gap-2.5 rounded-full px-4 py-3 shadow-xl transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-brand-400',
           isOpen
-            ? 'bg-ink-800 text-ink-100 hover:bg-ink-700 dark:bg-ink-200 dark:text-ink-900'
+            // `hover:bg-ink-700` necesita pareja en oscuro. La escala de tinta
+            // se invierte, asi que ahi `ink-700` es #ccd5cd: al pasar el raton
+            // el fondo se aclaraba y el texto seguia claro, y el boton se
+            // quedaba en blanco. `ink-300` si es un tono por encima del fondo.
+            ? 'bg-ink-800 text-ink-100 hover:bg-ink-700 dark:bg-ink-200 dark:text-ink-900 dark:hover:bg-ink-300'
             : 'bg-brand-700 text-white dark:text-brand-50 hover:bg-brand-800 shadow-brand-900/30'
         )}
       >
@@ -42,7 +46,12 @@ export function FloatingChatButton() {
           <span className="text-xs font-bold leading-tight tracking-wide">
             {isOpen ? 'Cerrar asistente' : 'Asistente Comunal'}
           </span>
-          <span className="text-[10px] text-white dark:text-brand-50 leading-none">
+          {/* Sin color propio: lo hereda del botón. Tenía fijado el del estado
+              cerrado (`dark:text-brand-50`), que en oscuro es casi negro porque
+              la paleta se invierte. Eso funciona sobre el verde claro de
+              `brand-700`, pero al abrir el asistente el fondo pasa a `ink-200`,
+              que es oscuro, y el subtítulo desaparecía. */}
+          <span className="text-[10px] leading-none opacity-80">
             {isOpen ? 'Toca para ocultar' : 'Voz & oficios cercanos'}
           </span>
         </div>
