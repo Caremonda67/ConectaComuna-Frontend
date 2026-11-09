@@ -5,16 +5,34 @@ import { geocodificar, type UbicacionGeocodificada } from '@/services/direccionS
  * barrios que más se nombran en la demo respondan al instante y sigan
  * funcionando si la red falla. Cualquier otro lugar de Colombia se resuelve
  * contra el geocodificador.
+ *
+ * LAS OCHO COORDENADAS ANTERIORES ESTABAN MAL, entre 1 y 3,5 km cada una, y
+ * ninguna caía en el barrio que decía su etiqueta. «Vallado» apuntaba a
+ * Antonio Nariño, «Antonio Nariño» a Guayaquil, «Nueva Floresta» a Junín.
+ * Estaban escritas a mano con cuatro decimales y nunca se comprobaron.
+ *
+ * No es cosmético: esta tabla pone el punto de un negocio cuando alguien
+ * escribe su barrio, y de ahí sale la comuna que cuenta el panel. Un negocio
+ * del piloto quedó guardado exactamente en el «Vallado» de arriba, o sea a un
+ * kilómetro de su calle y en la comuna equivocada.
+ *
+ * Las de ahora salen de Nominatim y están comprobadas de ida y vuelta: se
+ * busca el barrio, y el punto que devuelve se geocodifica al revés para
+ * confirmar que cae en ese mismo barrio. Si alguna se cambia, hay que repetir
+ * esa comprobación; a ojo no se ve que estén mal.
  */
-const ATAJOS_PILOTO: UbicacionGeocodificada[] = [
-  { etiqueta: 'Antonio Nariño, Cali', center: { lat: 3.4365, lng: -76.5255 } },
-  { etiqueta: 'El Rodeo, Cali', center: { lat: 3.4401, lng: -76.5209 } },
-  { etiqueta: 'Nueva Floresta, Cali', center: { lat: 3.4342, lng: -76.5281 } },
-  { etiqueta: 'Vallado, Cali', center: { lat: 3.414, lng: -76.505 } },
-  { etiqueta: 'San Judas, Cali', center: { lat: 3.4215, lng: -76.512 } },
-  { etiqueta: 'Ciudad Córdoba, Cali', center: { lat: 3.418, lng: -76.508 } },
-  { etiqueta: 'Mariano Ramos, Cali', center: { lat: 3.413, lng: -76.516 } },
-  { etiqueta: 'República de Israel, Cali', center: { lat: 3.424, lng: -76.517 } },
+export const ATAJOS_PILOTO: UbicacionGeocodificada[] = [
+  { etiqueta: 'Antonio Nariño, Cali', center: { lat: 3.41442, lng: -76.50542 } }, // comuna 16
+  { etiqueta: 'El Rodeo, Cali', center: { lat: 3.43599, lng: -76.50521 } }, // comuna 12
+  { etiqueta: 'Nueva Floresta, Cali', center: { lat: 3.43854, lng: -76.49701 } }, // comuna 12
+  { etiqueta: 'El Vallado, Cali', center: { lat: 3.40624, lng: -76.49942 } }, // comuna 15
+  // Cali tiene San Judas Tadeo I y II; esta es la I, que es a la que
+  // responde el geocodificador. Si en el barrio se refieren a la otra, hay
+  // que desdoblar la entrada.
+  { etiqueta: 'San Judas, Cali', center: { lat: 3.4088, lng: -76.52408 } }, // comuna 10
+  { etiqueta: 'Ciudad Córdoba, Cali', center: { lat: 3.40116, lng: -76.50803 } }, // comuna 15
+  { etiqueta: 'Mariano Ramos, Cali', center: { lat: 3.40361, lng: -76.51723 } }, // comuna 16
+  { etiqueta: 'República de Israel, Cali', center: { lat: 3.40759, lng: -76.51338 } }, // comuna 16
 ]
 
 /** Sin tildes y sin puntuación, para comparar "Ciudad Córdoba" con "ciudad cordoba". */

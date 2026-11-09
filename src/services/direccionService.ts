@@ -191,23 +191,57 @@ function etiquetarDireccion(
   return barrio || ciudad || respaldo
 }
 
-/** Convierte el texto del usuario ("El Rodeo", "Calle 26 Bogotá", "Corferias") en puntos. */
-export async function geocodificar(texto: string): Promise<UbicacionGeocodificada[]> {
+/**
+ * Convierte el texto del usuario ("El Rodeo", "Calle 26 Bogotá", "Corferias")
+ * en puntos.
+ *
+ * `cerca` acota la búsqueda a un recuadro alrededor de ese punto. Importa
+ * mucho más de lo que parece: una dirección como «Calle 48» existe en media
+ * docena de comunas de Cali, y sin acotar Nominatim devolvía la de Lili, a
+ * cuatro kilómetros del barrio de la persona, con toda la seguridad del
+ * mundo. Comprobado contra el servicio real.
+ *
+ * Si dentro del recuadro no hay nada, se repite la consulta sin acotar: quien
+ * registra un negocio en otra ciudad tiene que poder encontrarlo igual.
+ */
+export async function geocodificar(
+  texto: string,
+  cerca?: { lat: number; lng: number },
+): Promise<UbicacionGeocodificada[]> {
   const q = texto.trim()
   if (!q) return []
 
   // Geocoder abierto de OpenStreetMap para Colombia
-  const url =
+  const base =
     'https://nominatim.openstreetmap.org/search' +
     `?format=json&limit=5&countrycodes=co&addressdetails=1&email=contacto@conectacomuna.co&q=${encodeURIComponent(q)}`
 
+  // ~9 km de lado: una ciudad cabe en varios recuadros de estos, y una comuna
+  // entera con sus vecinas cabe de sobra en uno.
+  const GRADOS = 0.08
+  const recuadro = cerca
+    ? `&bounded=1&viewbox=${cerca.lng - GRADOS},${cerca.lat - GRADOS},${cerca.lng + GRADOS},${cerca.lat + GRADOS}`
+    : ''
+
   try {
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'ConectaComuna-Web/1.0 (contacto@conectacomuna.co)',
-        Accept: 'application/json',
-      },
-    })
+    // Sin `User-Agent`: es una cabecera prohibida en `fetch` y el navegador
+    // la descartaba sin avisar, así que nunca llegó a viajar. Quien identifica
+    // la aplicación ante Nominatim es el `email` de la consulta, que es lo que
+    // pide su política de uso.
+    const pedir = (sufijo: string) =>
+      fetch(base + sufijo, {
+        headers: { Accept: 'application/json' },
+      })
+
+    let res = await pedir(recuadro)
+    if (recuadro && res.ok) {
+      const previo = (await res.clone().json()) as unknown[]
+      if (!Array.isArray(previo) || previo.length === 0) {
+        // Nominatim pide como mucho una consulta por segundo.
+        await new Promise((r) => setTimeout(r, 1100))
+        res = await pedir('')
+      }
+    }
     if (res.ok) {
       const data = (await res.json()) as Array<{
         display_name: string
