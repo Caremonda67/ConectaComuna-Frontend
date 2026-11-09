@@ -244,10 +244,11 @@ export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
     : 'Cerrado por hoy'
 
   if (!today || today.closed || !today.opens || !today.closes) {
+    // Sin horario para hoy, `label` ya dice cuándo vuelve a abrir. Repetir la
+    // misma frase en `detail` la duplicaba en la ficha.
     return {
       isOpen: false,
       label: proximaApertura,
-      detail: proximaApertura,
     }
   }
 
@@ -269,14 +270,12 @@ export function getBusinessOpenStatus(hours?: BusinessHours[]): OpenStatus {
     return {
       isOpen: false,
       label: `Abre hoy a las ${today.opens}`,
-      detail: `Abre hoy a las ${today.opens}`,
     }
   }
 
   return {
     isOpen: false,
     label: proximaApertura,
-    detail: proximaApertura,
   }
 }
 
