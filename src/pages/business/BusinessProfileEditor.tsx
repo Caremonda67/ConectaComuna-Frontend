@@ -230,6 +230,7 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
   const [resolviendoBarrio, setResolviendoBarrio] = useState(false)
   const inputFotosRef = useRef<HTMLInputElement>(null)
   const [buscandoDireccion, setBuscandoDireccion] = useState(false)
+  const [ubicandome, setUbicandome] = useState(false)
   const [opcionesDireccion, setOpcionesDireccion] = useState<UbicacionGeocodificada[]>([])
   const [avisoDireccion, setAvisoDireccion] = useState<string | null>(null)
   const [photos, setPhotos] = useState<string[]>(managedBusiness?.photos ?? [])
@@ -253,6 +254,63 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       setResolviendoBarrio(false)
     }
   }
+  /**
+   * Pone el punto donde está el teléfono ahora mismo.
+   *
+   * Es, con diferencia, la forma más exacta de ubicar un negocio, y sale de
+   * mirar el problema al revés. Un geocodificador tiene que adivinar dónde
+   * queda «Carrera 40C #49-57»; OpenStreetMap no tiene numeración en estas
+   * comunas, así que acierta la calle y nunca el local. Pero quien rellena
+   * esta pantalla suele estar DENTRO de su negocio, muchas veces con un
+   * facilitador al lado. El GPS de ese momento no adivina nada.
+   *
+   * No reutiliza `useGeolocation`: ese hook pide baja precisión y acepta
+   * lecturas de hasta cinco minutos, que está bien para resolver «¿en qué
+   * barrio estoy?» y mal para clavar un punto en una cuadra. Aquí se pide
+   * alta precisión, sin caché, y se enseña el margen de error en metros para
+   * que la persona sepa si tiene que corregir a mano.
+   */
+  async function usarMiUbicacion() {
+    const enLocal =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    if (!window.isSecureContext && !enLocal) {
+      setAvisoDireccion('El navegador solo da la ubicación en sitios seguros (https).')
+      return
+    }
+    if (!('geolocation' in navigator)) {
+      setAvisoDireccion('Este dispositivo no puede darme la ubicación. Marca el punto en el mapa.')
+      return
+    }
+
+    setUbicandome(true)
+    setAvisoDireccion(null)
+    setOpcionesDireccion([])
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const metros = Math.round(pos.coords.accuracy)
+        await marcarPunto({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setUbicandome(false)
+        // Un margen de más de una cuadra se dice: el GPS bajo techo o con
+        // nubes se va con facilidad, y callarlo deja un punto malo con
+        // aspecto de bueno.
+        setAvisoDireccion(
+          metros > 80
+            ? `Listo, pero con un margen de unos ${metros} m. Si el punto no cayó en tu puerta, arrástralo en el mapa.`
+            : `Listo: punto puesto con un margen de unos ${metros} m.`,
+        )
+      },
+      (err) => {
+        setUbicandome(false)
+        setAvisoDireccion(
+          err.code === err.PERMISSION_DENIED
+            ? 'No me diste permiso de ubicación. Puedes activarlo en el candado de la barra de direcciones, o marcar el punto en el mapa.'
+            : 'No pude leer la ubicación ahora. Marca el punto en el mapa tocándolo.',
+        )
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    )
+  }
+
   /**
    * Busca en el mapa la dirección escrita y mueve el punto allí.
    *
@@ -281,7 +339,9 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
       // Se le añade el barrio y la ciudad que ya haya para acotar la búsqueda.
       const pistas = (getValues('neighborhood') ?? '').trim()
       const consulta = pistas ? `${direccion}, ${pistas}` : `${direccion}, Cali`
-      const hits = await geocodificar(consulta)
+      // Se busca alrededor del punto que ya está en el mapa. Sin esa pista,
+      // «Calle 48» devolvía la de otra comuna a cuatro kilómetros.
+      const hits = await geocodificar(consulta, position)
 
       if (hits.length === 0) {
         setAvisoDireccion(
@@ -603,19 +663,39 @@ function BusinessProfileEditorForm({ managedBusiness, userId, onSaved }: FormPro
         <div className="space-y-2">
           <TextField
             label="Dirección o punto de referencia"
-            hint="Escríbela y toca «Buscar en el mapa» para que el punto se ponga solo. Si no la encuentra, marca el punto a mano: eso es lo que vale."
+            hint="Esto se muestra a los vecinos tal como lo escribas. Quien te encuentra en el mapa es el punto, no este texto."
             error={errors.address?.message}
             {...register('address')}
           />
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            loading={buscandoDireccion}
-            onClick={buscarDireccionEnMapa}
-          >
-            Buscar en el mapa
-          </Button>
+
+          {/* El GPS va primero y el buscador de texto detrás, y el orden es la
+              corrección de fondo: el mapa de OpenStreetMap no tiene números de
+              casa en estas comunas, asi que buscar «Carrera 40C #49-57» llega
+              como mucho a la calle. Quien llena esto suele estar en su local,
+              y entonces el GPS es exacto. */}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              loading={ubicandome}
+              onClick={() => void usarMiUbicacion()}
+            >
+              Estoy en mi negocio ahora
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              loading={buscandoDireccion}
+              onClick={buscarDireccionEnMapa}
+            >
+              Buscar la dirección escrita
+            </Button>
+          </div>
+          <p className="text-xs text-ink-500">
+            Si estás en tu negocio, el botón verde es lo más exacto. Si no, busca la dirección
+            y corrige el punto arrastrándolo en el mapa.
+          </p>
 
           {avisoDireccion && (
             <p role="status" className="text-xs text-ink-600">
