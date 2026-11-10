@@ -1,6 +1,7 @@
 import { requireSupabase } from '@/lib/supabase'
 import { isDemoMode } from '@/lib/env'
 import { distanceKm, getBusinessOpenStatus } from '@/lib/utils'
+import { comprimirImagen } from '@/lib/imagenes'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import type { Business, BusinessFilters, BusinessWithDistance, EstadoReporte, ReporteComunitario, Review } from '@/types'
 
@@ -332,8 +333,12 @@ export const businessService = {
    * Ruta `${ownerId}/${archivo}` para que la policy de Storage valide que
    * la primera carpeta coincide con `auth.uid()`.
    */
-  async uploadPhoto(ownerId: string, file: File): Promise<string> {
-    if (isDemoMode) return delay(URL.createObjectURL(file), 400)
+  async uploadPhoto(ownerId: string, original: File): Promise<string> {
+    if (isDemoMode) return delay(URL.createObjectURL(original), 400)
+    // La foto se reduce antes de salir del teléfono. Sin esto subía tal cual
+    // la tomó la cámara: la portada de un negocio llegó a pesar 2.588 KB,
+    // nueve veces toda la aplicación, y la paga en datos quien la mira.
+    const file = await comprimirImagen(original)
     const path = `${ownerId}/${Date.now()}-${file.name.replace(/\s+/g, '-')}`
     const sb = requireSupabase()
     const { error } = await sb.storage.from('business-photos').upload(path, file, {
