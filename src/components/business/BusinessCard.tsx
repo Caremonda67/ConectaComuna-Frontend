@@ -29,11 +29,14 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
   const cover = business.photos[0]
   const openStatus = getBusinessOpenStatus(business.hours)
 
-  const meta = (
+  // Los sellos van en su propia fila, no pegados al nombre. Metidos en la
+  // fila del titulo, en cuanto la tarjeta se estrecha cada uno se baja a un
+  // renglon y acaban separando el nombre de su categoria: el bloque quedaba
+  // nombre, pildora, pildora, texto, estrellas, texto, pildora. Agrupados,
+  // la tarjeta se lee de corrido y los sellos se comparan de un vistazo.
+  const sellos = (
     <>
-      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 min-w-0">
-        <h3 className="font-semibold text-ink-900 min-w-0 line-clamp-1">{business.name}</h3>
-        {business.verification_status === 'verified' && (
+      {business.verification_status === 'verified' && (
           <span
             title="Oficio verificado en territorio por un facilitador de la red"
             className="inline-flex items-center gap-1 shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-emerald-300"
@@ -69,9 +72,15 @@ export function BusinessCard({ business, layout = 'row' }: Props) {
             Por mayor
           </span>
         )}
-      </div>
+    </>
+  )
+
+  const meta = (
+    <>
+      <h3 className="font-semibold text-ink-900 min-w-0 line-clamp-1">{business.name}</h3>
       <p className="truncate text-xs text-ink-500">{categoryLabel(business.category)}</p>
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        {sellos}
         {/* Cero reseñas no es "nadie lo recomienda", es "acaba de entrar". Las
             estrellas vacías leían a negocio abandonado en todo el directorio. */}
         {business.rating_count > 0 ? (
