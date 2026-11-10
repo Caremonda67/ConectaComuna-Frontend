@@ -3,6 +3,7 @@ import { isDemoMode, env } from '@/lib/env'
 import { apiFetch } from '@/lib/apiClient'
 import { delay, mutateDb, readDb, uid } from './demoBackend'
 import { hayTablaDeContacto } from './contactoDisponible'
+import { comprimirImagen } from '@/lib/imagenes'
 import type { Order, OrderStatus, Review, PactoVerificado } from '@/types'
 
 const SELECT_WITH_RELATIONS =
@@ -363,7 +364,10 @@ export const orderService = {
 
     const photos: string[] = []
     if (input.photos?.length) {
-      for (const file of input.photos.slice(0, 3)) {
+      for (const original of input.photos.slice(0, 3)) {
+        // Mismo motivo que en las fotos de negocio: las del pedido salen de
+        // la camara y nadie las mira a tamano completo.
+        const file = await comprimirImagen(original)
         const path = `${input.clientId}/${folder}/${uid('img')}-${file.name}`
         const { error: uploadError } = await supabase.storage
           .from('order-photos')
